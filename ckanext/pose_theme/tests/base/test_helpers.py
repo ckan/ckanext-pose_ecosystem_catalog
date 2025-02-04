@@ -1,6 +1,6 @@
 import pytest
 
-from ckanext.dathere_theme.base.helpers import version_builder
+from ckanext.pose_theme.base.helpers import version_builder
 from packaging.version import InvalidVersion
 
 

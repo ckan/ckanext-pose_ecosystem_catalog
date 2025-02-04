@@ -4,7 +4,7 @@ import ckan.tests.factories as factories
 
 
 @pytest.mark.usefixtures('with_plugins', 'clean_db')
-@pytest.mark.ckan_config("ckan.plugins", "datastore dathere_custom_theme")
+@pytest.mark.ckan_config("ckan.plugins", "datastore pose_custom_theme")
 class TestDataDictionaryDownload(object):
 
     def test_data_dictionary_download_basic(self, app):

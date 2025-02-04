@@ -1,4 +1,4 @@
-{% set group_alias = h.dathere_theme_group_alias() %}
+{% set group_alias = h.pose_theme_group_alias() %}
 
 {% if h.version(h.ckan_version()) >= h.version('2.9') %}
   {%- set dataset_feed = h.url_for('feeds.group', id=group_dict.name) -%}

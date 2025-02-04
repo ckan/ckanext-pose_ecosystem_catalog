@@ -1,6 +1,6 @@
 import pytest
 
-from ckanext.dathere_theme.tests.helpers import do_get, do_post
+from ckanext.pose_theme.tests.helpers import do_get, do_post
 
 CUSTOM_HOMEPAGE_URL = "/ckan-admin/custom_homepage"
 RESET_CUSTOM_HOMEPAGE_URL = "/ckan-admin/reset_custom_homepage"

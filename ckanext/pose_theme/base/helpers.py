@@ -10,8 +10,8 @@ from ckan.plugins import toolkit
 from ckan.plugins.toolkit import config
 from packaging.version import Version
 
-from ckanext.dathere_theme.base.compatibility_controller import BaseCompatibilityController
-from ckanext.dathere_theme.dathere_custom_homepage.constants import CUSTOM_NAMING
+from ckanext.pose_theme.base.compatibility_controller import BaseCompatibilityController
+from ckanext.pose_theme.pose_custom_homepage.constants import CUSTOM_NAMING
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ def dataset_count():
         if result.get('count'):
             count = result.get('count')
     except Exception:
-        logger.debug("[dathere_theme] Error getting dataset count")
+        logger.debug("[pose_theme] Error getting dataset count")
         return 0
     return count
 
@@ -37,7 +37,7 @@ def showcases(num=24):
         showcases = toolkit.get_action('ckanext_showcase_list')({}, {})
         sorted_showcases = sorted(showcases, key=lambda k: k.get('metadata_modified'), reverse=True)
     except Exception:
-        logger.debug("[dathere_theme] Error getting showcase list")
+        logger.debug("[pose_theme] Error getting showcase list")
         return []
     return sorted_showcases[:num]
 
@@ -48,7 +48,7 @@ def groups(num=12):
     try:
         groups = toolkit.get_action('group_list')({}, {'all_fields': True, 'sort': 'packages'})
     except Exception:
-        logger.debug("[dathere_theme] Error getting group list")
+        logger.debug("[pose_theme] Error getting group list")
         return []
     return groups[:num]
 
@@ -59,7 +59,7 @@ def organization(num=12):
     try:
         groups = toolkit.get_action('organization_list')({}, {'all_fields': True, 'sort': 'packages'})
     except Exception:
-        logger.debug("[dathere_theme] Error getting organization list")
+        logger.debug("[pose_theme] Error getting organization list")
         return []
     return groups[:num]
 
@@ -72,7 +72,7 @@ def popular_datasets(num=6):
         if search.get('results'):
             datasets = search.get('results')
     except Exception:
-        logger.debug("[dathere_theme] Error getting popular datasets")
+        logger.debug("[pose_theme] Error getting popular datasets")
         return []
     return datasets[:num]
 
@@ -85,7 +85,7 @@ def recent_datasets(num=6):
         if datasets:
             sorted_datasets = sorted(datasets, key=lambda k: k['metadata_modified'], reverse=True)
     except Exception:
-        logger.debug("[dathere_theme] Error getting recently updated/created datasets")
+        logger.debug("[pose_theme] Error getting recently updated/created datasets")
         return []
     return sorted_datasets[:num]
 
@@ -98,7 +98,7 @@ def new_datasets(num=3):
         if search.get('results'):
             datasets = search.get('results')
     except Exception:
-        logger.debug("[dathere_theme] Error getting newly created datasets")
+        logger.debug("[pose_theme] Error getting newly created datasets")
         return []
     return datasets[:num]
 
@@ -126,7 +126,7 @@ def package_tracking_summary(package):
         if result.get('tracking_summary'):
             tracking_summary = result.get('tracking_summary')
     except Exception:
-        logger.debug("[dathere_theme] Error getting dataset tracking_summary")
+        logger.debug("[pose_theme] Error getting dataset tracking_summary")
         return {}
     return tracking_summary
 
@@ -239,7 +239,7 @@ def search_document_page_exists(page_id):
         if search_doc.get('content') and not search_doc.get('private'):
             return True
     except Exception:
-        logger.debug("[dathere_theme] Error in retrieving page")
+        logger.debug("[pose_theme] Error in retrieving page")
     return False
 
 
@@ -293,7 +293,7 @@ def get_default_extent():
 
 
 def get_column_count():
-    return int(config.get('ckanext.dathere_theme.column_count', 3))
+    return int(config.get('ckanext.pose_theme.column_count', 3))
 
 
 def is_activity_enabled():

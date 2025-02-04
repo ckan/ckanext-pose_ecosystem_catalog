@@ -3,17 +3,17 @@ import six
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
-import ckanext.dathere_theme.base.helpers as helper
-from ckanext.dathere_theme.dathere_custom_css.controller import CustomCSSController
-from ckanext.dathere_theme.dathere_custom_css.constants import CSS_METADATA, RAW_CSS
+import ckanext.pose_theme.base.helpers as helper
+from ckanext.pose_theme.pose_custom_css.controller import CustomCSSController
+from ckanext.pose_theme.pose_custom_css.constants import CSS_METADATA, RAW_CSS
 
 if toolkit.check_ckan_version(min_version='2.9.0'):
-    from ckanext.dathere_theme.dathere_custom_css.plugin.flask_plugin import MixinPlugin
+    from ckanext.pose_theme.pose_custom_css.plugin.flask_plugin import MixinPlugin
 else:
-    from ckanext.dathere_theme.dathere_custom_css.plugin.pylons_plugin import MixinPlugin
+    from ckanext.pose_theme.pose_custom_css.plugin.pylons_plugin import MixinPlugin
 
 
-class DathereThemeCustomCSSPlugin(MixinPlugin):
+class PoseThemeCustomCSSPlugin(MixinPlugin):
     plugins.implements(plugins.IConfigurable, inherit=True)
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
@@ -23,7 +23,7 @@ class DathereThemeCustomCSSPlugin(MixinPlugin):
     def update_config(self, ckan_config):
         toolkit.add_template_directory(ckan_config, '../templates')
         toolkit.add_public_directory(ckan_config, '../assets')
-        toolkit.add_resource('../assets', 'dathere_custom_css_resource')
+        toolkit.add_resource('../assets', 'pose_custom_css_resource')
         toolkit.add_ckan_admin_tab(ckan_config, 'custom-css.custom_css',
                                    'Custom CSS', icon='file-code-o')
 

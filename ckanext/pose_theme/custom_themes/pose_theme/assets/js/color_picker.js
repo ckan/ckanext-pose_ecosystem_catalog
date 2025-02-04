@@ -1,6 +1,6 @@
 jQuery(document).ready(function () {
     function initColorSelector() {
-        $( ".dathere-theme-color-picker").each(function( index ) {
+        $( ".pose-theme-color-picker").each(function( index ) {
             $(this).spectrum({
                 showInput: true, // shows the color input box, which actually can take hex,  hsl, and rgb
                 showPaletteOnly: true, // only shows the color selectors

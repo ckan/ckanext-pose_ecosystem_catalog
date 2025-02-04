@@ -85,7 +85,7 @@ setup(
         pose_custom_homepage=ckanext.pose_theme.pose_custom_homepage.plugin:PoseThemeHomepagePlugin
         pose_custom_header=ckanext.pose_theme.pose_custom_header.plugin:PoseThemeHeaderPlugin
         pose_custom_footer=ckanext.pose_theme.pose_custom_footer.plugin:PoseThemeFooterPlugin
-        pose_custom_showcase=ckanext.pose_theme.pose_custom_showcase.plugin:PoseShowcasePlugin
+        pose_custom_showcase=ckanext.pose_theme.pose_custom_showcase.plugin:
  
         pose_custom_heroslider=ckanext.pose_theme.pose_custom_heroslider.plugin:PoseHeroSliderPlugin
 

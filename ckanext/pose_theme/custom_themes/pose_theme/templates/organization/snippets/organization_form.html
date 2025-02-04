@@ -1,5 +1,5 @@
 {% ckan_extends %}
-{% set org_alias = h.dathere_theme_organization_alias() %}
+{% set org_alias = h.pose_theme_organization_alias() %}
 
 {% if h.version(h.ckan_version()) >= h.version('2.9') %}
   {% set organization_delete_url = url_for('organization.delete', id=data.id) %}

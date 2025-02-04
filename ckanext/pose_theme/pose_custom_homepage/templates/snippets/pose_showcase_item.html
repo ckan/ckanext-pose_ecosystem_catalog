@@ -2,12 +2,15 @@
 display. item_class - The class name to use on the list item. truncate - The
 length to trucate the description to (default: 180) truncate_title - The length
 to truncate the title to (default: 85). show_remove - If True, show the remove
-button to remove showcase/dataset association. #} {% set truncate = truncate or
-180 %} {% set truncate_title = truncate_title or 80 %} {% set title =
-showcase.title or showcase.name %} {% set notes =
-h.markdown_extract(showcase.notes, extract_length=truncate) %} {% set
-ckan_29_or_higher = h.ckan_version().split('.')[1] | int >= 9 %} {% set
-showcase_read_route = 'showcase.read' %} {% block showcase_item %}
+button to remove showcase/dataset association. #}
+
+
+{% set truncate = truncate or 180 %}
+{% set truncate_title = truncate_title or 80 %} 
+{% set title = showcase.title or showcase.name %} 
+{% set notes = h.markdown_extract(showcase.notes, extract_length=truncate) %}
+{% set ckan_29_or_higher = h.ckan_version().split('.')[1] | int >= 9 %}
+{% block showcase_item %}
 
 <div class="media-item">
   {% block item_inner %} {% block image %} {% set image_url =
@@ -30,11 +33,16 @@ showcase_read_route = 'showcase.read' %} {% block showcase_item %}
   <div class="media-content">
     <!--h3>{{ showcase.title }}</h3>
                 <p>{{ notes }}</p-->
-    {% endblock %} {% block link %} {% set redirect_link =
-    h.get_value_from_showcase_extras(showcase.extras, 'redirect_link') %} {% if
-    redirect_link and showcase.url %} {% set showcase_url = showcase.url %} {%
-    else %} {% set showcase_url = h.url_for(showcase_read_route,
-    id=showcase.name) %} {% endif %}
+  {% endblock %} 
+  
+  {% block link %} 
+  {% set redirect_link = h.get_value_from_showcase_extras(showcase.extras, 'redirect_link') %} 
+  {% if redirect_link and showcase.url %} 
+    {% set showcase_url = showcase.url %} 
+  {%else %} 
+    {% set showcase_url = h.url_for('showcase.read', id=showcase.name) %} 
+    
+  {% endif %}
     <a
       href="{{ showcase_url }}"
       title="{{ _('View {showcase_title}').format(showcase_title=showcase.title) }}"

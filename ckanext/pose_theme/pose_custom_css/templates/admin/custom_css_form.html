@@ -4,11 +4,11 @@
 
 {% if h.version(h.ckan_version()) < h.version('2.9') %}
     {% set custom_css_action = h.url_for(
-    controller='ckanext.dathere_theme.dathere_custom_css.controller:CustomCSSController',
+    controller='ckanext.pose_theme.pose_custom_css.controller:CustomCSSController',
     action='custom_css') %}
 
     {% set reset_custom_css = h.url_for(
-    controller='ckanext.dathere_theme.dathere_custom_css.controller:CustomCSSController',
+    controller='ckanext.pose_theme.pose_custom_css.controller:CustomCSSController',
     action='reset_custom_css') %}
 {% else %}
     {% set custom_css_action = h.url_for('/ckan-admin/custom_css') %}
@@ -29,7 +29,7 @@
                         <div class="form-group">
                             <label class="col-form-label" for={{ name }}> {{ field["title"] }}</label>
                             <div class="controls">
-                                <input type="text" class="dathere-theme-color-picker"
+                                <input type="text" class="pose-theme-color-picker"
                                        name="{{ name }}" id="{{ name }}" value="{{ field["value"] }}"/>
                             </div>
                         </div>
@@ -42,7 +42,7 @@
                         <div class="form-group">
                             <label class="col-form-label" for={{ name }}> {{ field["title"] }}</label>
                             <div class="controls">
-                                <input type="text" class="dathere-theme-color-picker"
+                                <input type="text" class="pose-theme-color-picker"
                                        name="{{ name }}" id="{{ name }}" value="{{ field["value"] }}"/>
                             </div>
                         </div>
@@ -58,7 +58,7 @@
                         <div class="form-group">
                             <label class="col-form-label" for={{ name }}> {{ field["title"] }}</label>
                             <div class="controls">
-                                <input type="text" class="dathere-theme-color-picker"
+                                <input type="text" class="pose-theme-color-picker"
                                        name="{{ name }}" id="{{ name }}" value="{{ field["value"] }}"/>
                             </div>
                         </div>
@@ -74,7 +74,7 @@
                         <div class="form-group">
                             <label class="col-form-label" for={{ name }}> {{ field["title"] }}</label>
                             <div class="controls">
-                                <input type="text" class="dathere-theme-color-picker"
+                                <input type="text" class="pose-theme-color-picker"
                                        name="{{ name }}" id="{{ name }}" value="{{ field["value"] }}"/>
                             </div>
                         </div>

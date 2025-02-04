@@ -1,6 +1,6 @@
 import pytest
 
-from ckanext.dathere_theme.tests.helpers import do_get, do_post
+from ckanext.pose_theme.tests.helpers import do_get, do_post
 
 CUSTOM_CSS_URL = "/ckan-admin/custom_css"
 RESET_CUSTOM_CSS_URL = "/ckan-admin/reset_custom_css"
@@ -37,7 +37,7 @@ DEFAULT_CUSTOM_CSS = (
 
 def check_custom_css_page_html(response, expected_form_data, expected_css_data, errors=()):
     assert response, 'Response is empty.'
-    assert len(expected_form_data.keys()) == response.body.count('dathere-theme-color-picker')
+    assert len(expected_form_data.keys()) == response.body.count('pose-theme-color-picker')
     for key, value in expected_form_data.items():
         assert 'name="{0}" id="{0}" value="{1}"'.format(
             key, value) in response.body, 'Missed form field for "{}".'.format(key)

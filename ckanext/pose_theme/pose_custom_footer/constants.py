@@ -1,4 +1,4 @@
-CONFIG_KEY = 'ckanext.dathere_theme.custom_footer.data'
+CONFIG_KEY = 'ckanext.pose_theme.custom_footer.data'
 
 ALLOWED_TAGS_SET = {
     'a', 'abbr', 'acronym', 'b', 'br', 'div', 'em', 'i',

@@ -1,6 +1,6 @@
 import pytest
 
-from ckanext.dathere_theme.tests.helpers import do_get, do_post
+from ckanext.pose_theme.tests.helpers import do_get, do_post
 
 CUSTOM_FOOTER_URL = "/ckan-admin/custom_footer"
 RESET_CUSTOM_FOOTER_URL = "/ckan-admin/reset_custom_footer"

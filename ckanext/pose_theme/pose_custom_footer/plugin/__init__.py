@@ -13,7 +13,7 @@ else:
     from webhelpers.html import literal
 
 
-class poseThemeFooterPlugin(MixinPlugin):
+class PoseThemeFooterPlugin(MixinPlugin):
     plugins.implements(plugins.IConfigurable, inherit=True)
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)

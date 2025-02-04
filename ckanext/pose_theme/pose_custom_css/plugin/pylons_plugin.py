@@ -13,7 +13,7 @@ class MixinPlugin(p.SingletonPlugin):
         m.connect takes up to 5 parameters
         1.page template, 2.url route, 3.controller action, 4.controller class, 5. font-awesome icon class
         '''
-        controller = 'ckanext.dathere_theme.dathere_custom_css.controller:CustomCSSController'
+        controller = 'ckanext.pose_theme.pose_custom_css.controller:CustomCSSController'
         m.connect(
             'custom_css',
             '/ckan-admin/custom_css',
