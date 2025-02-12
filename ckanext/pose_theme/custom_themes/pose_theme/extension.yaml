@@ -83,9 +83,9 @@ dataset_fields:
   preset: select
   validators: ignore_missing
   choices:
-    - value: true
+    - value: True
       label: Yes
-    - value: false
+    - value: False
       label: No
   help_text: Indicates whether the extension repository is archived
 
@@ -156,12 +156,6 @@ dataset_fields:
   form_placeholder: Date of last repository update
   help_text: The most recent date the repository was updated
 
-- field_name: last_commit
-  label: Last Commit
-  form_placeholder: SHA of the last commit
-  validators: ignore_missing
-  help_text: Unique identifier of the most recent commit
-
 - field_name: open_issues
   label: Open Issues
   validators: ignore_missing int_validator
@@ -198,6 +192,3 @@ resource_fields:
   label: Caption
   validators: ignore_missing
   form_placeholder: eg. Description of application screenshot
-
-
-  
