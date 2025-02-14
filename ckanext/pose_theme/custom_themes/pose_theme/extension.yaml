@@ -176,7 +176,6 @@ dataset_fields:
 - field_name: contributors
   label: Contributors
   preset: multiple_text
-  validators: ignore_missing
   help_text: List of contributors to the extension
 
 - field_name: contributor_details
