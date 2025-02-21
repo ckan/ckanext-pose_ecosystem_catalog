@@ -11,6 +11,7 @@ main-js:
 
 main-css:
   output:  pose_theme/assets_main.css
+  filters: cssrewrite
   contents:
     - vendor/spectrum/css/spectrum.css
     - css/theme.css
