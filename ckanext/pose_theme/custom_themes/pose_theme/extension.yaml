@@ -79,8 +79,22 @@ dataset_fields:
       label: Visualization
     - value: data_utility
       label: Data Utility
-    - value: other
-      label: Other
+    - value: api
+      label: API
+    - value: workflow
+      label: Workflow
+    - value: validation
+      label: Validation
+    - value: authentication
+      label: Authentication
+    - value: storage
+      label: Storage
+    - value: federation
+      label: Federation
+    - value: general
+      label: General
+    - value: metadata
+      label: Metadata
   help_text: Classification of the extension's primary purpose
 
 - field_name: is_archived
@@ -88,9 +102,9 @@ dataset_fields:
   preset: select
   validators: ignore_missing
   choices:
-    - value: True
+    - value: TRUE
       label: Yes
-    - value: False
+    - value: FALSE
       label: No
   help_text: Indicates whether the extension repository is archived
 
