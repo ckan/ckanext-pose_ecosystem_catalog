@@ -106,6 +106,10 @@ dataset_fields:
       label: Yes
     - value: FALSE
       label: No
+    - value: True
+      label: Yes
+    - value: False
+      label: No
   help_text: Indicates whether the extension repository is archived
 
 - field_name: archive_reason
@@ -155,9 +159,10 @@ dataset_fields:
   validators: ignore_missing
   form_placeholder: Date of the latest release
   help_text: The date of the most recent software release
-
+  
 - field_name: ckan_version
   label: CKAN Version Requirement
+  preset: multiple_text
   form_placeholder: Compatible CKAN versions
   help_text: Versions of CKAN this extension supports
 
@@ -197,6 +202,11 @@ dataset_fields:
   form_snippet: markdown.html
   validators: ignore_missing
   help_text: Additional information about contributors and their contributions
+
+- field_name: license
+  label: License
+  validators: ignore_missing
+  help_text: License to control how others can use your code.
 
 resource_fields:
 
