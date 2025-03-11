@@ -220,3 +220,313 @@ form.form-inline.form-select.lang-select {
   border-bottom: 1px solid black !important;
   z-index: 10;
 }/*# sourceMappingURL=theme.css.map */
+
+.browse-group-title, .slick-showcase .media-item h3 {
+  font-size: 20px;
+  font-weight: normal;
+  text-transform: none;
+}
+
+.browse-group {
+  display: inline-block;
+  text-align: center;
+  vertical-align: top;
+  padding: 5px;
+}
+
+.slick-showcase .media-image {
+  max-height: auto;
+}
+
+.secondary.col-sm-3, .secondary.span3 {
+  border: 1px solid #cccccc;
+}
+
+.media-grid {
+  background: #ffffff;
+  border: none;
+}
+
+.media-grid .media-item {
+  min-height: 340px;
+  width: 200px;
+  text-align: center;
+}
+
+.media-grid .media-item .media-image {
+  max-height: 120px;
+}
+
+.media-grid .media-item img.img-responsive {
+  display: inline-block;
+}
+
+#organization-search-form + .media-grid h3,
+#group-search-form + .media-grid h3,
+.slick-showcase .media-item h3 {
+  overflow-y: hidden;
+  display: -webkit-box;
+  max-height: 100px;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+/* CSS for the visually enhanced showcase cards */
+section.showcases {
+  display: block;
+  clear: both;
+  padding: 2rem 0;
+}
+
+section.showcases .slick-slider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Enhanced card container */
+section.showcases .slick-showcase .media-item {
+  position: relative;
+  height: 380px;
+  width: 300px;
+  margin: 0 1rem 1rem 0;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-origin: center bottom;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e0e0;
+}
+
+
+section.showcases .slick-showcase .media-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+}
+
+section.showcases .slick-showcase .media-item:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #03789b, #02a0ce);
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+section.showcases .slick-showcase .media-item:hover:after {
+  opacity: 1;
+}
+
+/* Image container */
+section.showcases .slick-showcase .media-item .media-image-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: white;
+  position: relative;
+}
+
+/* Image styling */
+section.showcases .slick-showcase .media-item img.media-image {
+  max-width: 100%;
+  max-height: 95%;
+  object-fit: contain;
+  transition: transform 0.5s ease;
+  position: relative;
+  z-index: 0;
+  border: 2px groove #6f6c7d14;
+
+}
+
+section.showcases .slick-showcase .media-item:hover img.media-image {
+  transform: scale(1.02);
+}
+
+/* Content area styling - positioned at bottom */
+section.showcases .slick-showcase .media-item .media-content {
+  background-color: rgba(0, 24, 51, 0.3);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  padding: 1.5rem 1.25rem;
+  z-index: 99;
+  border-radius: 1rem;
+}
+
+section.showcases .slick-showcase .media-item .media-content a {
+  text-decoration: none;
+  display: block;
+}
+
+section.showcases .slick-showcase .media-item .media-content a h3 {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  position: relative;
+  padding-bottom: 0.75rem;
+  transition: transform 0.3s ease;
+}
+
+section.showcases .slick-showcase .media-item .media-content a h3:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background-color: #03789b;
+  transition: width 0.3s ease;
+}
+
+section.showcases .slick-showcase .media-item:hover .media-content a h3:after {
+  width: 80px;
+}
+
+/* Adjust slick slider arrows */
+section.showcases .slick-showcase .slick-arrow {
+  width: 42px;
+  height: 42px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  transition: background-color 0.3s ease;
+}
+
+section.showcases .slick-showcase .slick-arrow.slick-next {
+  right: -20px;
+  background-color: white;
+}
+
+section.showcases .slick-showcase .slick-arrow.slick-prev {
+  left: -20px;
+  background-color: white;
+}
+
+section.showcases .slick-showcase .slick-arrow:hover {
+  background-color: #03789b;
+}
+
+/* Responsive adjustments */
+@media screen and (min-width: 992px) {
+  section.showcases .slick-showcase .media-item {
+    width: 300px;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  section.showcases .slick-showcase .media-item {
+    width: 300px;
+  }
+}
+
+.img-thumbnail {
+  width: 120px;
+  height: 120px;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+
+/* Slider */
+.slick-slider {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.slick-list {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+.slick-list:focus {
+  outline: none;
+}
+.slick-list.dragging {
+  cursor: pointer;
+  cursor: hand;
+}
+
+.slick-slider .slick-track,
+.slick-slider .slick-list {
+  transform: translate3d(0, 0, 0);
+}
+
+.slick-track {
+  position: relative;
+  left: 0;
+  top: 0;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.slick-track:before, .slick-track:after {
+  content: "";
+  display: table;
+}
+.slick-track:after {
+  clear: both;
+}
+.slick-loading .slick-track {
+  visibility: hidden;
+}
+
+.slick-slide {
+  float: left;
+  height: 100%;
+  min-height: 1px;
+  display: none;
+}
+[dir=rtl] .slick-slide {
+  float: right;
+}
+.slick-slide img {
+  display: block;
+}
+.slick-slide.slick-loading img {
+  display: none;
+}
+.slick-slide.dragging img {
+  pointer-events: none;
+}
+.slick-initialized .slick-slide {
+  display: block;
+}
+.slick-loading .slick-slide {
+  visibility: hidden;
+}
+.slick-vertical .slick-slide {
+  display: block;
+  height: auto;
+  border: 1px solid transparent;
+}
+
+.slick-arrow.slick-hidden {
+  display: none;
+}
+
+
+section.showcases .slick-showcase .media-item {
+  border: 1px solid #e4e7ec;
+}

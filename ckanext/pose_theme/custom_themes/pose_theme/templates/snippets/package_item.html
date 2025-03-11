@@ -1,0 +1,98 @@
+{% ckan_extends %}
+{% set truncate_title = truncate_title or 120 %}
+{% set title = package.title or package.name %}
+{% set note_type = note_type or 'updated' %}
+
+{% set package_url = h.url_for(package.type ~ '.read', id=package.name) %}
+{% set detailed_info = h.markdown_extract(package.detailed_info, extract_length=180) %}
+
+{% set image_url = h.get_value_from_showcase_extras(package.extras, 'image_url') %}
+  {%if package.owner_org %}
+  {% set owner_url = h.url_for('organization' + '.read', id=package.owner_org ) %}
+{% endif %}
+
+{% if not image_url %}
+    {% if package.resources %}
+      {% set image_url = package.resources[0].url %}
+    {% else %}
+      {% set image_url = h.get_image_url(package.image_url) if package.image_url else None %}
+    {% endif %}
+{% endif %}
+
+{% block package_item %}
+  <li class="dataset-item">
+    {% block content %}
+      <div class="dataset-content d-flex">
+
+        <div class="dataset-info flex-grow-1">
+          {% block heading %}
+            <h3 class="dataset-heading">
+              {% block heading_title %}
+                {{ h.link_to(title|truncate(truncate_title), package_url) }}
+              {% endblock %}
+              {%if package.owner_org %}
+              {% block heading_org %}
+                {% set org = h.get_organization(package.owner_org) %}
+                <a href="{{ owner_url }}"
+                    class="label"  style="font-size: 16px;"><p>{{ org.title or org.display_name }}</p></a>  </h3>
+                {% endblock %}
+              {% endif %}
+              {% block description %}
+                {% if package.notes %}
+                {% if package.notes|length < 35 and detailed_info %}
+                <div>{{ detailed_info|urlize }}</div>
+                {% else %}
+                  <div>{{ h.markdown_extract(package.notes, extract_length=180)|urlize }}</div>
+                  {% endif %}
+                  {% else %}
+                  <p class="empty">{{ h.humanize_entity_type('package', package.type, 'no description') or _("There is no description for this dataset") }}</p>
+                  {% endif %}
+              {% endblock %}
+              {% block heading_meta %}
+                {% if package.get('state', '').startswith('draft') %}
+                  <span class="label label-info">{{ _('Draft') }}</span>
+                {% elif package.get('state', '').startswith('deleted') %}
+                  <span class="label label-important">{{ _('Deleted') }}</span>
+                {% endif %}
+              {% endblock %}
+          {% endblock %}
+          
+
+          
+          {% block resources %}
+            {% if package.resources and not hide_resources %}
+              {% block resources_outer %}
+                <ul class="dataset-resources list-unstyled">
+                  {% block resources_inner %}
+                    {% for resource in h.dict_list_reduce(package.resources, 'format') %}
+                    {% if package.type == 'application'%}
+                      <li>
+                      </li>
+                      {% else %}
+                      <li>
+                        <a href="{{ h.url_for(controller='dataset', action='read', id=package.name) }}"
+                            class="label" data-bs-format="{{ resource.lower() }}"
+                            style="color:white;">{{ resource }}</a>
+                      </li>
+                      {% endif %}
+                    {% endfor %}
+                    <li>
+                      {% block heading_private %}
+                        {% if package.private %}
+                        <span class="dataset-private label label-inverse">
+                          <i class="fa fa-lock"></i>
+                          {{ _('Private') }}
+                        </span>
+                        {% endif %}
+                      {% endblock %}
+                    </li>
+                  {% endblock %}
+                </ul>
+              {% endblock %}
+            {% endif %}
+          {% endblock %}
+        </div>
+      </div>
+    {% endblock %}
+  </li>
+{% endblock %}

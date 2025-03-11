@@ -15,3 +15,4 @@ datastore_dictionary.add_url_rule(u'/datastore/dictionary_download/<resource_id>
 
 def get_blueprints():
     return [datastore_dictionary]
+ 

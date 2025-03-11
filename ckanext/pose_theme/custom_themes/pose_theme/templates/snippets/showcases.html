@@ -3,12 +3,12 @@
     <div class="container">
         <div class="showcase-content">
           <h4 class="heading-explanation above-heading">
-            Browse our extesnions
+            Browse our showcases
           </h4>
           <h2 class="heading">
-            <a href="/extensions">
-              {{ h.pose_theme_get_custom_name('extensions-custom-name',
-              'Extesnions') }}
+            <a href="/application">
+              {{ h.dathere_theme_get_custom_name('showcases-custom-name',
+              'Showcases') }}
             </a>
           </h2>
           <p>
@@ -18,10 +18,10 @@
 
         <section id="recent-list" class="showcases">
           {% snippet 'snippets/showcase_list.html',
-          extesnions=h.pose_theme_get_extesnions() %}
+          showcases=h.dathere_theme_get_showcases() %}
         </section>
         <div class="d-flex justify-content-center">
-          <a href="/extesnion" class="btn btn-primary-dark">View All Extesnions</a>
+          <a href="/showcase" class="btn btn-primary-dark">View All Showcases</a>
         </div>
       </div>
     </div>
