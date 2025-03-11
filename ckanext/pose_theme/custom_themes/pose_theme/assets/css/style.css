@@ -1270,142 +1270,174 @@ ul.dataset-list li.dataset-item .dataset-content .datset-update::before {
   background: url(../../icons/icon-updated.svg) no-repeat center center;
   background-size: 18px;
 }
-
+/* CSS for the visually enhanced showcase cards */
 section.showcases {
   display: block;
   clear: both;
+  padding: 2rem 0;
 }
+
 section.showcases .slick-slider {
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
+/* Enhanced card container */
 section.showcases .slick-showcase .media-item {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
   position: relative;
-  height: 480px;
-  padding: 1rem;
-  margin: 0 1.5rem 1.5rem 0;
-  background: #ffffff;
-  border-radius: 1.5rem;
+  height: 380px;
+  width: 300px;
+  margin: 0 1rem 1rem 0;
+  border-radius: 1.25rem;
   overflow: hidden;
-}
-@media screen and (min-width: 992px) {
-  section.showcases .slick-showcase .media-item {
-    width: 50%;
-  }
-}
-@media screen and (min-width: 1200px) {
-  section.showcases .slick-showcase .media-item {
-    width: 25%;
-  }
-}
-section.showcases .slick-showcase .media-item img.media-image {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-origin: center bottom;
+  background-color: white;
   display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e0e0;
+}
+
+
+section.showcases .slick-showcase .media-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+}
+
+section.showcases .slick-showcase .media-item:after {
+  content: "";
   position: absolute;
-  z-index: 1;
-  -o-object-fit: cover;
-     object-fit: cover;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #03789b, #02a0ce);
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+section.showcases .slick-showcase .media-item:hover:after {
+  opacity: 1;
+}
+
+/* Image container */
+section.showcases .slick-showcase .media-item .media-image-container {
   width: 100%;
   height: 100%;
-  margin: 0px;
-  top: 0px;
-  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: white;
+  position: relative;
 }
+
+/* Image styling */
+section.showcases .slick-showcase .media-item img.media-image {
+  max-width: 100%;
+  max-height: 85%;
+  object-fit: contain;
+  transition: transform 0.5s ease;
+  position: relative;
+  z-index: 0;
+  border: 6px groove #6c757d24;
+  margin-bottom: 2rem;
+}
+
+section.showcases .slick-showcase .media-item:hover img.media-image {
+  transform: scale(1.02);
+}
+
+/* Content area styling - positioned at bottom */
 section.showcases .slick-showcase .media-item .media-content {
   background-color: rgba(0, 24, 51, 0.5);
   -webkit-backdrop-filter: blur(24px);
-          backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
   padding: 1.5rem 1.25rem;
   z-index: 99;
   border-radius: 1rem;
 }
-section.showcases .slick-showcase .media-item .media-content h4,
-section.showcases .slick-showcase .media-item .media-content h3,
-section.showcases .slick-showcase .media-item .media-content p {
-  position: relative;
-  z-index: 2;
-}
-section.showcases .slick-showcase .media-item .media-content h4 {
-  font-size: 1rem;
-  color: #e4e7ec;
-  font-weight: 400;
-  margin: 0 0 0.25rem;
-}
-section.showcases .slick-showcase .media-item .media-content h3 {
-  color: #ffffff;
-  letter-spacing: -1px;
-  font-size: 1.75rem;
-  font-weight: 400;
-  margin: 0 0 0.25rem;
-  line-height: 1.125;
-}
-section.showcases .slick-showcase .media-item .media-content p {
-  color: #e4e7ec;
-  letter-spacing: -0.5px;
-}
-section.showcases .slick-showcase .media-item .media-content a.media-view {
-  position: relative;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border: none;
-  overflow: hidden;
-  transition: all 0.2s ease-in;
+
+section.showcases .slick-showcase .media-item .media-content a {
   text-decoration: none;
-}
-section.showcases .slick-showcase .media-item .media-content a.media-view:hover {
-  text-decoration: none;
-}
-section.showcases .slick-showcase .media-item .media-content:hover {
-  background-color: rgba(0, 24, 51, 0.75);
-  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-section.showcases .slick-showcase .media-item:hover img.media-image {
-  filter: brightness(75%);
-}
-section.showcases .slick-showcase .slick-arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 100%;
-  border: none;
-  outline: none;
-  font-size: 0;
-  line-height: 0;
-  position: absolute;
-  top: 100%;
-  padding: 0;
-  transform: translate(0, -50%);
-  cursor: pointer;
-  color: transparent;
-  z-index: 9999;
-}
-section.showcases .slick-showcase .slick-arrow.slick-next {
-  background: #ffffff url("../../icons/icon-next-item.svg") no-repeat center center;
-  background-size: 24px auto;
-  right: 0;
-}
-section.showcases .slick-showcase .slick-arrow.slick-next:before {
-  display: none !important;
-}
-section.showcases .slick-showcase .slick-arrow.slick-prev {
-  background: #ffffff url("../../icons/icon-prev-item.svg") no-repeat center center;
-  background-size: 24px auto;
-  right: 2.5rem;
-}
-section.showcases .slick-showcase .slick-arrow.slick-prev:before {
-  display: none !important;
+  display: block;
 }
 
-.slick-next:before,
-.slick-prev:before {
-  display: none !important;
+section.showcases .slick-showcase .media-item .media-content a h3 {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  position: relative;
+  padding-bottom: 0.75rem;
+  transition: transform 0.3s ease;
+}
+
+section.showcases .slick-showcase .media-item .media-content a h3:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background-color: #03789b;
+  transition: width 0.3s ease;
+}
+
+section.showcases .slick-showcase .media-item:hover .media-content a h3:after {
+  width: 80px;
+}
+
+/* Adjust slick slider arrows */
+section.showcases .slick-showcase .slick-arrow {
+  width: 42px;
+  height: 42px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  transition: background-color 0.3s ease;
+}
+
+section.showcases .slick-showcase .slick-arrow.slick-next {
+  right: -20px;
+  background-color: white;
+}
+
+section.showcases .slick-showcase .slick-arrow.slick-prev {
+  left: -20px;
+  background-color: white;
+}
+
+section.showcases .slick-showcase .slick-arrow:hover {
+  background-color: #03789b;
+}
+
+/* Responsive adjustments */
+@media screen and (min-width: 992px) {
+  section.showcases .slick-showcase .media-item {
+    width: 300px;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  section.showcases .slick-showcase .media-item {
+    width: 300px;
+  }
+}
+
+
+.img-thumbnail {
+  width: 120px;
+  height: 120px;
+  -o-object-fit: cover;
+     object-fit: cover;
 }
 
 /* Slider */
@@ -1427,6 +1459,7 @@ section.showcases .slick-showcase .slick-arrow.slick-prev:before {
   display: block;
   margin: 0;
   padding: 0;
+  width: 100%;
 }
 .slick-list:focus {
   outline: none;
