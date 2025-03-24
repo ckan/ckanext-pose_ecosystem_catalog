@@ -208,6 +208,12 @@ dataset_fields:
   validators: ignore_missing
   help_text: License to control how others can use your code.
 
+- field_name: topic_id
+  label: Topic ID
+  validators: ignore_missing
+  form_placeholder: Enter the topic ID
+  help_text: Unique identifier for the extensions topic
+
 resource_fields:
 
 - field_name: url
