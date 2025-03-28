@@ -17,24 +17,36 @@ def facet_remove_field(key, value=None, replace=None):
     )
 
 
-def get_site_statistics():
+def get_site_statistics(organization_id=None):
     """
     Custom stats helper, so we can get the correct number of packages, and a
-    count of extensions.
+    count of extensions for a specific organization (optional).
+    
+    Args:
+        organization_id: The ID or name of the organization to filter by
     """
-
     stats = {}
-    stats["extension_count"] = tk.get_action("package_search")(
-        {}, {"rows": 1, "fq": "+dataset_type:extension"}
-    )["count"]
-    stats["site_count"] = tk.get_action("package_search")(
-        {}, {"rows": 1, "fq": "+dataset_type:site"}
-    )["count"]
-    stats["dataset_count"] = tk.get_action("package_search")(
-        {}, {"rows": 1, "fq": "+dataset_type:dataset"}
-    )["count"]
-    stats["group_count"] = len(tk.get_action("group_list")({}, {}))
-    stats["organization_count"] = len(tk.get_action("organization_list")({}, {}))
+    
+    # Base query parameters
+    extension_query = {"rows": 1, "fq": "+dataset_type:extension"}
+    site_query = {"rows": 1, "fq": "+dataset_type:site"}
+    dataset_query = {"rows": 1, "fq": "+dataset_type:dataset"}
+    
+    # If organization is specified, add it to the query filters
+    if organization_id:
+        extension_query["fq"] += " +owner_org:" + organization_id
+        site_query["fq"] += " +owner_org:" + organization_id
+        dataset_query["fq"] += " +owner_org:" + organization_id
+    
+    # Get counts for each type
+    stats["extension_count"] = tk.get_action("package_search")({}, extension_query)["count"]
+    stats["site_count"] = tk.get_action("package_search")({}, site_query)["count"]
+    stats["dataset_count"] = tk.get_action("package_search")({}, dataset_query)["count"]
+    
+    # Only get these if no organization filter (they don't make sense per-organization)
+    if not organization_id:
+        stats["group_count"] = len(tk.get_action("group_list")({}, {}))
+        stats["organization_count"] = len(tk.get_action("organization_list")({}, {}))
 
     return stats
 
