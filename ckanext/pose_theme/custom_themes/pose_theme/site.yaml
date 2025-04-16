@@ -85,13 +85,13 @@ dataset_fields:
 
 - field_name: latitude
   label: Latitude
-  validators: ignore_missing number_validator
+  validators: ignore_missing 
   form_placeholder: "e.g. 51.5074"
   help_text: "The latitude coordinate of your location in decimal degrees (e.g. 51.5074 for London)"
 
 - field_name: longitude
   label: Longitude
-  validators: ignore_missing number_validator
+  validators: ignore_missing 
   form_placeholder: "e.g. -0.1278"
   help_text: "The longitude coordinate of your location in decimal degrees (e.g. -0.1278 for London)"
 
@@ -173,7 +173,6 @@ dataset_fields:
   label: Extensions
   preset: multiple_text
   form_placeholder: Extensions
-  validators: ignore_missing
   help_text: "List any extensions you're using."
 
 - field_name: contact_email
@@ -237,7 +236,6 @@ dataset_fields:
   preset: select
   validators: ignore_missing
   choices:
-    # European languages
     - label: "English"
       value: "en"
     - label: "French"
@@ -284,8 +282,6 @@ dataset_fields:
       value: "sl"
     - label: "Croatian"
       value: "hr"
-      
-    # Americas languages
     - label: "Mexican Spanish"
       value: "es-mx"
     - label: "Argentinian Spanish"
@@ -296,8 +292,6 @@ dataset_fields:
       value: "pt-br"
     - label: "Canadian French"
       value: "fr-ca"
-      
-    # Asian languages
     - label: "Chinese"
       value: "zh"
     - label: "Japanese"
@@ -320,16 +314,12 @@ dataset_fields:
       value: "ur"
     - label: "Persian"
       value: "fa"
-      
-    # Middle Eastern languages
     - label: "Arabic"
       value: "ar"
     - label: "Hebrew"
       value: "he"
     - label: "Turkish"
       value: "tr"
-      
-    # African languages
     - label: "Swahili"
       value: "sw"
     - label: "Amharic"
@@ -340,11 +330,16 @@ dataset_fields:
       value: "yo"
     - label: "Zulu"
       value: "zu"
-      
-    # For any other languages
     - label: "Other"
       value: "other"
   help_text: "Primary language of the Website"
+
+
+- field_name: topic_id
+  label: Topic ID
+  validators: ignore_missing
+  form_placeholder: Enter the topic ID
+  help_text: Unique identifier for the extensions topic
 
 - field_name: other_language
   label: Other Language
