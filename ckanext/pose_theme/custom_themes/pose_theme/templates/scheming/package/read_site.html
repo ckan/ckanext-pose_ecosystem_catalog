@@ -76,10 +76,6 @@
         {% endif %}
       {% endblock %}
 
-        {% if pkg.url %}
-            <p><a class="btn btn-primary ckanext-site-launch" href="{{ pkg.url }}" target="_blank"><i class="fa fa-external-link icon-external-link"></i> {{ _('Visit') }}</a></p>
-        {% endif %}
-
     {% endblock %}
 
     {% block package_tags %}
@@ -92,6 +88,10 @@
     pkg_dict=pkg, dataset_type=extesnion, schema=schema %}
 {% endblock %}
     {% block package_search_results_list %}
+    {% endblock %}
+
+    {% block discourse_comments %}
+            {{ h.discourse_comments(pkg) }}
     {% endblock %}
 
 {% endblock %}

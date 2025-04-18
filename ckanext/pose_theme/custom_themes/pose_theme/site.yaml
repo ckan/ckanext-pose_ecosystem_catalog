@@ -148,14 +148,9 @@ dataset_fields:
       value: "wordpress"
     - label: "Custom"
       value: "custom"
-    - label: "Unknown"
-      value: "unknown"
+    - label: "Not Specified"
+      value: "other"
   help_text: "What frontend technology is used with your CKAN instance?"
-
-- field_name: other_frontend_cms
-  label: Other Frontend CMS
-  required: false
-  help_text: "If you selected 'Other' for the frontend CMS, please specify which one you're using."
 
 - field_name: extensions
   label: Extensions
@@ -173,26 +168,16 @@ dataset_fields:
   label: Tags
   preset: tag_string_autocomplete
   form_placeholder: eg. economy, mental health, government
-  
-- field_name: license_id
-  label: License
-  validators: ignore_missing
-  form_placeholder: "e.g. notspecified, odc-pddl, cc-by"
-  help_text: "The license(s) under which the dataset is released. Enter comma-separated license IDs from: notspecified, odc-pddl, odc-odbl, odc-by, cc-zero, cc-by, cc-by-sa, gfdl, other-open, other-pd, other-at, uk-ogl, cc-nc, other-nc, other-closed"
 
-- field_name: custom_license
-  label: Custom License Details
-  validators: ignore_missing
-  form_placeholder: "Enter details about your custom license"
-  help_text: "If you selected 'Custom License' above, please provide details here"
-  
 - field_name: language
-  label: Language
+  label: Primary Language
   preset: select
   validators: ignore_missing
   choices:
     - label: "English"
       value: "en"
+    - label: "United Kingdom English"
+      value: "en_GB"      
     - label: "French"
       value: "fr"
     - label: "Spanish"
@@ -291,119 +276,28 @@ dataset_fields:
 
 
 - field_name: other_language
-  label: Other Language
+  label: Languages Available
   required: false
-  preset: multiple_checkbox
   validators: ignore_missing
-  choices:
-    # European languages
-    - label: "English"
-      value: "en"
-    - label: "French"
-      value: "fr"
-    - label: "Spanish"
-      value: "es"
-    - label: "German"
-      value: "de"
-    - label: "Italian"
-      value: "it"
-    - label: "Portuguese"
-      value: "pt"
-    - label: "Dutch"
-      value: "nl"
-    - label: "Swedish"
-      value: "sv"
-    - label: "Danish"
-      value: "da"
-    - label: "Finnish"
-      value: "fi"
-    - label: "Norwegian"
-      value: "no"
-    - label: "Polish"
-      value: "pl"
-    - label: "Czech"
-      value: "cs"
-    - label: "Slovak"
-      value: "sk"
-    - label: "Hungarian"
-      value: "hu"
-    - label: "Romanian"
-      value: "ro"
-    - label: "Bulgarian"
-      value: "bg"
-    - label: "Greek"
-      value: "el"
-    - label: "Latvian"
-      value: "lv"
-    - label: "Lithuanian"
-      value: "lt"
-    - label: "Estonian"
-      value: "et"
-    - label: "Slovenian"
-      value: "sl"
-    - label: "Croatian"
-      value: "hr"
-      
-    # Americas languages
-    - label: "Mexican Spanish"
-      value: "es-mx"
-    - label: "Argentinian Spanish"
-      value: "es-ar"
-    - label: "Chilean Spanish"
-      value: "es-cl"
-    - label: "Brazilian Portuguese"
-      value: "pt-br"
-    - label: "Canadian French"
-      value: "fr-ca"
-      
-    # Asian languages
-    - label: "Chinese"
-      value: "zh"
-    - label: "Japanese"
-      value: "ja"
-    - label: "Korean"
-      value: "ko"
-    - label: "Thai"
-      value: "th"
-    - label: "Vietnamese"
-      value: "vi"
-    - label: "Indonesian"
-      value: "id"
-    - label: "Malay"
-      value: "ms"
-    - label: "Hindi"
-      value: "hi"
-    - label: "Bengali"
-      value: "bn"
-    - label: "Urdu"
-      value: "ur"
-    - label: "Persian"
-      value: "fa"
-      
-    # Middle Eastern languages
-    - label: "Arabic"
-      value: "ar"
-    - label: "Hebrew"
-      value: "he"
-    - label: "Turkish"
-      value: "tr"
-      
-    # African languages
-    - label: "Swahili"
-      value: "sw"
-    - label: "Amharic"
-      value: "am"
-    - label: "Hausa"
-      value: "ha"
-    - label: "Yoruba"
-      value: "yo"
-    - label: "Zulu"
-      value: "zu"
-      
-    # For any other languages
-    - label: "Other"
-      value: "other"
   help_text: "Additional languages Supported"
+
+- field_name: num_datasets
+  label: Number of Datasets
+  validators: ignore_missing int_validator
+  form_placeholder: "e.g. 1024"
+  help_text: "Total number of datasets in this CKAN instance"
+
+- field_name: num_organizations
+  label: Number of Organizations
+  validators: ignore_missing int_validator
+  form_placeholder: "e.g. 42"
+  help_text: "Total numchoicesber of organizations in this CKAN instance"
+
+- field_name: num_groups
+  label: Number of Groups
+  validators: ignore_missing int_validator
+  form_placeholder: "e.g. 15"
+  help_text: "Total number of groups in this CKAN instance"
 
 - field_name: topic_id
   label: Topic ID

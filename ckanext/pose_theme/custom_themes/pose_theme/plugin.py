@@ -8,6 +8,24 @@ class PoseThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IBlueprint)
+    plugins.implements(plugins.IFacets, inherit=True)
+    
+
+        # IFacets
+    def dataset_facets(self, facets_dict, package_type):
+        """Customize the facets displayed for datasets.
+        """
+        if package_type == "site":
+            if facets_dict is None:
+                # Ensure facets_dict is a dictionary
+                facets_dict = {}
+
+            # Remove the "format" facet if it exists
+            if "license_id" in facets_dict:
+                del facets_dict["license_id"]
+
+        # Return the modified facets dictionary
+        return facets_dict
 
     # IConfigurer   
     def update_config(self, ckan_config):
