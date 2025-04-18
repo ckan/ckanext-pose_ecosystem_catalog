@@ -20,9 +20,12 @@ class PoseThemePlugin(plugins.SingletonPlugin):
                 # Ensure facets_dict is a dictionary
                 facets_dict = {}
 
-            # Remove the "format" facet if it exists
+            # Remove the "license" facet if it exists
             if "license_id" in facets_dict:
                 del facets_dict["license_id"]
+            # Remove the "format" facet if it exists
+            if "res_format" in facets_dict:
+                del facets_dict["res_format"]
 
         # Return the modified facets dictionary
         return facets_dict
