@@ -241,14 +241,14 @@
                 {% endif %}
             </h1>
             
-            {% if h.check_access('package_update', {'id':pkg.id }) %}
-                <div class="app-site-manage">
-                    <div class="nav-item">
-                        {{ h.build_nav_icon(dataset_type ~ '.groups', h.humanize_entity_type('group', default_group_type, 'content tab') or _('Groups'), id=pkg.name, icon='users') }}
-                    </div>
-                    {% link_for _('Manage'), named_route=pkg.type+'.edit', id=pkg.name, package_type=pkg.type, class_='btn btn-default', icon='wrench' %}
-                </div>
-            {% endif %}
+          <div class="actions">
+              {% if h.check_access('package_update', {'id':pkg.id }) %}
+                  {% link_for _('Manage'), named_route=pkg.type+'.edit', id=pkg.name, package_type=pkg.type, class_='btn btn-default', icon='wrench' %}
+                  {{ h.build_nav_icon(pkg.type ~ '.groups', h.humanize_entity_type('group', default_group_type, 'content tab') or _('Groups'), id=pkg.name, icon='users', class_='btn btn-default') }}
+              {% endif %}
+                  {{ h.build_nav_icon('activity.package_activity', _('Activity Stream'), id=pkg.id if is_activity_archive else pkg.name, icon='clock', class_='btn btn-default' ) }}
+
+          </div>
         </div>
         
         <div class="app-site-content">
@@ -281,18 +281,14 @@
                         {% endif %}
                     {% endif %}
                 </div>
-                {% if pkg.tags %}
-                <div class="app-site-section">
-                    <h2 class="app-site-section-title">{{ _('Tags') }}</h2>
-                    <div class="app-site-tags">
-                        {% for tag in pkg.tags %}
-                            <a class="tag" href="{{ h.url_for(pkg.type + '.search', tags=tag.name) }}">{{ tag.display_name }}</a>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
+
             </div>
         </div>
+          {% if pkg.tags %}
+            {% block package_tags %}
+                    {% snippet "package/snippets/tags.html", tags=pkg.tags %}
+            {% endblock %}
+          {% endif %}
     </div>
 
     <section class="additional-info">
@@ -303,9 +299,7 @@
               {% block package_search_results_list %}
               {% endblock %}
     </section>
-    {% block discourse_comments %}
-        {{ h.discourse_comments(pkg) }}
-    {% endblock %}
+
 
 {% endblock %}
 

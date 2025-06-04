@@ -214,6 +214,17 @@ dataset_fields:
   form_placeholder: Enter the topic ID
   help_text: Unique identifier for the extensions topic
 
+- field_name: discussions
+  label: GitHub Discussions Enabled
+  preset: select
+  validators: ignore_missing
+  choices:
+    - value: True
+      label: Yes
+    - value: False
+      label: No
+  help_text: Indicates whether the extension repository discussion tab is enabled 
+
 resource_fields:
 
 - field_name: url

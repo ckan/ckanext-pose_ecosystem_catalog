@@ -2,14 +2,15 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 import ckanext.pose_theme.base.helpers as helper
 import ckanext.pose_theme.custom_themes.pose_theme.blueprint as view
-
+import ckanext.pose_theme.custom_themes.pose_theme.cli as cli
 
 class PoseThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IFacets, inherit=True)
-    
+    plugins.implements(plugins.IClick)
+
 
         # IFacets
     def dataset_facets(self, facets_dict, package_type):
@@ -58,6 +59,9 @@ class PoseThemePlugin(plugins.SingletonPlugin):
             'pose_theme_is_data_dict_active': helper.is_data_dict_active,
             'version': helper.version_builder,
         }
+
+    def get_commands(self):
+        return [cli.pose_theme]
 
     # IBlueprint
     def get_blueprint(self):
