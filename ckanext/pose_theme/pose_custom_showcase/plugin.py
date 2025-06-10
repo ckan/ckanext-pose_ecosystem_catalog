@@ -59,8 +59,73 @@ class PoseShowcasePlugin(plugins.SingletonPlugin, lb.DefaultDatasetForm):
         return OrderedDict({"tags": _("Tags")})
 
 
+
+    # IPackageController
+    def before_dataset_search(self, search_params):
+        """
+        Modify search parameters before the search is executed.
+        Only filter dataset types when on the dataset listing page (not search results).
+        """
+        # Add some debug logging
+        log.debug(f"Request path: {tk.request.path if tk.request else 'None'}")
+        log.debug(f"Request args: {tk.request.args if tk.request else 'None'}")
+        
+        # Only apply filtering if we're on the exact /dataset path
+        if tk.request and tk.request.path == "/dataset":
+            # Check if this is a search query vs dataset listing
+            is_search_query = self._is_search_query()
+            
+            log.debug(f"Is search query: {is_search_query}")
+            
+            if not is_search_query:
+                # This is the dataset listing page (/dataset), apply filtering
+                current_fq = search_params.get('fq', '')
+                
+                # Try different field names - adjust based on your CKAN setup
+                type_filter = 'dataset_type:dataset'  # or 'type:dataset'
+                
+                if current_fq:
+                    search_params['fq'] = f"{current_fq} AND {type_filter}"
+                else:
+                    search_params['fq'] = type_filter
+                    
+                log.debug(f"Applied filter: {search_params['fq']}")
+        
+        return search_params
+
+    def _is_search_query(self):
+        """
+        Check if the current request is a search query or just dataset listing.
+        Returns True if it's a search, False if it's just the dataset listing page.
+        """
+        try:
+            # Use CKAN's toolkit request
+            if tk.request and tk.request.args:
+                # Check for 'q' parameter (main search)
+                if tk.request.args.get('q'):
+                    return True
+                
+                # Check for other search-related parameters
+                search_params = ['fq', 'sort', 'ext_bbox']
+                for param in search_params:
+                    if tk.request.args.get(param):
+                        return True
+                
+            
+            return False
+        except Exception as e:
+            # Log the error for debugging
+            log.debug(f"Error checking search query: {e}")
+            return False
+
+    def after_dataset_search(self, search_results, search_params):
+        """
+        Modify search results after the search is executed.
+        """
+        return search_results
+
     # IActions
     def get_actions(self):
         return {
             "ckanext_showcase_list": actions.showcase_list,
-        } 
+        }
