@@ -112,6 +112,47 @@ def recent_datasets(num=6):
         return []
     return sorted_datasets[:num]
 
+def popular_extensions(num=6):
+    """Return a list of most popular extension datasets sorted by GitHub stars."""
+    popular_extensions_list = []
+    try:
+        # Use package_search to filter for extensions and sort by stars (descending)
+        search_result = toolkit.get_action('package_search')({}, {
+            'q': 'type:extension',
+            'sort': 'stars desc',
+            'rows': num,
+            'start': 0
+        })
+        
+        if search_result and 'results' in search_result:
+            popular_extensions_list = search_result['results']
+    except Exception:
+        logger.debug("[pose_theme] Error getting popular extensions")
+        return []
+    
+    return popular_extensions_list[:num]
+
+def recent_extensions(num=6):
+    """Return a list of recently updated/created extension datasets."""
+    sorted_extensions = []
+    try:
+        # Use package_search to filter for extensions and sort by metadata_modified
+        search_result = toolkit.get_action('package_search')({}, {
+            'q': 'type:extension',
+            'sort': 'metadata_modified desc',
+            'rows': num,
+            'start': 0
+        })
+        
+        if search_result and 'results' in search_result:
+            sorted_extensions = search_result['results']
+    except Exception:
+        logger.debug("[pose_theme] Error getting recently updated/created extensions")
+        return []
+    
+    return sorted_extensions[:num]
+
+
 
 def new_datasets(num=3):
     """Return a list of the newly created datasets."""
