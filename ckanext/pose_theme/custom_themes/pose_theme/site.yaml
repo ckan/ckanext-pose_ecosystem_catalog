@@ -43,17 +43,6 @@ dataset_fields:
   required: true
   help_text: Tell us about your CKAN site, its purpose, and what kind of data it hosts.
 
-- field_name: is_featured
-  label: Is Featured
-  preset: select
-  validators: ignore_missing
-  choices:
-    - value: TRUE
-      label: Yes
-    - value: FALSE
-      label: No
-  help_text: Indicates whether the extension is marked as featured
-
 - field_name: location
   label: Location
   required: false
@@ -279,6 +268,17 @@ dataset_fields:
   validators: ignore_missing int_validator
   form_placeholder: "e.g. 15"
   help_text: "Total number of groups in this CKAN instance"
+
+- field_name: is_featured
+  label: Featured
+  preset: select
+  validators: ignore_missing
+  choices:
+    - value: TRUE
+      label: Yes
+    - value: FALSE
+      label: No
+  help_text: Indicates whether the extension is marked as featured
 
 - field_name: topic_id
   label: Topic ID
