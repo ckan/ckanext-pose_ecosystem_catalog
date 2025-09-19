@@ -71,7 +71,7 @@ class PoseShowcasePlugin(plugins.SingletonPlugin, lb.DefaultDatasetForm):
         log.debug(f"Request args: {tk.request.args if tk.request else 'None'}")
         
         # Only apply filtering if we're on the exact /dataset path
-        if tk.request and tk.request.path == "/dataset":
+        if tk.request and (tk.request.path == "/dataset/" or tk.request.path == "/dataset"):
             # Check if this is a search query vs dataset listing
             is_search_query = self._is_search_query()
             
