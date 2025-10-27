@@ -51,3 +51,22 @@
   </div>
 </article>
 {% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    // Auto-refresh on page access to sync authentication state.
+    // Required because Auth0 SSO redirects to /dashboard after login,
+    // so users manually navigate back to /contact and need a refresh
+    // to see the authenticated view instead of the login UI.
+    if (!sessionStorage.getItem('contact_page_refreshed')) {
+      sessionStorage.setItem('contact_page_refreshed', 'true');
+      window.location.reload();
+    }
+    
+    // Clear flag when leaving page so next visit triggers a refresh
+    window.addEventListener('beforeunload', function() {
+      sessionStorage.removeItem('contact_page_refreshed');
+    });
+  </script>
+{% endblock %}
