@@ -34,16 +34,7 @@ class PoseHeroSliderPlugin(MixinPlugin, plugins.SingletonPlugin):
         toolkit.add_template_directory(config, "../templates")
         toolkit.add_public_directory(config, "../public")
         toolkit.add_resource("../assets", "pose_custom_heroslider")
-        if toolkit.check_ckan_version(min_version="2.4", max_version="2.9.0"):
-            toolkit.add_ckan_admin_tab(
-                config, "hero_slider_admin", "Hero Slider Config"
-            )
-        elif toolkit.check_ckan_version(min_version="2.9.0"):
-            toolkit.add_ckan_admin_tab(
-                config,
-                "heroslideradmin_blueprint.hero_slider_admin",
-                "Hero Slider Config",
-            )
+
 
     # IConfigurable
     def configure(self, config):

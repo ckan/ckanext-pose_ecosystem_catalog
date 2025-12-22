@@ -24,9 +24,6 @@ class PoseThemeFooterPlugin(MixinPlugin):
         toolkit.add_template_directory(ckan_config, '../templates')
         toolkit.add_public_directory(ckan_config, '../assets')
         toolkit.add_resource('../assets', 'pose_custom_footer_resource')
-        toolkit.add_ckan_admin_tab(ckan_config, 'custom-footer.custom_footer',
-                                   'Footer', icon='file-code-o')
-
     def update_config_schema(self, schema):
         ignore_missing = toolkit.get_validator('ignore_missing')
         dict_only = toolkit.get_validator('dict_only')
