@@ -12,10 +12,10 @@
              value=""
              autocomplete="off"
              placeholder="{% block search_placeholder %}{{ placeholder }}{% endblock %}"
-             title= "{{_('Type search term here')}}" />
-      <button type="submit" aria-labelledby="search-label">
+             title="{{_('Type search term here')}}" />
+      <button type="submit" aria-label="{{ _('Search') }}">
         <i class="fa fa-search"></i>
-        <span class="sr-only" id="search-label">{{ _('Search') }}</span>
+        <span class="sr-only">{{ _('Search') }}</span>
       </button>
     </div>
   </form>
