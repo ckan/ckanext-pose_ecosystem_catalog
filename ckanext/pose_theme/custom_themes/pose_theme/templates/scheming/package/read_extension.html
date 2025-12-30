@@ -94,13 +94,7 @@
     {% endblock %}
 
 
-{% if pkg.discussions and pkg.discussions|string|lower not in ['false', '0', 'none', ''] %}
-    <a class="btn btn-success" href="{{ pkg.url }}/discussions" target="_blank"><i class="fa fa-comments"></i> {{ _('Go to Discussions') }}</a>
-{% else %}
-    {% block discourse_comments %}
-            {{ h.discourse_comments(pkg) }}
-    {% endblock %}
-{% endif %}
+
 
     
 

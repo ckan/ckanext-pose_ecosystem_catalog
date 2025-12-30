@@ -3,9 +3,9 @@
     <div class="container">
       <div class="showcase-content d-flex justify-content-between align-items-center">
         <h2 class="heading">
-          Featured Sites
+          <a href="/site">Featured Sites</a>
         </h2>
-        <a href="/site" class="btn btn-link text-primary text-decoration-none view-all-btn">
+        <a href="/site" class="btn btn-link view-all-btn">
           View All Sites<span class="ml-1 arrow-icon">→</span>
         </a>
       </div>
@@ -18,22 +18,73 @@
 </section>
 
 <style>
+.showcase-content {
+  margin-bottom: 2rem;
+}
+
+.showcase-content .heading {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.showcase-content .heading a {
+  color: #000;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.showcase-content .heading a:hover {
+  color: #d9534f;
+}
+
 .view-all-btn {
+  color: #d9534f;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
   transition: all 0.3s ease;
   position: relative;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
 .view-all-btn:hover {
-  color: #0056b3 !important;
+  color: #c9302c !important;
   text-decoration: none;
   transform: translateX(2px);
 }
 
 .view-all-btn .arrow-icon {
+  margin-left: 0.5rem;
   transition: transform 0.3s ease;
+  display: inline-block;
 }
 
 .view-all-btn:hover .arrow-icon {
   transform: translateX(3px);
+}
+
+/* Featured Sites Section Background */
+.main-featured.showcase {
+  background: #ffffff;
+  padding: 60px 0;
+}
+
+.main-featured.showcase .module-content {
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  .showcase-content {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+  
+  .showcase-content .heading {
+    font-size: 1.75rem;
+  }
 }
 </style>

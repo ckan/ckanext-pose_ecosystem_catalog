@@ -2,10 +2,10 @@
 <section class="main-browse section global-datasets recent-dataset">
   <div class="module-content">
     <div class="container">
-        <h2 class="heading">
-            <a href="/dataset?sort=views_recent+desc">
-              Recently Updated
-            </a>
+      <h2 class="heading">
+        <a href="/dataset?sort=views_recent+desc">
+          Recently Updated
+        </a>
       </h2>
       <section id="recent-list" class="recent-ds">
         {% snippet 'home/snippets/package_list.html', packages=latest_datasets,
@@ -14,3 +14,21 @@
     </div>
   </div>
 </section>
+
+<style>
+.main-browse.recent-dataset .heading {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 0 0 2rem 0;
+}
+
+.main-browse.recent-dataset .heading a {
+  color: #000;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.main-browse.recent-dataset .heading a:hover {
+  color: #d9534f;
+}
+</style>

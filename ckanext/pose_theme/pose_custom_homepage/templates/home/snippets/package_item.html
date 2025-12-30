@@ -27,64 +27,250 @@ Example:
     {% block content %}
       <div class="dataset-content">
         {% block heading %}
-          <h3 class="dataset-heading">
-            
-            {% block heading_title %}
-              {{ h.link_to(title|truncate(truncate_title), package_url) }}
-            {% endblock %}
+          <div class="dataset-heading-wrapper">
+            <h3 class="dataset-heading">
+              {% block heading_title %}
+                {{ h.link_to(title|truncate(truncate_title), package_url) }}
+              {% endblock %}
+            </h3>
             {% block heading_meta %}
-              {% if package.get('state', '').startswith('draft') %}
-                <span class="label label-info">{{ _('Draft') }}</span>
-              {% elif package.get('state', '').startswith('deleted') %}
-                <span class="label label-important">{{ _('Deleted') }}</span>
-              {% endif %}
-              {{ h.popular('recent views', package.tracking_summary.recent, min=10) if package.tracking_summary }}
+              <div class="dataset-meta-badges">
+                {% if package.get('state', '').startswith('draft') %}
+                  <span class="badge badge-draft">{{ _('Draft') }}</span>
+                {% elif package.get('state', '').startswith('deleted') %}
+                  <span class="badge badge-deleted">{{ _('Deleted') }}</span>
+                {% endif %}
+                {% if package.tracking_summary %}
+                  {{ h.popular('recent views', package.tracking_summary.recent, min=10) }}
+                {% endif %}
+              </div>
             {% endblock %}
-          </h3>
+          </div>
         {% endblock %}
+        
         {% block notes %}
           {% if note_type == 'updated' %}
             {% if package.metadata_modified %}
-              <div class="datset-update">Updated on {{ h.render_datetime(package.metadata_modified) }}</div>
+              <div class="dataset-update">
+                <svg class="update-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 1.5V8L11.5 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                Updated {{ h.render_datetime(package.metadata_modified, with_hours=True) }}
+              </div>
             {% endif %}
           {% elif note_type == 'recent_views' %}
             {% set tracking_summary = h.pose_theme_get_package_tracking_summary(package) %}
             {% if tracking_summary %}
-                <div>{{ tracking_summary.recent }} recent views</div>
+              <div class="dataset-views">
+                <svg class="views-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 8s2-5 7-5 7 5 7 5-2 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.5"/>
+                  <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                {{ tracking_summary.recent }} recent views
+              </div>
             {% endif %}
           {% endif %}
         {% endblock %}
         
-        {% block resources %}
-          {% if package.resources and not hide_resources %}
-            {% block resources_outer %}
-              <ul class="dataset-resources list-unstyled list-unstyled">
-                {% block resources_inner %}
-                  {% for resource in h.dict_list_reduce(package.resources, 'format') %}
-                  
-                    <li>
-                      <a href="{{ h.url_for(controller='dataset', action='read', id=package.name) }}"
-                          class="label" data-bs-format="{{ resource.lower() }}"
-                          style="color:white;">{{ resource }}</a>
-                    </li>
-                  {% endfor %}
-                  <li>
-                    {% block heading_private %}
-                      {% if package.private %}
-                      <span class="dataset-private label label-inverse">
-                        <i class="fa fa-lock"></i>
-                        {{ _('Private') }}
-                      </span>
-                      {% endif %}
-                    {% endblock %}
-                  </li>
-                {% endblock %}
-              </ul>
-            {% endblock %}
-          {% endif %}
-        {% endblock %}
+      
           
       </div>
     {% endblock %}
   </li>
 {% endblock %}
+
+<style>
+/* Dataset Item Styling */
+.dataset-item {
+  background: #ffffff;
+  border: 2px solid #f2f4f7;
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dataset-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #d9534f;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.dataset-item:hover {
+  border-color: #e4e7ec;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.dataset-item:hover::before {
+  transform: scaleX(1);
+}
+
+/* Dataset Content */
+.dataset-content {
+  position: relative;
+  z-index: 1;
+}
+
+.dataset-heading-wrapper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.dataset-heading {
+  margin: 0;
+  flex: 1;
+}
+
+.dataset-heading a {
+  font-size: 18px;
+  font-weight: 600;
+  color: #000;
+  text-decoration: none;
+  line-height: 1.4;
+  transition: color 0.2s ease;
+}
+
+.dataset-heading a:hover {
+  color: #d9534f;
+}
+
+/* Meta Badges */
+.dataset-meta-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-draft {
+  background: rgba(253, 126, 20, 0.1);
+  color: #fd7e14;
+}
+
+.badge-deleted {
+  background: rgba(217, 83, 79, 0.1);
+  color: #d9534f;
+}
+
+/* Update/Views Info */
+.dataset-update,
+.dataset-views {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #667085;
+  margin-bottom: 16px;
+}
+
+.update-icon,
+.views-icon {
+  flex-shrink: 0;
+  color: #98a2b3;
+}
+
+/* Resources Section */
+.dataset-resources-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dataset-resources {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dataset-resources li {
+  margin: 0;
+}
+
+.resource-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  color: #ffffff !important;
+}
+
+.resource-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Private Badge */
+.dataset-private {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  color: #475467;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lock-icon {
+  flex-shrink: 0;
+  color: #667085;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dataset-item {
+    padding: 20px;
+  }
+  
+  .dataset-heading-wrapper {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .dataset-heading a {
+    font-size: 16px;
+  }
+  
+  .dataset-resources-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+</style>
