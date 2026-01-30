@@ -128,30 +128,35 @@ dataset_fields:
 - field_name: language_stats
   label: Language Statistics
   form_placeholder: Programming languages used in the extension
+  form_snippet: null
   help_text: Breakdown of programming languages used in the repository
 
 - field_name: repository_size
   label: Repository Size
   validators: ignore_missing int_validator
   form_placeholder: Repository size in kilobytes
+  form_snippet: null
   help_text: Size of the repository in kilobytes
 
 - field_name: forks_count
   label: Number of Forks
   validators: ignore_missing int_validator
   form_placeholder: Enter the number of repository forks
+  form_snippet: null
   help_text: Total number of times the repository has been forked
 
 - field_name: total_releases
   label: Total Releases
   validators: ignore_missing int_validator
   form_placeholder: Number of releases
+  form_snippet: null
   help_text: Total number of software releases for this extension
 
 - field_name: latest_release
   label: Latest Release Version
   form_placeholder: Latest version number
   validators: ignore_missing
+  form_snippet: null
   help_text: The most recent version of the extension
 
 - field_name: release_date
@@ -171,6 +176,7 @@ dataset_fields:
   label: GitHub Stars
   validators: ignore_missing int_validator
   form_placeholder: Number of GitHub stars
+  form_snippet: null
   validators: ignore_missing
   help_text: Number of stars the repository has received on GitHub
 
@@ -179,12 +185,14 @@ dataset_fields:
   preset: datetime
   validators: ignore_missing
   form_placeholder: Date of last repository update
+  form_snippet: null
   help_text: The most recent date the repository was updated
 
 - field_name: open_issues
   label: Open Issues
   validators: ignore_missing int_validator
   form_placeholder: Number of open issues
+  form_snippet: null
   help_text: Current number of open issues in the repository
 
 - field_name: contributors_count
@@ -192,17 +200,20 @@ dataset_fields:
   validators: ignore_missing int_validator
   form_placeholder: Total number of contributors
   help_text: Total unique contributors to the repository
+  form_snippet: null
 
 - field_name: contributors
   label: Contributors
   preset: multiple_text
   help_text: List of contributors to the extension
+  form_snippet: null
 
 - field_name: contributor_details
   label: Contributor Details
   form_snippet: markdown.html
   validators: ignore_missing
   help_text: Additional information about contributors and their contributions
+  form_snippet: null
 
 - field_name: license
   label: License
@@ -219,17 +230,20 @@ dataset_fields:
     - value: FALSE
       label: No
   help_text: Indicates whether the extension is marked as featured
+  form_snippet: null
 
 - field_name: topic_id
   label: Topic ID
   validators: ignore_missing
   form_placeholder: Enter the topic ID
+  form_snippet: null
   help_text: Unique identifier for the extensions topic
 
 - field_name: discussions
   label: GitHub Discussions Enabled
   preset: select
   validators: ignore_missing
+  form_snippet: null
   choices:
     - value: True
       label: Yes
@@ -245,8 +259,10 @@ resource_fields:
   validators: ignore_missing
   form_placeholder: http://example.com/my-application-screenshot.jpg
   upload_label: Photo
+  required: false
 
 - field_name: name
   label: Caption
   validators: ignore_missing
   form_placeholder: eg. Description of application screenshot
+  required: false
