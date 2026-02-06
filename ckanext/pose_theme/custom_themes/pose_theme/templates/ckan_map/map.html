@@ -1,0 +1,229 @@
+{% extends "page.html" %}
+
+{% block styles %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ h.url_for_static('/ckan_map/css/maplibre-gl.css') }}">
+  <style>
+    .map-container {
+      position: relative;
+      width: 100%;
+    }
+    #ckan-map {
+      width: 100%;
+      height: 70vh;
+      min-height: 500px;
+    }
+    .map-header {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 4px 4px 0 0;
+    }
+    .map-header h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0;
+      color: white;
+    }
+    .map-stats {
+      display: flex;
+      gap: 2rem;
+      font-size: 0.9rem;
+    }
+    .map-stat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .map-stat-value {
+      font-weight: 700;
+      font-size: 1.1rem;
+      font-family: monospace;
+    }
+    .map-overlay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-style: italic;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+    .maplibregl-popup-content {
+      padding: 1rem;
+      max-width: 300px;
+    }
+    .maplibregl-popup-content h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #1e1b4b;
+    }
+    .maplibregl-popup-content a {
+      display: block;
+      color: #4f46e5;
+      text-decoration: underline;
+      margin-bottom: 0.25rem;
+      font-weight: 500;
+    }
+    .maplibregl-popup-content .description {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 0.5rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
+{% endblock %}
+
+{% block subtitle %}{{ _('CKAN Ecosystem Map') }}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li class="active">{{ _('Map') }}</li>
+{% endblock %}
+
+{% block primary_content %}
+  <div class="map-container">
+    <div class="map-header">
+      <h2>{{ _('CKAN Ecosystem Map') }}</h2>
+      <div class="map-stats">
+        <div class="map-stat-item">
+          <span class="map-stat-value" id="site-count">-</span>
+          <span>{{ _('sites') }}</span>
+        </div>
+        <div class="map-stat-item">
+          <span class="map-stat-value" id="extension-count">-</span>
+          <span>{{ _('extensions') }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="ckan-map">
+      <div class="map-overlay">{{ _('Click points to see site details') }}</div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block secondary_content %}{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ h.url_for_static('/ckan_map/js/maplibre-gl.js') }}"></script>
+  <script>
+    (function() {
+      // Fetch stats
+      fetch('{{ h.url_for("ckan_map.catalog_stats") }}')
+        .then(response => response.json())
+        .then(data => {
+          if (data.sites) {
+            document.getElementById('site-count').textContent = data.sites.toLocaleString();
+          }
+          if (data.extensions) {
+            document.getElementById('extension-count').textContent = data.extensions.toLocaleString();
+          }
+        })
+        .catch(err => console.error('Failed to fetch stats:', err));
+
+      // Initialize map
+      const map = new maplibregl.Map({
+        container: 'ckan-map',
+        style: 'https://api.maptiler.com/maps/dataviz/style.json?key={{ maptiler_key }}',
+        center: [0, 20],
+        zoom: 1.5
+      });
+
+      map.on('load', () => {
+        // Add GeoJSON source
+        map.addSource('sites', {
+          type: 'geojson',
+          data: '{{ h.url_for("ckan_map.site_geojson") }}'
+        });
+
+        // Add circle layer for sites
+        map.addLayer({
+          id: 'sites-points',
+          type: 'circle',
+          source: 'sites',
+          paint: {
+            'circle-stroke-color': '#372AAC',
+            'circle-color': '#FFDF20',
+            'circle-stroke-width': 1.5,
+            'circle-radius': 6
+          }
+        });
+
+        // Hover popup
+        const hoverPopup = new maplibregl.Popup({
+          closeButton: false,
+          closeOnClick: false
+        });
+
+        // Click popup
+        const clickPopup = new maplibregl.Popup({
+          closeButton: true,
+          closeOnClick: true
+        });
+
+        // Mouse enter handler
+        map.on('mouseenter', 'sites-points', (e) => {
+          map.getCanvas().style.cursor = 'pointer';
+          const coordinates = e.features[0].geometry.coordinates.slice();
+          const title = e.features[0].properties.title;
+
+          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+          }
+
+          hoverPopup
+            .setLngLat(coordinates)
+            .setHTML('<div style="font-weight: bold;">' + title + '</div>')
+            .addTo(map);
+        });
+
+        // Mouse leave handler
+        map.on('mouseleave', 'sites-points', () => {
+          map.getCanvas().style.cursor = '';
+          hoverPopup.remove();
+        });
+
+        // Disable scroll zoom, add navigation controls
+        map.scrollZoom.disable();
+        map.addControl(new maplibregl.NavigationControl({
+          visualizePitch: true,
+          showZoom: true,
+          showCompass: true
+        }));
+
+        // Click handler
+        map.on('click', 'sites-points', (e) => {
+          const coordinates = e.features[0].geometry.coordinates.slice();
+          const props = e.features[0].properties;
+
+          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+          }
+
+          clickPopup
+            .setLngLat(coordinates)
+            .setHTML(
+              '<article>' +
+                '<h3>' + props.title + '</h3>' +
+                '<a href="' + props.url + '" target="_blank" rel="noopener">{{ _("Visit Site") }}</a>' +
+                '<a href="' + props.catalog_url + '" target="_blank" rel="noopener">{{ _("Catalog Listing") }}</a>' +
+                '<div class="description">' + (props.description || '{{ _("No description available.") }}') + '</div>' +
+              '</article>'
+            )
+            .addTo(map);
+        });
+      });
+    })();
+  </script>
+{% endblock %}
