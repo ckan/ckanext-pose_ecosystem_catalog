@@ -6,6 +6,10 @@
   {% endif %}
 
   <div class="flex-container">
+    {% block pose_theme_ecosystem_map %}
+      {% snippet 'home/snippets/ecosystem_map.html' %}
+    {% endblock %}
+
     {% block pose_theme_showcases %}
     {% if 'pose_custom_showcase' in g.plugins %}
       {% if h.pose_theme_get_showcases() %}
