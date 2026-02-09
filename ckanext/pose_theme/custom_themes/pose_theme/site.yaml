@@ -138,6 +138,7 @@ dataset_fields:
   preset: multiple_text
   form_placeholder: Extensions
   help_text: "List any extensions you're using."
+  form_snippet: null
 
 - field_name: contact_email
   label: Maintainer Email
@@ -256,23 +257,25 @@ dataset_fields:
   help_text: "Primary language of the Website"
 
 
-
 - field_name: num_datasets
   label: Number of Datasets
   validators: ignore_missing int_validator
   form_placeholder: "e.g. 1024"
+  form_snippet: null
   help_text: "Total number of datasets in this CKAN instance"
 
 - field_name: num_organizations
   label: Number of Organizations
   validators: ignore_missing int_validator
   form_placeholder: "e.g. 42"
+  form_snippet: null
   help_text: "Total numchoicesber of organizations in this CKAN instance"
 
 - field_name: num_groups
   label: Number of Groups
   validators: ignore_missing int_validator
   form_placeholder: "e.g. 15"
+  form_snippet: null
   help_text: "Total number of groups in this CKAN instance"
 
 - field_name: is_featured
@@ -285,11 +288,13 @@ dataset_fields:
     - value: FALSE
       label: No
   help_text: Indicates whether the extension is marked as featured
+  form_snippet: null
 
 - field_name: topic_id
   label: Topic ID
   validators: ignore_missing
   form_placeholder: Enter the topic ID
+  form_snippet: null
   help_text: Unique identifier for the extensions topic
 
 resource_fields:
@@ -299,6 +304,7 @@ resource_fields:
   validators: ignore_missing
   form_placeholder: http://example.com/my-application-screenshot.jpg
   upload_label: Photo
+  required: false
 
 - field_name: name
   label: Caption

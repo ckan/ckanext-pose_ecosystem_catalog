@@ -78,9 +78,11 @@
                     {% for resource in h.dict_list_reduce(package.resources, 'format') %}
                     {% if package.type == 'site'%}
                       <li>
-                        <a href=""
-                        class="label" data-bs-format="Site"
-                        style="color:white;">Site</a>
+                       <a href="{{ h.get_pkg_dict_extra(package, 'url', '#') }}"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         class="label" data-bs-format="Site"
+                         style="color:white;">Site</a>
                       </li>
                       {% elif package.type == 'extension'%}
                       <li>
