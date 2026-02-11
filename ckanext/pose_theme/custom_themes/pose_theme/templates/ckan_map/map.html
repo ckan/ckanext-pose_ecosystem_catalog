@@ -4,82 +4,227 @@
   {{ super() }}
   <link rel="stylesheet" href="{{ h.url_for_static('/ckan_map/css/maplibre-gl.css') }}">
   <style>
+    /* Large Map Container */
     .map-container {
       position: relative;
       width: 100%;
+      margin: 0 auto;
+      max-width: 100%;
     }
+
     #ckan-map {
       width: 100%;
-      height: 70vh;
-      min-height: 500px;
+      height: 85vh;
+      min-height: 600px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border: 2px solid #f2f4f7;
     }
+
+    /* Map Header Overlay */
     .map-header {
-      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-      color: white;
-      padding: 1rem 2rem;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 20px 32px;
+      border-radius: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-radius: 4px 4px 0 0;
+      z-index: 1000;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border: 2px solid #f2f4f7;
     }
+
     .map-header h2 {
-      font-size: 1.5rem;
+      font-size: 24px;
       font-weight: 700;
       margin: 0;
-      color: white;
+      color: #000;
+      letter-spacing: -0.5px;
     }
+
+    /* Statistics */
     .map-stats {
       display: flex;
-      gap: 2rem;
-      font-size: 0.9rem;
+      gap: 32px;
     }
+
     .map-stat-item {
       display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      flex-direction: column;
+      align-items: flex-end;
     }
+
     .map-stat-value {
-      font-weight: 700;
-      font-size: 1.1rem;
-      font-family: monospace;
+      font-weight: 800;
+      font-size: 28px;
+      color: #000;
+      line-height: 1;
+      letter-spacing: -1px;
     }
+
+    .map-stat-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #667085;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    /* Map Instructions Overlay */
     .map-overlay {
       position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      font-size: 0.85rem;
-      font-style: italic;
-      z-index: 1000;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      color: #667085;
+      z-index: 1000;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e4e7ec;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
+
+    .map-overlay svg {
+      width: 16px;
+      height: 16px;
+      color: #d9534f;
+    }
+
+    /* Popup Styling */
     .maplibregl-popup-content {
-      padding: 1rem;
-      max-width: 300px;
+      padding: 20px;
+      max-width: 320px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      border: 2px solid #f2f4f7;
     }
+
     .maplibregl-popup-content h3 {
-      font-size: 1.1rem;
+      font-size: 18px;
       font-weight: 700;
-      margin-bottom: 0.5rem;
-      color: #1e1b4b;
+      margin: 0 0 12px 0;
+      color: #000;
+      line-height: 1.3;
     }
+
     .maplibregl-popup-content a {
-      display: block;
-      color: #4f46e5;
-      text-decoration: underline;
-      margin-bottom: 0.25rem;
-      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      background: #d9534f;
+      color: #ffffff;
+      text-decoration: none;
+      margin: 4px 8px 4px 0;
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
     }
+
+    .maplibregl-popup-content a:hover {
+      background: #c9302c;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(217, 83, 79, 0.3);
+    }
+
+    .maplibregl-popup-content a.secondary {
+      background: #ffffff;
+      color: #000;
+      border: 2px solid #e4e7ec;
+    }
+
+    .maplibregl-popup-content a.secondary:hover {
+      border-color: #d9534f;
+      color: #d9534f;
+      background: rgba(217, 83, 79, 0.05);
+    }
+
     .maplibregl-popup-content .description {
-      font-size: 0.8rem;
-      color: #666;
-      margin-top: 0.5rem;
+      font-size: 14px;
+      color: #667085;
+      margin-top: 12px;
+      line-height: 1.5;
       display: -webkit-box;
       -webkit-line-clamp: 4;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      padding-top: 12px;
+      border-top: 1px solid #e4e7ec;
+    }
+
+    /* Navigation Controls Styling */
+    .maplibregl-ctrl-group {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      border: 2px solid #e4e7ec;
+    }
+
+    .maplibregl-ctrl-group button {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+    }
+
+    .maplibregl-ctrl-group button:hover {
+      background: #F4F4F4;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      #ckan-map {
+        height: 70vh;
+        min-height: 500px;
+      }
+
+      .map-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        padding: 16px 20px;
+      }
+
+      .map-header h2 {
+        font-size: 20px;
+      }
+
+      .map-stats {
+        gap: 24px;
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .map-stat-item {
+        align-items: flex-start;
+      }
+
+      .map-stat-value {
+        font-size: 24px;
+      }
+
+      .map-overlay {
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        font-size: 13px;
+        padding: 10px 16px;
+      }
     }
   </style>
 {% endblock %}
@@ -92,22 +237,31 @@
 
 {% block primary_content %}
   <div class="map-container">
+    <!-- Map Header Overlay -->
     <div class="map-header">
       <h2>{{ _('CKAN Ecosystem Map') }}</h2>
       <div class="map-stats">
         <div class="map-stat-item">
           <span class="map-stat-value" id="site-count">-</span>
-          <span>{{ _('sites') }}</span>
+          <span class="map-stat-label">{{ _('Sites') }}</span>
         </div>
         <div class="map-stat-item">
           <span class="map-stat-value" id="extension-count">-</span>
-          <span>{{ _('extensions') }}</span>
+          <span class="map-stat-label">{{ _('Extensions') }}</span>
         </div>
       </div>
     </div>
 
-    <div id="ckan-map">
-      <div class="map-overlay">{{ _('Click points to see site details') }}</div>
+    <!-- Map Container -->
+    <div id="ckan-map"></div>
+
+    <!-- Instructions Overlay -->
+    <div class="map-overlay">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8 4v4m0 4h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <span>{{ _('Click markers to view site details') }}</span>
     </div>
   </div>
 {% endblock %}
@@ -147,29 +301,31 @@
           data: '{{ h.url_for("ckan_map.site_geojson") }}'
         });
 
-        // Add circle layer for sites
+        // Add circle layer for sites with CKAN theme colors
         map.addLayer({
           id: 'sites-points',
           type: 'circle',
           source: 'sites',
           paint: {
-            'circle-stroke-color': '#372AAC',
-            'circle-color': '#FFDF20',
-            'circle-stroke-width': 1.5,
-            'circle-radius': 6
+            'circle-stroke-color': '#d9534f',
+            'circle-color': '#ffffff',
+            'circle-stroke-width': 2.5,
+            'circle-radius': 7
           }
         });
 
         // Hover popup
         const hoverPopup = new maplibregl.Popup({
           closeButton: false,
-          closeOnClick: false
+          closeOnClick: false,
+          offset: 15
         });
 
         // Click popup
         const clickPopup = new maplibregl.Popup({
           closeButton: true,
-          closeOnClick: true
+          closeOnClick: true,
+          offset: 15
         });
 
         // Mouse enter handler
@@ -184,7 +340,7 @@
 
           hoverPopup
             .setLngLat(coordinates)
-            .setHTML('<div style="font-weight: bold;">' + title + '</div>')
+            .setHTML('<div style="font-weight: 600; color: #000;">' + title + '</div>')
             .addTo(map);
         });
 
@@ -200,7 +356,7 @@
           visualizePitch: true,
           showZoom: true,
           showCompass: true
-        }));
+        }), 'bottom-right');
 
         // Click handler
         map.on('click', 'sites-points', (e) => {
@@ -216,8 +372,10 @@
             .setHTML(
               '<article>' +
                 '<h3>' + props.title + '</h3>' +
-                '<a href="' + props.url + '" target="_blank" rel="noopener">{{ _("Visit Site") }}</a>' +
-                '<a href="' + props.catalog_url + '" target="_blank" rel="noopener">{{ _("Catalog Listing") }}</a>' +
+                '<div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 12px;">' +
+                  '<a href="' + props.url + '" target="_blank" rel="noopener">{{ _("Visit Site") }}</a>' +
+                  '<a href="' + props.catalog_url + '" class="secondary" target="_blank" rel="noopener">{{ _("View Listing") }}</a>' +
+                '</div>' +
                 '<div class="description">' + (props.description || '{{ _("No description available.") }}') + '</div>' +
               '</article>'
             )

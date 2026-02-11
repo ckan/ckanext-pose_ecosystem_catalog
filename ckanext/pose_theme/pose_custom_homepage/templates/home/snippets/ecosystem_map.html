@@ -1,6 +1,6 @@
 <section class="main-browse section ecosystem-map-section">
   <div class="module-content">
-    <div class="container">
+    <div class="container map-heading-container">
       <h4 class="heading-explanation above-heading">
         Explore CKAN sites around the world.
       </h4>
@@ -9,38 +9,48 @@
           Ecosystem Map
         </a>
       </h2>
-      <div class="ecosystem-map-container">
-        <div id="homepage-map"></div>
-      </div>
+    </div>
+    <div class="ecosystem-map-container">
+      <div id="homepage-map"></div>
     </div>
   </div>
 </section>
 
 <link rel="stylesheet" href="{{ h.url_for_static('/ckan_map/css/maplibre-gl.css') }}">
+
 <style>
   .ecosystem-map-section {
-    padding: 3rem 0;
+    padding: 2rem 0 0 0;
   }
+
+  .map-heading-container {
+    padding-bottom: 1.5rem;
+  }
+
   .ecosystem-map-container {
     position: relative;
-    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
   }
+
   #homepage-map {
     width: 100%;
-    height: 450px;
+    height: 500px;
   }
+
   .maplibregl-popup-content {
     padding: 1rem;
     max-width: 280px;
   }
+
   .maplibregl-popup-content h3 {
     font-size: 1rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
     color: #1e1b4b;
   }
+
   .maplibregl-popup-content a {
     display: block;
     color: #4f46e5;
@@ -48,6 +58,7 @@
     margin-bottom: 0.25rem;
     font-weight: 500;
   }
+
   .maplibregl-popup-content .description {
     font-size: 0.8rem;
     color: #666;
@@ -62,8 +73,7 @@
 <script src="{{ h.url_for_static('/ckan_map/js/maplibre-gl.js') }}"></script>
 <script>
 (function() {
-  const maptilerKey = '{{ h.config.get("ckanext.pose_theme.maptiler_api_key", "") }}';
-
+  const maptilerKey = '{{ h.pose_theme_get_maptiler_api_key() }}';
   const map = new maplibregl.Map({
     container: 'homepage-map',
     style: 'https://api.maptiler.com/maps/dataviz/style.json?key=' + maptilerKey,
@@ -120,6 +130,7 @@
     });
 
     map.scrollZoom.disable();
+
     map.addControl(new maplibregl.NavigationControl({
       visualizePitch: true,
       showZoom: true,
@@ -138,10 +149,10 @@
         .setLngLat(coordinates)
         .setHTML(
           '<article>' +
-            '<h3>' + props.title + '</h3>' +
-            '<a href="' + props.url + '" target="_blank" rel="noopener">Visit Site</a>' +
-            '<a href="' + props.catalog_url + '" target="_blank" rel="noopener">Catalog Listing</a>' +
-            '<div class="description">' + (props.description || 'No description available.') + '</div>' +
+          '<h3>' + props.title + '</h3>' +
+          '<a href="' + props.url + '" target="_blank" rel="noopener">Visit Site</a>' +
+          '<a href="' + props.catalog_url + '" target="_blank" rel="noopener">Catalog Listing</a>' +
+          '<div class="description">' + (props.description || 'No description available.') + '</div>' +
           '</article>'
         )
         .addTo(map);

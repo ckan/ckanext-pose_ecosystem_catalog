@@ -55,6 +55,8 @@ class PoseThemePlugin(plugins.SingletonPlugin):
             'pose_theme_get_default_extent': helper.get_default_extent,
             'pose_theme_is_data_dict_active': helper.is_data_dict_active,
             'version': helper.version_builder,
+            'pose_theme_get_maptiler_api_key': helper.get_maptiler_api_key,
+
         }
 
     def get_commands(self):

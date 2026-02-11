@@ -386,3 +386,6 @@ def get_column_count():
 
 def is_activity_enabled():
     return 'activity' in config.get('ckan.plugins', '')
+
+def get_maptiler_api_key():
+   return config.get('ckanext.pose_theme.maptiler_api_key', '')
