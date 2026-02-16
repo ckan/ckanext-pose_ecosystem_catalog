@@ -71,7 +71,7 @@
   map.on('load', () => {
     map.addSource('sites', {
       type: 'geojson',
-      data: '{{ h.url_for_static("/ckan_map/data/sites.geojson") }}'
+      data: 'https://raw.githubusercontent.com/dathere/pose-ckanext-metadata/main/map-data/sites.geojson'
     });
 
     map.addLayer({
