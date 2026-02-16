@@ -289,85 +289,82 @@
       // Initialize map
       const map = new maplibregl.Map({
         container: 'ckan-map',
-        style: 'https://api.maptiler.com/maps/dataviz/style.json?key={{ maptiler_key }}',
+        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
         center: [0, 20],
         zoom: 1.5
       });
 
       map.on('load', () => {
-        // Add GeoJSON source
+        // Add GeoJSON source with clustering
         map.addSource('sites', {
           type: 'geojson',
-          data: 'https://raw.githubusercontent.com/dathere/pose-ckanext-metadata/main/map-data/sites.geojson'
+          data: 'https://raw.githubusercontent.com/dathere/pose-ckanext-metadata/main/map-data/sites.geojson',
+          cluster: true,
+          clusterMaxZoom: 14,
+          clusterRadius: 50
         });
 
-        // Add circle layer for sites with CKAN theme colors
+        // Cluster circles with step-based coloring
         map.addLayer({
-          id: 'sites-points',
+          id: 'clusters',
           type: 'circle',
           source: 'sites',
+          filter: ['has', 'point_count'],
           paint: {
-            'circle-stroke-color': '#d9534f',
-            'circle-color': '#ffffff',
-            'circle-stroke-width': 2.5,
-            'circle-radius': 7
+            'circle-color': [
+              'step', ['get', 'point_count'],
+              '#d9534f', 10,
+              '#fd7e14', 100,
+              '#101828'
+            ],
+            'circle-radius': 20
           }
         });
 
-        // Hover popup
-        const hoverPopup = new maplibregl.Popup({
-          closeButton: false,
-          closeOnClick: false,
-          offset: 15
+        // Cluster count labels
+        map.addLayer({
+          id: 'cluster-count',
+          type: 'symbol',
+          source: 'sites',
+          filter: ['has', 'point_count'],
+          layout: {
+            'text-field': '{point_count_abbreviated}',
+            'text-size': 12
+          }
         });
 
-        // Click popup
-        const clickPopup = new maplibregl.Popup({
-          closeButton: true,
-          closeOnClick: true,
-          offset: 15
+        // Unclustered individual points
+        map.addLayer({
+          id: 'unclustered-point',
+          type: 'circle',
+          source: 'sites',
+          filter: ['!', ['has', 'point_count']],
+          paint: {
+            'circle-color': '#d9534f',
+            'circle-radius': 4,
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#fff'
+          }
         });
 
-        // Mouse enter handler
-        map.on('mouseenter', 'sites-points', (e) => {
-          map.getCanvas().style.cursor = 'pointer';
-          const coordinates = e.features[0].geometry.coordinates.slice();
-          const title = e.features[0].properties.title;
+        // Zoom into cluster on click
+        map.on('click', 'clusters', async (e) => {
+          var features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+          var clusterId = features[0].properties.cluster_id;
+          var zoom = await map.getSource('sites').getClusterExpansionZoom(clusterId);
+          map.easeTo({ center: features[0].geometry.coordinates, zoom: zoom });
+        });
+
+        // Popup on individual point click
+        map.on('click', 'unclustered-point', (e) => {
+          var coordinates = e.features[0].geometry.coordinates.slice();
+          var props = e.features[0].properties;
 
           while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
             coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
           }
 
-          hoverPopup
-            .setLngLat(coordinates)
-            .setHTML('<div style="font-weight: 600; color: #000;">' + title + '</div>')
-            .addTo(map);
-        });
-
-        // Mouse leave handler
-        map.on('mouseleave', 'sites-points', () => {
-          map.getCanvas().style.cursor = '';
-          hoverPopup.remove();
-        });
-
-        // Disable scroll zoom, add navigation controls
-        map.scrollZoom.disable();
-        map.addControl(new maplibregl.NavigationControl({
-          visualizePitch: true,
-          showZoom: true,
-          showCompass: true
-        }), 'bottom-right');
-
-        // Click handler
-        map.on('click', 'sites-points', (e) => {
-          const coordinates = e.features[0].geometry.coordinates.slice();
-          const props = e.features[0].properties;
-
-          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-          }
-
-          clickPopup
+          new maplibregl.Popup({ offset: 15 })
             .setLngLat(coordinates)
             .setHTML(
               '<article>' +
@@ -381,6 +378,20 @@
             )
             .addTo(map);
         });
+
+        // Cursor handlers
+        map.on('mouseenter', 'clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
+        map.on('mouseleave', 'clusters', () => { map.getCanvas().style.cursor = ''; });
+        map.on('mouseenter', 'unclustered-point', () => { map.getCanvas().style.cursor = 'pointer'; });
+        map.on('mouseleave', 'unclustered-point', () => { map.getCanvas().style.cursor = ''; });
+
+        // Disable scroll zoom, add navigation controls
+        map.scrollZoom.disable();
+        map.addControl(new maplibregl.NavigationControl({
+          visualizePitch: true,
+          showZoom: true,
+          showCompass: true
+        }), 'bottom-right');
       });
     })();
   </script>
