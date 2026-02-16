@@ -274,7 +274,7 @@
   <script>
     (function() {
       // Fetch stats
-      fetch('{{ h.url_for("ckan_map.catalog_stats") }}')
+      fetch('{{ h.url_for_static("/ckan_map/data/stats.json") }}')
         .then(response => response.json())
         .then(data => {
           if (data.sites) {
@@ -298,7 +298,7 @@
         // Add GeoJSON source
         map.addSource('sites', {
           type: 'geojson',
-          data: '{{ h.url_for("ckan_map.site_geojson") }}'
+          data: '{{ h.url_for_static("/ckan_map/data/sites.geojson") }}'
         });
 
         // Add circle layer for sites with CKAN theme colors
