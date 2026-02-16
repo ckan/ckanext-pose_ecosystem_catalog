@@ -313,11 +313,12 @@
           paint: {
             'circle-color': [
               'step', ['get', 'point_count'],
-              '#d9534f', 10,
-              '#fd7e14', 100,
-              '#101828'
+              '#abc1d7', 10,
+              '#eae735', 100,
+              '#ed5248'
             ],
-            'circle-radius': 20
+            'circle-radius': 20,
+            'circle-opacity': 0.6
           }
         });
 
@@ -340,10 +341,11 @@
           source: 'sites',
           filter: ['!', ['has', 'point_count']],
           paint: {
-            'circle-color': '#d9534f',
+            'circle-color': '#ed5248',
             'circle-radius': 4,
             'circle-stroke-width': 1,
-            'circle-stroke-color': '#fff'
+            'circle-stroke-color': '#ed5248',
+            'circle-opacity': 0.6
           }
         });
 
