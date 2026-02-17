@@ -269,7 +269,7 @@ dataset_fields:
   validators: ignore_missing int_validator
   form_placeholder: "e.g. 42"
   form_snippet: null
-  help_text: "Total number of organizations in this CKAN instance"
+  help_text: "Total numchoicesber of organizations in this CKAN instance"
 
 - field_name: num_groups
   label: Number of Groups

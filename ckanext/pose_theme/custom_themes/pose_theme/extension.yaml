@@ -177,7 +177,7 @@ dataset_fields:
   validators: ignore_missing int_validator
   form_placeholder: Number of GitHub stars
   form_snippet: null
-
+  validators: ignore_missing
   help_text: Number of stars the repository has received on GitHub
 
 - field_name: last_update
@@ -213,6 +213,7 @@ dataset_fields:
   form_snippet: markdown.html
   validators: ignore_missing
   help_text: Additional information about contributors and their contributions
+  form_snippet: null
 
 
 - field_name: license
