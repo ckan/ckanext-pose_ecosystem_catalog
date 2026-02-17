@@ -337,6 +337,9 @@ section.featured-charts-wrap h2 a {
     padding: 4rem 2rem;
   }
 }
+.ecosystem-map-section .module-content {
+  padding: 0;
+}
 
 .row.wrapper .primary .media-grid {
   background: #ffffff !important;
