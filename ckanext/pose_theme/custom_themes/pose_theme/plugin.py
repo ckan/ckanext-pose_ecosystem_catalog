@@ -40,7 +40,9 @@ class PoseThemePlugin(plugins.SingletonPlugin):
         ignore_not_sysadmin = toolkit.get_validator('ignore_not_sysadmin')
         schema.update({
             # This is a custom configuration option
-            'contact_form_legend_content': [ignore_missing, ignore_not_sysadmin]
+            'contact_form_legend_content': [ignore_missing, ignore_not_sysadmin],
+            # MapTiler API key for the CKAN ecosystem map
+            'ckanext.pose_theme.maptiler_api_key': [ignore_missing, ignore_not_sysadmin],
         })
         return schema
 
@@ -52,6 +54,8 @@ class PoseThemePlugin(plugins.SingletonPlugin):
             'pose_theme_get_default_extent': helper.get_default_extent,
             'pose_theme_is_data_dict_active': helper.is_data_dict_active,
             'version': helper.version_builder,
+            'pose_theme_get_maptiler_api_key': helper.get_maptiler_api_key,
+
         }
 
     def get_commands(self):
@@ -59,7 +63,7 @@ class PoseThemePlugin(plugins.SingletonPlugin):
 
     # IBlueprint
     def get_blueprint(self):
-        # Combine both blueprint lists
+        # Combine all blueprint lists
         blueprints = view.get_blueprints()
         blueprints.extend(contact.get_blueprints())
         return blueprints

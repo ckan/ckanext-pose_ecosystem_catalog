@@ -1,0 +1,9 @@
+{% ckan_extends %}
+
+
+{% block head_extras %}
+ {{ super() }}
+ {% if request.args.get('tags') %}
+   <meta name="robots" content="noindex, nofollow">
+ {% endif %}
+{% endblock %}
