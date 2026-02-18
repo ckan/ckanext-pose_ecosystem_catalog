@@ -2,6 +2,13 @@
   <div class="module-content">
     <div class="ecosystem-map-container">
       <div id="homepage-map"></div>
+      <div class="map-search-container">
+        <div class="map-search-input-wrapper">
+          <svg class="map-search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="map-search-input" placeholder="Search portals..." autocomplete="off" />
+        </div>
+        <ul id="map-search-results" class="map-search-results"></ul>
+      </div>
     </div>
   </div>
 </section>
@@ -26,6 +33,100 @@
   #homepage-map {
     width: 100%;
     height: 700px;
+  }
+
+  .map-search-container {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+    width: 220px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  .map-search-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    padding: 0 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+
+  .map-search-input-wrapper:focus-within {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
+
+  .map-search-icon {
+    color: #888;
+    flex-shrink: 0;
+  }
+
+  #map-search-input {
+    border: none;
+    background: transparent;
+    outline: none;
+    padding: 6px 6px;
+    font-size: 13px;
+    width: 100%;
+    color: #333;
+  }
+
+  #map-search-input::placeholder {
+    color: #aaa;
+  }
+
+  .map-search-results {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    display: none;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  .map-search-results.active {
+    display: block;
+  }
+
+  .map-search-results li {
+    padding: 6px 10px;
+    font-size: 13px;
+    color: #333;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .map-search-results li:last-child {
+    border-bottom: none;
+  }
+
+  .map-search-results li:hover,
+  .map-search-results li.active {
+    background: rgba(79, 70, 229, 0.08);
+    color: #4f46e5;
+  }
+
+  .map-search-results .no-results {
+    color: #999;
+    cursor: default;
+    font-style: italic;
+  }
+
+  .map-search-results .no-results:hover {
+    background: none;
+    color: #999;
   }
 
   .maplibregl-popup-content {
@@ -158,6 +259,111 @@
     map.on('mouseleave', 'clusters', () => { map.getCanvas().style.cursor = ''; });
     map.on('mouseenter', 'unclustered-point', () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'unclustered-point', () => { map.getCanvas().style.cursor = ''; });
+
+    // Search functionality
+    var searchInput = document.getElementById('map-search-input');
+    var searchResults = document.getElementById('map-search-results');
+    var allFeatures = [];
+    var activeIndex = -1;
+
+    // Fetch GeoJSON features for search
+    fetch('https://raw.githubusercontent.com/dathere/pose-ckanext-metadata/main/map-data/sites.geojson')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        allFeatures = (data.features || []).filter(function(f) {
+          return f.geometry && f.properties && f.properties.title;
+        });
+      });
+
+    function showResults(items) {
+      searchResults.innerHTML = '';
+      activeIndex = -1;
+      if (items.length === 0) {
+        searchResults.innerHTML = '<li class="no-results">No portals found</li>';
+        searchResults.classList.add('active');
+        return;
+      }
+      items.slice(0, 8).forEach(function(feature, i) {
+        var li = document.createElement('li');
+        li.textContent = feature.properties.title;
+        li.addEventListener('click', function() { selectFeature(feature); });
+        searchResults.appendChild(li);
+      });
+      searchResults.classList.add('active');
+    }
+
+    function hideResults() {
+      searchResults.classList.remove('active');
+      activeIndex = -1;
+    }
+
+    function selectFeature(feature) {
+      var coords = feature.geometry.coordinates;
+      var props = feature.properties;
+
+      map.flyTo({ center: coords, zoom: 8, duration: 1500 });
+
+      // Remove existing popups
+      var existing = document.querySelectorAll('.maplibregl-popup');
+      existing.forEach(function(el) { el.remove(); });
+
+      // Wait for fly animation to mostly complete, then show popup
+      setTimeout(function() {
+        new maplibregl.Popup()
+          .setLngLat(coords)
+          .setHTML(
+            '<article>' +
+            '<h3>' + props.title + '</h3>' +
+            '<a href="' + props.url + '" target="_blank" rel="noopener">Visit Site</a>' +
+            '<a href="' + props.catalog_url + '" target="_blank" rel="noopener">Catalog Listing</a>' +
+            '<div class="description">' + (props.description || 'No description available.') + '</div>' +
+            '</article>'
+          )
+          .addTo(map);
+      }, 1200);
+
+      searchInput.value = '';
+      hideResults();
+    }
+
+    searchInput.addEventListener('input', function() {
+      var query = this.value.trim().toLowerCase();
+      if (!query) { hideResults(); return; }
+      var matches = allFeatures.filter(function(f) {
+        return f.properties.title.toLowerCase().indexOf(query) !== -1;
+      });
+      showResults(matches);
+    });
+
+    searchInput.addEventListener('keydown', function(e) {
+      var items = searchResults.querySelectorAll('li:not(.no-results)');
+      if (!items.length) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIndex = Math.min(activeIndex + 1, items.length - 1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIndex = Math.max(activeIndex - 1, 0);
+      } else if (e.key === 'Enter' && activeIndex >= 0) {
+        e.preventDefault();
+        items[activeIndex].click();
+        return;
+      } else if (e.key === 'Escape') {
+        hideResults();
+        searchInput.blur();
+        return;
+      } else {
+        return;
+      }
+      items.forEach(function(li) { li.classList.remove('active'); });
+      items[activeIndex].classList.add('active');
+      items[activeIndex].scrollIntoView({ block: 'nearest' });
+    });
+
+    // Hide results when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.map-search-container')) hideResults();
+    });
 
     map.scrollZoom.disable();
     map.addControl(new maplibregl.NavigationControl({
