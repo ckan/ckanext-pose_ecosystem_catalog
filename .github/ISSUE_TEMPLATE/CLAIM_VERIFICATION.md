@@ -1,3 +1,11 @@
+---
+name: Claim Verification
+about: Claim ownership of an existing CKAN site or extension in our catalog
+title: "[CLAIM] "
+labels: claim-verification
+assignees: ''
+---
+
 ## Claim Your Listing
 
 Claim ownership of an existing CKAN site or extension in our catalog.
