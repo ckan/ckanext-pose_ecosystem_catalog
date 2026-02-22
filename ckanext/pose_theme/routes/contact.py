@@ -6,15 +6,7 @@ contact_blueprint = Blueprint('pose_contact', __name__)
 
 @contact_blueprint.route('/contact', methods=['GET', 'POST'])
 def form():
-    """General contact form - restricted to logged-in users."""
-    
-    # Check if user is logged in
-    if not toolkit.current_user.is_authenticated:
-        toolkit.h.flash_error(toolkit._('You must be logged in to access the contact form.'))
-        # Redirect to login page with return URL
-        return toolkit.redirect_to('user.login', came_from=toolkit.request.url)
-    
-    # User is authenticated, proceed with form handling
+    """General contact form."""
     if request.method == 'POST':
         result = _helpers.submit()
         if result['success']:
