@@ -286,7 +286,7 @@
         </div>
           {% if pkg.tags %}
             {% block package_tags %}
-                    {% snippet "package/snippets/tags.html", tags=pkg.tags %}
+                    {% snippet "site/snippets/tags.html", type=pkg.type, tags=pkg.tags %}
             {% endblock %}
           {% endif %}
     </div>
