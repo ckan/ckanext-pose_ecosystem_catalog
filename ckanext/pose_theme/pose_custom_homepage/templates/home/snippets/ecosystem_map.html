@@ -189,11 +189,11 @@
         'circle-color': [
           'step', ['get', 'point_count'],
           '#abc1d7', 10,
-          '#eae735', 100,
+          '#eae735', 80,
           '#ed5248'
         ],
         'circle-radius': 20,
-        'circle-opacity': 0.6
+        'circle-opacity': 0.8
       }
     });
 
@@ -216,11 +216,24 @@
       source: 'sites',
       filter: ['!', ['has', 'point_count']],
       paint: {
-        'circle-color': '#ed5248',
+        'circle-color': '#5570cc',
         'circle-radius': 4,
-        'circle-stroke-width': 1,
-        'circle-stroke-color': '#fff',
-        'circle-opacity': 0.4
+        'circle-stroke-width': 0,
+        'circle-stroke-color': '#ed5248',
+        'circle-opacity': 1
+      }
+    });
+
+    // Transparent larger hit area for easier clicking
+    map.addLayer({
+      id: 'unclustered-point-hitarea',
+      type: 'circle',
+      source: 'sites',
+      filter: ['!', ['has', 'point_count']],
+      paint: {
+        'circle-color': 'transparent',
+        'circle-radius': 12,
+        'circle-opacity': 0
       }
     });
 
@@ -233,7 +246,7 @@
     });
 
     // Popup on individual point click
-    map.on('click', 'unclustered-point', (e) => {
+    map.on('click', 'unclustered-point-hitarea', (e) => {
       var coordinates = e.features[0].geometry.coordinates.slice();
       var props = e.features[0].properties;
 
@@ -257,8 +270,8 @@
     // Cursor handlers
     map.on('mouseenter', 'clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'clusters', () => { map.getCanvas().style.cursor = ''; });
-    map.on('mouseenter', 'unclustered-point', () => { map.getCanvas().style.cursor = 'pointer'; });
-    map.on('mouseleave', 'unclustered-point', () => { map.getCanvas().style.cursor = ''; });
+    map.on('mouseenter', 'unclustered-point-hitarea', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'unclustered-point-hitarea', () => { map.getCanvas().style.cursor = ''; });
 
     // Search functionality
     var searchInput = document.getElementById('map-search-input');
