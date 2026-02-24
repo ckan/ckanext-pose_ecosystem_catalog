@@ -55,3 +55,4 @@ cypress.env.json
 
 # cypress
 cypress/videos
+ckanext/pose_theme/custom_themes/pose_theme/templates/scheming/package/read_extension.html
