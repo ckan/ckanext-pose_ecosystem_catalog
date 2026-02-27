@@ -65,7 +65,7 @@ dataset_fields:
 
 - field_name: url
   label: GitHub Repository URL
-  validators: url_validator ignore_missing
+  validators: url_validator
   form_placeholder: Enter the GitHub repository URL
   help_text: Link to the extension's GitHub repository
 
