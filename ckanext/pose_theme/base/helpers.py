@@ -389,3 +389,34 @@ def is_activity_enabled():
 
 def get_maptiler_api_key():
    return config.get('ckanext.pose_theme.maptiler_api_key', '')
+
+
+EXCLUDED_EDITORS = {'ckan_bot'}
+
+
+def get_latest_editor(package_id):
+    """Return info about the most recent human editor of a package, skipping bot users."""
+    try:
+        activities = toolkit.get_action('package_activity_list')(
+            {'ignore_auth': True},
+            {'id': package_id, 'limit': 25}
+        )
+        for activity in activities:
+            user_id = activity.get('user_id')
+            if not user_id:
+                continue
+            user = toolkit.get_action('user_show')(
+                {'ignore_auth': True},
+                {'id': user_id, 'include_datasets': False}
+            )
+            if user.get('name') in EXCLUDED_EDITORS:
+                continue
+            return {
+                'name': user.get('display_name') or user.get('fullname') or user.get('name'),
+                'username': user.get('name'),
+                'timestamp': activity.get('timestamp'),
+                'activity_type': activity.get('activity_type', ''),
+            }
+    except Exception:
+        logger.debug("[pose_theme] Error getting latest editor for package %s", package_id)
+    return None

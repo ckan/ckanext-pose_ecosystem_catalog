@@ -69,6 +69,17 @@
                 {% endif %}
             {% endblock %}
         </h1>
+        {% set latest_editor = h.get_latest_editor(pkg.id) %}
+        {% if latest_editor %}
+          <p class="text-muted" style="font-size:0.9em;">
+            <i class="fa fa-user"></i>
+            {{ _('Last edited by') }}
+            <strong>{{ latest_editor.name }}</strong>
+            {% if latest_editor.timestamp %}
+              &ndash; {{ h.time_ago_from_timestamp(latest_editor.timestamp) }}
+            {% endif %}
+          </p>
+        {% endif %}
         {% block package_notes %}
         {% if pkg.detailed_info %}
           <div class="notes embedded-content ckanext-extension-notes">

@@ -227,7 +227,7 @@
 
 {% block primary_content_inner %}
     <div class="app-site-container">
-        <div class="app-site-header">
+        <div class="app-site-header" style="margin-top: 70px;">
             <h1 class="app-site-title">
                 {{ name }}
                 {% if pkg.private %}
@@ -240,6 +240,17 @@
                     <span class="label label-info">[{{ _('Draft') }}]</span>
                 {% endif %}
             </h1>
+            {% set latest_editor = h.get_latest_editor(pkg.id) %}
+            {% if latest_editor %}
+              <p class="text-muted" style="font-size:0.9em;">
+                <i class="fa fa-user"></i>
+                {{ _('Last edited by') }}
+                <strong>{{ latest_editor.name }}</strong>
+                {% if latest_editor.timestamp %}
+                  &ndash; {{ h.time_ago_from_timestamp(latest_editor.timestamp) }}
+                {% endif %}
+              </p>
+            {% endif %}
             
           <div class="actions">
               {% if h.check_access('package_update', {'id':pkg.id }) %}

@@ -55,7 +55,7 @@ class PoseThemePlugin(plugins.SingletonPlugin):
             'pose_theme_is_data_dict_active': helper.is_data_dict_active,
             'version': helper.version_builder,
             'pose_theme_get_maptiler_api_key': helper.get_maptiler_api_key,
-
+            'get_latest_editor': helper.get_latest_editor,
         }
 
     def get_commands(self):
