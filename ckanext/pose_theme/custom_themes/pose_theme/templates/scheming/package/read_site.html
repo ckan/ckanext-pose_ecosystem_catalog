@@ -302,6 +302,13 @@
           {% endif %}
     </div>
 
+    {% if pkg.resources %}
+    <section class="resources">
+        {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources,
+            can_edit=h.check_access('package_update', {'id':pkg.id }) %}
+    </section>
+    {% endif %}
+
     <section class="additional-info">
             {% block package_additional_info %}
             {% snippet "scheming/package/snippets/additional_info.html",
@@ -310,13 +317,6 @@
               {% block package_search_results_list %}
               {% endblock %}
     </section>
-
-    {% if pkg.resources %}
-    <section class="resources">
-        {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources,
-            can_edit=h.check_access('package_update', {'id':pkg.id }) %}
-    </section>
-    {% endif %}
 
 
 {% endblock %}
