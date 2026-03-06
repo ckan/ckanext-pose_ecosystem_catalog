@@ -311,8 +311,8 @@
 
     <section class="additional-info">
             {% block package_additional_info %}
-            {% snippet "scheming/package/snippets/additional_info.html",
-              pkg_dict=pkg, dataset_type=extesnion, schema=schema %}
+            {% snippet "scheming/package/additional_info.html",
+              pkg_dict=pkg, dataset_type=dataset_type, schema=schema %}
           {% endblock %}
               {% block package_search_results_list %}
               {% endblock %}

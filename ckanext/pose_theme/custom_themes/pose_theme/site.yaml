@@ -289,6 +289,14 @@ dataset_fields:
       label: No
   help_text: Indicates whether the extension is marked as featured
   form_snippet: null
+  display_snippet: null
+
+- field_name: sotm_month
+  label: Site of the Month
+  validators: ignore_missing
+  form_placeholder: "e.g. 2026-03"
+  help_text: "Set to YYYY-MM (e.g. 2026-03) to feature this site as Site of the Month for that month. Only one site should have a given month value."
+  form_snippet: null
 
 - field_name: topic_id
   label: Topic ID

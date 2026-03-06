@@ -3,6 +3,7 @@ import bleach
 import logging
 import re
 import string
+from datetime import datetime
 
 import ckan.model as model
 
@@ -155,6 +156,23 @@ def featured_sites(num=6):
         
     
     return featured_site_list[:num]  
+
+def site_of_month():
+    """Return the site designated as Site of the Month for the current month."""
+    current_month = datetime.utcnow().strftime('%Y-%m')
+    try:
+        search_result = toolkit.get_action('package_search')({}, {
+            'q': 'type:site',
+            'fq': f'extras_sotm_month:{current_month}',
+            'rows': 1,
+            'start': 0
+        })
+        if search_result and search_result.get('results'):
+            return search_result['results'][0]
+    except Exception as e:
+        logger.error(f"[pose_theme] Error getting site of the month: {str(e)}", exc_info=True)
+    return None
+
 
 def recent_extensions(num=6):
     """Return a list of recently updated/created extension datasets."""
