@@ -74,7 +74,7 @@
           <p class="text-muted" style="font-size:0.9em;">
             <i class="fa fa-user"></i>
             {{ _('Last edited by') }}
-            <strong>{{ latest_editor.name }}</strong>
+            <strong><a href="https://ecosystem.ckan.org/user/{{ latest_editor.username }}" target="_blank" rel="noopener noreferrer">{{ latest_editor.name }}</a></strong>
             {% if latest_editor.timestamp %}
               &ndash; {{ h.time_ago_from_timestamp(latest_editor.timestamp) }}
             {% endif %}

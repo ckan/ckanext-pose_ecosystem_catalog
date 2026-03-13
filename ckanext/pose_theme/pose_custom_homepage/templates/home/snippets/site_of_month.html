@@ -8,7 +8,9 @@
       <h4 class="heading-explanation above-heading">
         <i class="fa fa-trophy"></i> {{ _('Highlighted this month') }}
       </h4>
-      <h2 class="heading">{{ _('Site of the Month') }}</h2>
+      <h2 class="heading">
+        <a href="https://ecosystem.ckan.org/dataset?q=type:site+extras_sotm_month:[*+TO+*]&sort=extras_sotm_month+desc">{{ _('Site of the Month') }}</a>
+      </h2>
 
       <div class="sotm-layout">
 
@@ -93,6 +95,16 @@
   font-weight: 700;
   margin: 0 0 2.5rem 0;
   color: #000;
+}
+
+.site-of-month .heading a {
+  color: #000;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.site-of-month .heading a:hover {
+  color: #d9534f;
 }
 
 .sotm-layout {

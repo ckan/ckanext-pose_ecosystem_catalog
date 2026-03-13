@@ -409,7 +409,7 @@ def get_maptiler_api_key():
    return config.get('ckanext.pose_theme.maptiler_api_key', '')
 
 
-EXCLUDED_EDITORS = {'ckan_bot'}
+EXCLUDED_EDITORS = {'ckan_bot', 'a5dur'}
 
 
 def get_latest_editor(package_id):
