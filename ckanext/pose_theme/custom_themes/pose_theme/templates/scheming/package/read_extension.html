@@ -81,11 +81,24 @@
           </p>
         {% endif %}
         {% block package_notes %}
-        {% if pkg.detailed_info %}
+          {% if pkg.description_source %}
+          <div class="ckanext-extension-description-source">
+            {% if pkg.description_source == 'ai_generated' %}
+            <span class="label label-default" title="{{ _('This description was generated automatically and has not yet been reviewed by the extension maintainer') }}">
+              <i class="fa fa-magic"></i> {{ _('AI-generated description') }}
+            </span>
+            {% elif pkg.description_source == 'maintainer_curated' %}
+            <span class="label label-success" title="{{ _('This description has been curated by the extension maintainer') }}">
+              <i class="fa fa-check-circle"></i> {{ _('Maintainer-curated') }}
+            </span>
+            {% endif %}
+          </div>
+          {% endif %}
+          {% if pkg.detailed_info %}
           <div class="notes embedded-content ckanext-extension-notes">
             {{ h.render_markdown(pkg.detailed_info) }}
           </div>
-        {% endif %}
+          {% endif %}
       {% endblock %}
 
 
@@ -165,6 +178,15 @@
             width: 16px;
             text-align: center;
             color: #555;
+        }
+        .ckanext-extension-description-source {
+            margin-top: 8px;
+        }
+        .ckanext-extension-description-source .label {
+            font-size: 11px;
+            font-weight: normal;
+            letter-spacing: 0.02em;
+            padding: 3px 7px;
         }
         .module-github-stats .github-stats-error {
             color: #999;

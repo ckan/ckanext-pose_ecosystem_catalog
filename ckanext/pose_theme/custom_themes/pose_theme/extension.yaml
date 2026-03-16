@@ -12,7 +12,7 @@ dataset_fields:
 - field_name: name
   label: URL
   preset: dataset_slug
-  form_placeholder: eg. a-descriptive-title
+  form_placeholder: eg. URL slug (automatically generated from title, but can be edited)
 
 - field_name: owner_org
   label: Organization
@@ -29,7 +29,9 @@ dataset_fields:
   label: Description
   required: True
   form_snippet: markdown.html
-  form_placeholder: eg. Some useful notes about the data
+  form_placeholder: Enter a one-sentence summary...
+  help_text: This appears in search results and list views. Keep it brief (under 160 characters) so users can scan quickly.
+ # form_placeholder: A 1-sentence summary for the search results page. Keep it brief to help users scan quickly.
 
 # - field_name: group
 #   label: Categories
@@ -47,7 +49,6 @@ dataset_fields:
   label: Maintainer Name
   form_placeholder: Enter the maintainer name
   validators: ignore_missing
-  required: True
   help_text: Point of contact name for data steward.
 
 - field_name: contact_email
@@ -60,12 +61,13 @@ dataset_fields:
   label: Detailed Description
   validators: ignore_missing
   preset: markdown
-  form_placeholder: Provide a comprehensive description of the extension and its functionality
-  help_text: Elaborate on the extension's features, use cases, and technical details
+  form_placeholder: Describe features, installation steps, and technical details here...
+  help_text: This appears on the main dataset page. Use this space for full documentation, Markdown formatting, and in-depth context.
 
 - field_name: url
   label: GitHub Repository URL
   validators: url_validator
+  required: True
   form_placeholder: Enter the GitHub repository URL
   help_text: Link to the extension's GitHub repository
 
@@ -250,20 +252,51 @@ dataset_fields:
       label: Yes
     - value: False
       label: No
-  help_text: Indicates whether the extension repository discussion tab is enabled 
+  help_text: Indicates whether the extension repository discussion tab is enabled
+
+- field_name: description_source
+  label: Description Source
+  preset: select
+  validators: ignore_missing
+  display_snippet: null
+  form_include_blank_choice: true
+  choices:
+    - value: ai_generated
+      label: AI-generated
+    - value: maintainer_curated
+      label: Maintainer-curated
+  help_text: "Indicates how the detailed description was created. Set automatically to 'AI-generated' on harvest; update to 'Maintainer-curated' once you have reviewed or rewritten it."
+
+- field_name: auto_harvest
+  label: Enable Auto-harvest
+  preset: select
+  validators: ignore_missing
+  choices:
+    - value: TRUE
+      label: Yes
+    - value: FALSE
+      label: No
+  help_text: Whether this extension's metadata should be automatically updated from its GitHub repository
 
 resource_fields:
 
 - field_name: url
-  label: Screenshot
+  label: URL
   preset: resource_url_upload
-  validators: ignore_missing
-  form_placeholder: http://example.com/my-application-screenshot.jpg
-  upload_label: Photo
   required: false
+  validators: ignore_missing unicode_safe
 
 - field_name: name
-  label: Caption
-  validators: ignore_missing
-  form_placeholder: eg. Description of application screenshot
+  label: Name
   required: false
+  validators: ignore_missing unicode_safe
+
+- field_name: description
+  label: Description
+  required: false
+  validators: ignore_missing unicode_safe
+
+- field_name: format
+  label: Format
+  required: false
+  preset: resource_format_autocomplete

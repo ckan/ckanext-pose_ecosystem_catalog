@@ -1,0 +1,58 @@
+# ckan-ecosystem.yaml
+#
+# Drop this file in the root of your GitHub repository to control how your
+# extension appears in the CKAN Ecosystem Catalog (https://ecosystem.ckan.org).
+#
+# The presence of this file marks your listing as maintainer-curated.
+# Fields you omit will be populated automatically from your GitHub repository.
+# Fields you provide here always take precedence over auto-harvested values.
+#
+# Rename this file to "ckan-ecosystem.yaml" in your own repository.
+# -----------------------------------------------------------------------
+
+
+# Short plain-text description shown in search results and cards.
+description: A CKAN extension that does X.
+
+
+# Detailed description rendered as Markdown on the extension page.
+# This is the main place to explain features, usage, and examples.
+detailed_info: |
+  ## Overview
+  Describe what the extension does and why it exists.
+
+  ## Features
+  - Feature one
+  - Feature two
+
+  ## Usage
+  ```ini
+  ckan.plugins = my_extension
+  ```
+
+
+# Primary category for this extension.
+# Accepted values:
+#   theme, dataset_type, harvester, visualization, data_utility,
+#   api, workflow, validation, authentication, storage, federation,
+#   general, metadata
+extension_type: general
+
+
+# CKAN versions this extension is compatible with.
+ckan_versions:
+  - "2.10"
+  - "2.11"
+
+
+# Maintainer contact details.
+# Defaults to the repository owner's GitHub profile if omitted.
+contact_name: Jane Doe
+contact_email: jane@example.com
+
+
+# Tags shown on the extension page and used in search.
+# Keep these concise and relevant (e.g. harvesting, spatial, oauth).
+tags:
+  - example
+  - metadata
