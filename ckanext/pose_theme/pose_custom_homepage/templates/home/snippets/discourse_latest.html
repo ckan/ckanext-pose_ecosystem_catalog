@@ -1,0 +1,177 @@
+{% set forum_url = h.pose_theme_get_discourse_url() %}
+{% set topics = h.pose_theme_get_discourse_latest(3) %}
+<section class="main-browse section global-datasets discourse-latest">
+  <div class="module-content">
+    <div class="container">
+
+      <div class="discourse-header">
+        <div class="discourse-title-group">
+          <h4 class="heading-explanation above-heading">Community forum</h4>
+          <h2 class="heading">Latest Discussions</h2>
+        </div>
+        <a href="{{ forum_url }}" class="btn btn-default discourse-view-all" target="_blank" rel="noopener noreferrer">
+          View all discussions &nbsp;<i class="fa fa-external-link"></i>
+        </a>
+      </div>
+
+      {% if topics %}
+        <ul class="discourse-topics-list">
+          {% for topic in topics %}
+            <li class="discourse-topic-item">
+              <span class="discourse-topic-icon">
+                {% if topic.avatar_url %}
+                  <img src="{{ topic.avatar_url }}" alt="{{ topic.last_poster }}'s avatar" class="discourse-avatar">
+                {% else %}
+                  <i class="fa fa-user"></i>
+                {% endif %}
+              </span>
+              <div class="discourse-topic-body">
+                <a class="discourse-topic-title" href="{{ topic.url }}" target="_blank" rel="noopener noreferrer">
+                  {{ topic.title }}
+                </a>
+                <div class="discourse-topic-meta">
+                  <span class="discourse-topic-replies">
+                    <i class="fa fa-comment-o"></i>
+                    {{ topic.reply_count }} {{ 'reply' if topic.reply_count == 1 else 'replies' }}
+                  </span>
+                  {% if topic.relative_time %}
+                    <span class="discourse-topic-time">
+                      <i class="fa fa-clock-o"></i> {{ topic.relative_time }}
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="discourse-empty">
+          No recent discussions found.
+          <a href="{{ forum_url }}" target="_blank" rel="noopener noreferrer">Visit the forum directly.</a>
+        </p>
+      {% endif %}
+
+    </div>
+  </div>
+</section>
+
+<style>
+/* ── Section background & spacing ───────────────────────────── */
+.discourse-latest {
+  background-color: #ffffff;
+}
+.discourse-latest .container {
+  padding-left: 7rem;
+  padding-right: 7rem;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+@media (max-width: 992px) {
+  .discourse-latest .container {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+}
+@media (max-width: 768px) {
+  .discourse-latest .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* ── Header row ─────────────────────────────────────────────── */
+.discourse-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.discourse-title-group {
+  display: flex;
+  flex-direction: column;
+}
+.discourse-latest .heading {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #000;
+}
+
+/* ── Topic list ─────────────────────────────────────────────── */
+.discourse-topics-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.discourse-topic-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+.discourse-topic-item:last-child {
+  border-bottom: none;
+}
+.discourse-topic-icon {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: #fff;
+  background-color: #0089d1;
+  margin-top: 0.15rem;
+  overflow: hidden;
+}
+.discourse-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+.discourse-topic-body {
+  flex: 1;
+  min-width: 0;
+}
+.discourse-topic-title {
+  display: block;
+  font-weight: 600;
+  font-size: 0.97rem;
+  color: #222;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s ease;
+}
+.discourse-topic-title:hover {
+  color: #d9534f;
+  text-decoration: none;
+}
+.discourse-topic-meta {
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ── Empty state ────────────────────────────────────────────── */
+.discourse-empty {
+  color: #777;
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+}
+
+/* ── CTA button ─────────────────────────────────────────────── */
+.discourse-view-all {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+</style>

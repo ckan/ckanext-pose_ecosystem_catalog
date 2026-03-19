@@ -1,9 +1,12 @@
 import ast
 import bleach
+import json
 import logging
 import re
 import string
-from datetime import datetime
+import threading
+import time
+from datetime import datetime, timezone
 
 import ckan.model as model
 
@@ -407,6 +410,98 @@ def is_activity_enabled():
 
 def get_maptiler_api_key():
    return config.get('ckanext.pose_theme.maptiler_api_key', '')
+
+
+def get_discourse_url():
+    url = (
+        config.get('ckanext.pose_theme.discourse_url')
+        or config.get('discourse.url')
+        or 'https://community.civicdataecosystem.org'
+    )
+    return url.rstrip('/')
+
+
+_discourse_cache = {'topics': None, 'expires': 0}
+_discourse_cache_lock = threading.Lock()
+_DISCOURSE_CACHE_TTL = 300  # seconds
+
+
+def discourse_latest_topics(num=6):
+    """Fetch the latest non-pinned topics from the configured Discourse forum.
+
+    Results are cached in-memory for _DISCOURSE_CACHE_TTL seconds to avoid
+    hammering the Discourse API on every homepage request.
+    """
+    global _discourse_cache
+    from urllib.request import urlopen, Request
+
+    now = time.time()
+    if _discourse_cache['topics'] is not None and now < _discourse_cache['expires']:
+        return _discourse_cache['topics'][:num]
+
+    def _relative_time(date_str):
+        try:
+            dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+            _now = datetime.now(timezone.utc)
+            diff = int((_now - dt).total_seconds())
+            if diff < 60:
+                return 'just now'
+            if diff < 3600:
+                return '{}m ago'.format(diff // 60)
+            if diff < 86400:
+                return '{}h ago'.format(diff // 3600)
+            if diff < 2592000:
+                return '{}d ago'.format(diff // 86400)
+            return '{}mo ago'.format(diff // 2592000)
+        except Exception:
+            return ''
+
+    with _discourse_cache_lock:
+        # Re-check inside the lock — another thread may have just refreshed
+        if _discourse_cache['topics'] is not None and now < _discourse_cache['expires']:
+            return _discourse_cache['topics'][:num]
+
+        forum_url = get_discourse_url()
+        try:
+            req = Request(
+                forum_url + '/latest.json',
+                headers={'Accept': 'application/json', 'User-Agent': 'CKAN-pose-ecosystem-catalog/1.0'},
+            )
+            with urlopen(req, timeout=5) as response:
+                data = json.loads(response.read().decode('utf-8'))
+
+            # Build a username → avatar_url lookup from the top-level users list
+            user_avatars = {}
+            for u in data.get('users', []):
+                template = u.get('avatar_template', '')
+                if template:
+                    avatar_url = template.replace('{size}', '40')
+                    if avatar_url.startswith('/'):
+                        avatar_url = forum_url + avatar_url
+                    user_avatars[u['username']] = avatar_url
+
+            raw = data.get('topic_list', {}).get('topics', [])
+            topics = []
+            for t in raw:
+                if t.get('pinned'):
+                    continue
+                last_posted = t.get('last_posted_at') or t.get('created_at', '')
+                username = t.get('last_poster_username', '')
+                topics.append({
+                    'title': t.get('title', ''),
+                    'url': '{}/t/{}/{}'.format(forum_url, t.get('slug', ''), t.get('id', '')),
+                    'reply_count': max(t.get('posts_count', 1) - 1, 0),
+                    'relative_time': _relative_time(last_posted),
+                    'last_poster': username,
+                    'avatar_url': user_avatars.get(username, ''),
+                })
+                if len(topics) >= 20:  # cap fetch; cache the full set
+                    break
+            _discourse_cache = {'topics': topics, 'expires': now + _DISCOURSE_CACHE_TTL}
+            return topics[:num]
+        except Exception as e:
+            logger.debug("[pose_theme] Error fetching Discourse topics: %s", e)
+            return _discourse_cache['topics'][:num] if _discourse_cache['topics'] else []
 
 
 EXCLUDED_EDITORS = {'ckan_bot', 'a5dur'}
