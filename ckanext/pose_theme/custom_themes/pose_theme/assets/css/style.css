@@ -1128,14 +1128,14 @@ a.browse-group:hover .browse-group-link {
 }
 
 .global-datasets.add-to-catalog {
-  background-color: #F4F4F4;
+  background-color: #f4f4f4;
 }
 
 .global-datasets.popular-dataset {
-  background-color: #F4F4F4;
+  background-color: #ffffff;
 }
 .global-datasets.recent-dataset {
-  background-color: #ffffff;
+  background-color: #f4f4f4;
 }
 
 .global-datasets section.popular-ds ul.dataset-list li.dataset-item {
@@ -2355,7 +2355,7 @@ nav.account.not-authed > ul > li > a > .dh-icon.login {
 }
 /* Add to Catalog Section */
 .add-to-catalog {
-  background: #F4F4F4 url('../images/newsletter-blog.svg') no-repeat right center;
+  background: #f4f4f4 url('../images/newsletter-blog.svg') no-repeat right center;
   background-size: 100%;
   position: relative;
   min-height: 400px;

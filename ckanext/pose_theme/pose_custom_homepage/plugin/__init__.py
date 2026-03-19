@@ -61,4 +61,6 @@ class PoseThemeHomepagePlugin(MixinPlugin):
             'pose_theme_get_site_of_month': helper.site_of_month,
             'version': helper.version_builder,
             'is_activity_enabled': helper.is_activity_enabled,
+            'pose_theme_get_discourse_latest': helper.discourse_latest_topics,
+            'pose_theme_get_discourse_url': helper.get_discourse_url,
         }
