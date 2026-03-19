@@ -1,17 +1,17 @@
 {% set forum_url = h.pose_theme_get_discourse_url() %}
-{% set topics = h.pose_theme_get_discourse_latest(3) %}
+{% set topics = h.pose_theme_get_discourse_latest(5) %}
 <section class="main-browse section global-datasets discourse-latest">
   <div class="module-content">
     <div class="container">
 
       <div class="discourse-header">
-        <div class="discourse-title-group">
-          <h4 class="heading-explanation above-heading">Community forum</h4>
+        <h4 class="heading-explanation above-heading">Community forum</h4>
+        <div class="discourse-title-row">
           <h2 class="heading">Latest Discussions</h2>
+          <a href="{{ forum_url }}" class="btn btn-default discourse-view-all" target="_blank" rel="noopener noreferrer">
+            View all discussions &nbsp;<i class="fa fa-external-link"></i>
+          </a>
         </div>
-        <a href="{{ forum_url }}" class="btn btn-default discourse-view-all" target="_blank" rel="noopener noreferrer">
-          View all discussions &nbsp;<i class="fa fa-external-link"></i>
-        </a>
       </div>
 
       {% if topics %}
@@ -29,17 +29,20 @@
                 <a class="discourse-topic-title" href="{{ topic.url }}" target="_blank" rel="noopener noreferrer">
                   {{ topic.title }}
                 </a>
-                <div class="discourse-topic-meta">
-                  <span class="discourse-topic-replies">
-                    <i class="fa fa-comment-o"></i>
-                    {{ topic.reply_count }} {{ 'reply' if topic.reply_count == 1 else 'replies' }}
-                  </span>
-                  {% if topic.relative_time %}
-                    <span class="discourse-topic-time">
-                      <i class="fa fa-clock-o"></i> {{ topic.relative_time }}
-                    </span>
-                  {% endif %}
+                <div class="discourse-topic-excerpt">
+                  {{ topic.excerpt if topic.excerpt else '' }}
                 </div>
+              </div>
+              <div class="discourse-topic-side">
+                <span class="discourse-topic-replies">
+                  <i class="fa fa-comment-o"></i>
+                  {{ topic.reply_count }} {{ 'reply' if topic.reply_count == 1 else 'replies' }}
+                </span>
+                {% if topic.relative_time %}
+                  <span class="discourse-topic-time">
+                    <i class="fa fa-clock-o"></i> {{ topic.relative_time }}
+                  </span>
+                {% endif %}
               </div>
             </li>
           {% endfor %}
@@ -81,14 +84,16 @@
 
 /* ── Header row ─────────────────────────────────────────────── */
 .discourse-header {
+  margin-bottom: 1rem;
+}
+.discourse-title-row {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
-.discourse-title-group {
-  display: flex;
-  flex-direction: column;
+.discourse-latest .heading {
+  margin: 0;
 }
 .discourse-latest .heading {
   font-size: 2.25rem;
@@ -104,7 +109,7 @@
 }
 .discourse-topic-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
   padding: 1rem 0;
   border-bottom: 1px solid #e0e0e0;
@@ -136,6 +141,8 @@
 .discourse-topic-body {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 .discourse-topic-title {
   display: block;
@@ -143,23 +150,38 @@
   font-size: 0.97rem;
   color: #222;
   text-decoration: none;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
   transition: color 0.2s ease;
 }
 .discourse-topic-title:hover {
   color: #d9534f;
   text-decoration: none;
 }
-.discourse-topic-meta {
-  margin-top: 0.3rem;
+.discourse-topic-excerpt {
+  font-size: 0.8rem;
+  color: #888;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+  margin-top: 0.2rem;
+}
+
+.discourse-topic-side {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
   font-size: 0.78rem;
   color: #888;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  text-align: right;
+  min-width: 90px;
 }
 
 /* ── Empty state ────────────────────────────────────────────── */

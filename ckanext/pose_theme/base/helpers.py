@@ -494,6 +494,7 @@ def discourse_latest_topics(num=6):
                     'relative_time': _relative_time(last_posted),
                     'last_poster': username,
                     'avatar_url': user_avatars.get(username, ''),
+                    'excerpt': t.get('excerpt', '').split('\n')[0][:120].strip(),
                 })
                 if len(topics) >= 20:  # cap fetch; cache the full set
                     break
