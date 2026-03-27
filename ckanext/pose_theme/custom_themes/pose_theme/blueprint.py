@@ -32,7 +32,7 @@ def allow_tool_finish_without_resources():
 
     # No resource data — activate the dataset and redirect to its page
     try:
-        from ckan.plugins.toolkit import h, get_action, abort, _
+        from ckan.plugins.toolkit import h, get_action
         import ckan.model as model
         from ckan.common import current_user
         pkg_id = request.view_args.get(u'id')
