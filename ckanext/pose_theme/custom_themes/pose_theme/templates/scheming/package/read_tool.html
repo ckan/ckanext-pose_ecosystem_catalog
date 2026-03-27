@@ -45,10 +45,10 @@
 {% block primary_content_inner %}
     <div class="actions">
         {% if pkg.url %}
-            <a class="btn btn-primary ckanext-tool-launch" href="{{ pkg.url }}" target="_blank"><i class="fa fa-external-link icon-external-link"></i> {{ _('Visit') }}</a>
+            <a class="btn btn-primary ckanext-tool-launch" href="{{ pkg.url }}" target="_blank" rel="noopener noreferrer"><i class="fa fa-external-link icon-external-link"></i> {{ _('Visit') }}</a>
         {% endif %}
         {% if pkg.source_url %}
-            <a class="btn btn-default" href="{{ pkg.source_url }}" target="_blank"><i class="fa fa-code icon-code"></i> {{ _('Source Code') }}</a>
+            <a class="btn btn-default" href="{{ pkg.source_url }}" target="_blank" rel="noopener noreferrer"><i class="fa fa-code icon-code"></i> {{ _('Source Code') }}</a>
         {% endif %}
         {% if h.check_access('package_update', {'id':pkg.id }) %}
             {% link_for _('Manage'), named_route=pkg.type+'.edit', id=pkg.name, package_type=pkg.type, class_='btn btn-default', icon='wrench' %}
