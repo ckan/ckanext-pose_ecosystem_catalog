@@ -23,14 +23,14 @@ Example:
                         {% endif %}
                         {% if pkg.url %}
                             <div class="info">
-                                <a class="btn btn-primary" href="{{ pkg.url }}" target="_blank">
+                                <a class="btn btn-primary" href="{{ pkg.url }}" target="_blank" rel="noopener noreferrer">
                                     <i class="fa fa-external-link icon-external-link"></i> {{ _('Visit') }}
                                 </a>
                             </div>
                         {% endif %}
                         {% if pkg.source_url %}
                             <div class="info" style="margin-top: 6px;">
-                                <a class="btn btn-default" href="{{ pkg.source_url }}" target="_blank">
+                                <a class="btn btn-default" href="{{ pkg.source_url }}" target="_blank" rel="noopener noreferrer">
                                     <i class="fa fa-code icon-code"></i> {{ _('Source Code') }}
                                 </a>
                             </div>
