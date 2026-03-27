@@ -1,5 +1,9 @@
+import logging
+
 from flask import Blueprint, make_response, request
 import ckanext.pose_theme.custom_themes.pose_theme.utils as utils
+
+log = logging.getLogger(__name__)
 
 datastore_dictionary = Blueprint(u'datastore_dictionary', __name__)
 
@@ -32,7 +36,7 @@ def allow_tool_finish_without_resources():
 
     # No resource data — activate the dataset and redirect to its page
     try:
-        from ckan.plugins.toolkit import h, get_action
+        from ckan.plugins.toolkit import h, get_action, ObjectNotFound, NotAuthorized, ValidationError
         import ckan.model as model
         from ckan.common import current_user
         pkg_id = request.view_args.get(u'id')
@@ -48,7 +52,10 @@ def allow_tool_finish_without_resources():
             dict(data_dict, state=u'active')
         )
         return h.redirect_to(u'tool.read', id=data_dict[u'name'])
+    except (ObjectNotFound, NotAuthorized, ValidationError):
+        return  # fall through to CKAN's normal handling
     except Exception:
+        log.exception(u'Unexpected error in allow_tool_finish_without_resources')
         return  # fall through to CKAN's normal handling
 
 
