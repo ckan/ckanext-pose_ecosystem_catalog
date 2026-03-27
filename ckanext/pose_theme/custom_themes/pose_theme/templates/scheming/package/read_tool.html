@@ -47,9 +47,7 @@
         {% if pkg.url %}
             <a class="btn btn-primary ckanext-tool-launch" href="{{ pkg.url }}" target="_blank" rel="noopener noreferrer"><i class="fa fa-external-link icon-external-link"></i> {{ _('Visit') }}</a>
         {% endif %}
-        {% if pkg.source_url %}
-            <a class="btn btn-default" href="{{ pkg.source_url }}" target="_blank" rel="noopener noreferrer"><i class="fa fa-code icon-code"></i> {{ _('Source Code') }}</a>
-        {% endif %}
+
         {% if h.check_access('package_update', {'id':pkg.id }) %}
             {% link_for _('Manage'), named_route=pkg.type+'.edit', id=pkg.name, package_type=pkg.type, class_='btn btn-default', icon='wrench' %}
             {{ h.build_nav_icon(pkg.type ~ '.groups', h.humanize_entity_type('group', default_group_type, 'content tab') or _('Groups'), id=pkg.name, icon='users', class_='btn btn-default') }}
@@ -137,119 +135,5 @@
         {% snippet 'tool/snippets/tool_info.html', pkg=pkg %}
     {% endblock %}
 
-    {% if pkg.source_url and 'github.com' in pkg.source_url %}
-    {% block package_github_stats %}
-    <section class="module module-narrow module-github-stats">
-        <h3 class="module-heading">
-            <i class="fab fa-github icon-medium"></i> {{ _('Repository Stats') }}
-        </h3>
-        <div class="module-content" id="github-stats-content" data-github-url="{{ pkg.source_url }}">
-            <p class="github-stats-loading text-muted">
-                <i class="fa fa-spinner fa-spin"></i> {{ _('Loading stats…') }}
-            </p>
-        </div>
-    </section>
-    <style>
-        .module-github-stats .github-stats-list {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 12px 0;
-        }
-        .module-github-stats .github-stats-list li {
-            padding: 5px 0;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .module-github-stats .github-stats-list li:last-child {
-            border-bottom: none;
-        }
-        .module-github-stats .github-stats-list .stat-value {
-            font-weight: bold;
-            margin-left: auto;
-        }
-        .module-github-stats .github-stats-list i {
-            width: 16px;
-            text-align: center;
-            color: #555;
-        }
-        .ckanext-tool-description-source {
-            margin-top: 8px;
-        }
-        .ckanext-tool-description-source .label {
-            font-size: 11px;
-            font-weight: normal;
-            letter-spacing: 0.02em;
-            padding: 3px 7px;
-        }
-        .module-github-stats .github-stats-error {
-            color: #999;
-            font-size: 13px;
-        }
-    </style>
-    <script>
-    (function () {
-        var CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
-        var container = document.getElementById('github-stats-content');
-        if (!container) return;
-        var ghUrl = container.getAttribute('data-github-url') || '';
-        var match = ghUrl.match(/github\.com\/([^\/]+\/[^\/\?#]+)/);
-        if (!match) return;
-        var repo = match[1].replace(/\.git$/, '');
-        var cacheKey = 'gh_stats_' + repo.replace('/', '_');
-
-        function render(data) {
-            var updated = new Date(data.pushed_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-            var licenseHtml = data.license
-                ? '<li><i class="fa fa-balance-scale"></i> {{ _("License") }} <span class="stat-value">' + data.license.spdx_id + '</span></li>'
-                : '';
-            container.innerHTML =
-                '<ul class="github-stats-list">' +
-                '<li><i class="fa fa-star"></i> {{ _("Stars") }} <span class="stat-value">' + data.stargazers_count.toLocaleString() + '</span></li>' +
-                '<li><i class="fa fa-code-fork"></i> {{ _("Forks") }} <span class="stat-value">' + data.forks_count.toLocaleString() + '</span></li>' +
-                '<li><i class="fa fa-exclamation-circle"></i> {{ _("Open Issues") }} <span class="stat-value">' + data.open_issues_count.toLocaleString() + '</span></li>' +
-                '<li><i class="fa fa-eye"></i> {{ _("Watchers") }} <span class="stat-value">' + data.subscribers_count.toLocaleString() + '</span></li>' +
-                licenseHtml +
-                '<li><i class="fa fa-clock-o"></i> {{ _("Last Push") }} <span class="stat-value">' + updated + '</span></li>' +
-                '</ul>' +
-                '<a href="' + data.html_url + '" class="btn btn-default btn-block" target="_blank" rel="noopener">' +
-                '<i class="fab fa-github"></i> {{ _("View on GitHub") }}</a>';
-        }
-
-        // Serve from localStorage cache if still fresh
-        try {
-            var cached = localStorage.getItem(cacheKey);
-            if (cached) {
-                var entry = JSON.parse(cached);
-                if (Date.now() - entry.ts < CACHE_TTL_MS) {
-                    render(entry.data);
-                    return;
-                }
-            }
-        } catch (e) {}
-
-        fetch('https://api.github.com/repos/' + repo, {
-            headers: { 'Accept': 'application/vnd.github.v3+json' }
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            if (data.message) {
-                container.innerHTML = '<p class="github-stats-error"><i class="fa fa-exclamation-triangle"></i> ' + data.message + '</p>';
-                return;
-            }
-            try {
-                localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: data }));
-            } catch (e) {}
-            render(data);
-        })
-        .catch(function () {
-            container.innerHTML = '<p class="github-stats-error"><i class="fa fa-exclamation-triangle"></i> {{ _("Could not load stats.") }}</p>';
-        });
-    })();
-    </script>
-    {% endblock %}
-    {% endif %}
 
 {% endblock %}
