@@ -29,7 +29,7 @@ To enable the plugins provided by this extension, add the following lines to you
 
 ```ini
 ckan.plugins = pose_theme pose_custom_css pose_custom_homepage pose_custom_header pose_custom_footer pose_custom_showcase
-scheming.dataset_schemas = ckanext.pose_theme.pose_custom_showcase:showcase.yaml ckanext.pose_theme.custom_themes.pose_theme:extension.yaml ckanext.pose_theme.custom_themes.pose_theme:site.yaml
+scheming.dataset_schemas = ckanext.pose_theme.pose_custom_showcase:showcase.yaml ckanext.pose_theme.custom_themes.pose_theme:extension.yaml ckanext.pose_theme.custom_themes.pose_theme:site.yaml ckanext.pose_theme.custom_themes.pose_theme:tool.yaml
 scheming.presets = ckanext.scheming:presets.json
 ```
 

@@ -30,17 +30,20 @@ def get_site_statistics(organization_id=None):
     # Base query parameters
     extension_query = {"rows": 1, "fq": "+dataset_type:extension"}
     site_query = {"rows": 1, "fq": "+dataset_type:site"}
+    tool_query = {"rows": 1, "fq": "+dataset_type:tool"}
     dataset_query = {"rows": 1, "fq": "+dataset_type:dataset"}
-    
+
     # If organization is specified, add it to the query filters
     if organization_id:
         extension_query["fq"] += " +owner_org:" + organization_id
         site_query["fq"] += " +owner_org:" + organization_id
+        tool_query["fq"] += " +owner_org:" + organization_id
         dataset_query["fq"] += " +owner_org:" + organization_id
-    
+
     # Get counts for each type
     stats["extension_count"] = tk.get_action("package_search")({}, extension_query)["count"]
     stats["site_count"] = tk.get_action("package_search")({}, site_query)["count"]
+    stats["tool_count"] = tk.get_action("package_search")({}, tool_query)["count"]
     stats["dataset_count"] = tk.get_action("package_search")({}, dataset_query)["count"]
     
     # Only get these if no organization filter (they don't make sense per-organization)

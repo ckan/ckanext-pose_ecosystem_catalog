@@ -38,6 +38,9 @@
         {% if org_stats.site_count %}
           <strong class="count">{{ ungettext('{num} Site', '{num} Sites', org_stats.site_count).format(num=org_stats.site_count) }}</strong><br/>
         {% endif %}
+        {% if org_stats.tool_count %}
+          <strong class="count">{{ ungettext('{num} Tool', '{num} Tools', org_stats.tool_count).format(num=org_stats.tool_count) }}</strong><br/>
+        {% endif %}
       {% endblock %}
 
       {% block capacity %}

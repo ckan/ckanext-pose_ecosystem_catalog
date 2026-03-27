@@ -1,0 +1,205 @@
+scheming_version: 3
+dataset_type: tool
+about: "Schema for describing tools in the CKAN ecosystem"
+about_url: https://ecosystem.ckan.org/tool
+
+dataset_fields:
+
+- field_name: title
+  label: Tool Name
+  preset: title
+  required: true
+  form_placeholder: eg. A Descriptive Title
+
+- field_name: name
+  label: URL
+  preset: dataset_slug
+  form_placeholder: eg. URL slug (automatically generated from title, but can be edited)
+
+- field_name: owner_org
+  label: Organization
+  required: True
+  preset: dataset_organization
+
+- field_name: publisher
+  label: Publisher
+  validators: ignore_missing
+  form_placeholder: Publisher
+  help_text: Enter the name of the publisher organization
+
+- field_name: notes
+  label: Description
+  required: True
+  form_snippet: markdown.html
+  form_placeholder: Enter a one-sentence summary...
+  help_text: This appears in search results and list views. Keep it brief (under 160 characters) so users can scan quickly.
+
+- field_name: tag_string
+  label: Tags
+  preset: tag_string_autocomplete
+  form_placeholder: eg. data-quality, csv, etl
+
+- field_name: contact_name
+  label: Maintainer Name
+  form_placeholder: Enter the maintainer name
+  validators: ignore_missing
+  help_text: Point of contact name for this tool.
+
+- field_name: contact_email
+  label: Maintainer Email
+  form_placeholder: Enter the maintainer email
+  validators: ignore_missing
+  help_text: Point of contact email for this tool.
+
+- field_name: detailed_info
+  label: Detailed Description
+  validators: ignore_missing
+  preset: markdown
+  form_placeholder: Describe features, installation steps, and usage details here...
+  help_text: This appears on the main tool page. Use this space for full documentation, Markdown formatting, and in-depth context.
+
+- field_name: url
+  label: Tool Homepage URL
+  validators: url_validator ignore_missing
+  form_placeholder: Enter the tool's homepage or documentation URL
+  help_text: Link to the tool's website or documentation
+
+- field_name: source_url
+  label: Source Code URL
+  validators: url_validator ignore_missing
+  form_placeholder: Enter the GitHub/GitLab repository URL
+  help_text: Link to the tool's source code repository
+
+- field_name: tool_type
+  label: Tool Type
+  preset: select
+  required: true
+  choices:
+    - value: cli
+      label: CLI Tool
+    - value: web_app
+      label: Web Application
+    - value: library
+      label: Library / SDK
+    - value: api
+      label: API Service
+    - value: desktop_app
+      label: Desktop Application
+    - value: plugin
+      label: Plugin / Integration
+    - value: data_pipeline
+      label: Data Pipeline
+    - value: visualization
+      label: Visualization
+    - value: general
+      label: General
+  help_text: Classification of the tool's primary type
+
+- field_name: platform
+  label: Platform
+  preset: select
+  validators: ignore_missing
+  choices:
+    - value: cross_platform
+      label: Cross-platform
+    - value: linux
+      label: Linux
+    - value: macos
+      label: macOS
+    - value: windows
+      label: Windows
+    - value: web
+      label: Web
+    - value: cloud
+      label: Cloud
+  help_text: Platform(s) the tool runs on
+
+- field_name: built_with
+  label: Built With
+  validators: ignore_missing
+  form_placeholder: eg. Python, JavaScript, Go
+  help_text: Primary programming language or technology the tool is built with
+
+- field_name: is_open_source
+  label: Open Source
+  preset: select
+  validators: ignore_missing
+  choices:
+    - value: TRUE
+      label: Yes
+    - value: FALSE
+      label: No
+  help_text: Indicates whether the tool is open source
+
+- field_name: license
+  label: License
+  validators: ignore_missing
+  help_text: License under which the tool is distributed
+
+- field_name: latest_version
+  label: Latest Version
+  validators: ignore_missing
+  form_placeholder: eg. 1.4.2
+  help_text: The most recent version of the tool
+
+- field_name: release_date
+  label: Latest Release Date
+  preset: date
+  validators: ignore_missing
+  form_placeholder: Date of the latest release
+  help_text: The date of the most recent release
+
+- field_name: ckan_version
+  label: Compatible CKAN Version
+  preset: multiple_text
+  validators: ignore_missing
+  form_placeholder: Compatible CKAN versions (if applicable)
+  help_text: Versions of CKAN this tool is compatible with (if applicable)
+
+- field_name: is_featured
+  label: Featured
+  preset: select
+  validators: ignore_missing
+  choices:
+    - value: TRUE
+      label: Yes
+    - value: FALSE
+      label: No
+  help_text: Indicates whether the tool is marked as featured
+  form_snippet: null
+
+- field_name: description_source
+  label: Description Source
+  preset: select
+  validators: ignore_missing
+  display_snippet: null
+  form_include_blank_choice: true
+  choices:
+    - value: ai_generated
+      label: AI-generated
+    - value: maintainer_curated
+      label: Maintainer-curated
+  help_text: "Indicates how the description was created."
+
+resource_fields:
+
+- field_name: url
+  label: URL
+  preset: resource_url_upload
+  required: false
+  validators: ignore_missing unicode_safe
+
+- field_name: name
+  label: Name
+  required: false
+  validators: ignore_missing unicode_safe
+
+- field_name: description
+  label: Description
+  required: false
+  validators: ignore_missing unicode_safe
+
+- field_name: format
+  label: Format
+  required: false
+  preset: resource_format_autocomplete

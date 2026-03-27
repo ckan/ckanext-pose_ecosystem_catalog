@@ -1,11 +1,11 @@
-{% if pkg.type == 'extension' %} 
-	{% include 'scheming/package/read_extension.html'%} 
-{% endif %}
-
-{% if pkg.type == 'site' %} 
-	{% include 'scheming/package/read_site.html'%} 
-{%else %} 
-	{% ckan_extends %} 
-	{{ super() }} 
+{% if pkg.type == 'extension' %}
+	{% include 'scheming/package/read_extension.html' %}
+{% elif pkg.type == 'site' %}
+	{% include 'scheming/package/read_site.html' %}
+{% elif pkg.type == 'tool' %}
+	{% include 'scheming/package/read_tool.html' %}
+{% else %}
+	{% ckan_extends %}
+	{{ super() }}
 {% endif %}
 
