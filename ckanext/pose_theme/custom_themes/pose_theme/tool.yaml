@@ -152,7 +152,6 @@ dataset_fields:
 - field_name: ckan_version
   label: Compatible CKAN Version
   preset: multiple_text
-  validators: ignore_missing
   form_placeholder: Compatible CKAN versions (if applicable)
   help_text: Versions of CKAN this tool is compatible with (if applicable)
 
