@@ -1,10 +1,10 @@
-{% set placeholder = _('Search Datasets') %}
+{% set placeholder = _('Search datasets, extensions, sites, tools...') %}
 
 <div class="module module-search module-narrow module-shallow">
   <form class="search-form" method="get" action="{% url_for controller='dataset', action='search' %}">
     {{ h.csrf_input() if 'csrf_input' in h }}
     <div class="search-input form-group search-giant">
-      <input aria-label="{% block header_site_search_label %}{{ _('Search datasets') }}{% endblock %}"
+      <input aria-label="{% block header_site_search_label %}{{ _('Search datasets, extensions, sites, tools') }}{% endblock %}"
              id="field-main-search"
              type="text"
              class="form-control"

@@ -188,14 +188,68 @@ def recent_extensions(num=6):
             'rows': num,
             'start': 0
         })
-        
+
         if search_result and 'results' in search_result:
             sorted_extensions = search_result['results']
     except Exception:
         logger.debug("[pose_theme] Error getting recently updated/created extensions")
         return []
-    
+
     return sorted_extensions[:num]
+
+
+def tools(num=24):
+    """Return a list of tools."""
+    sorted_tools = []
+    try:
+        search_result = toolkit.get_action('package_search')({}, {
+            'q': 'type:tool',
+            'sort': 'metadata_modified desc',
+            'rows': num,
+            'start': 0
+        })
+        if search_result and 'results' in search_result:
+            sorted_tools = search_result['results']
+    except Exception:
+        logger.debug("[pose_theme] Error getting tool list")
+        return []
+    return sorted_tools[:num]
+
+
+def featured_tools(num=6):
+    """Return featured tool datasets."""
+    featured_tools_list = []
+    try:
+        search_result = toolkit.get_action('package_search')({}, {
+            'q': 'type:tool',
+            'fq': 'extras_is_featured:TRUE',
+            'rows': num,
+            'start': 0
+        })
+        if search_result and 'results' in search_result:
+            featured_tools_list = search_result['results']
+    except Exception as e:
+        logger.error(f"[pose_theme] Error getting featured tools: {str(e)}", exc_info=True)
+        return []
+    return featured_tools_list[:num]
+
+
+def recent_tools(num=6):
+    """Return a list of recently updated/created tool datasets."""
+    sorted_tools = []
+    try:
+        search_result = toolkit.get_action('package_search')({}, {
+            'q': 'type:tool',
+            'sort': 'metadata_modified desc',
+            'rows': num,
+            'start': 0
+        })
+        if search_result and 'results' in search_result:
+            sorted_tools = search_result['results']
+    except Exception:
+        logger.debug("[pose_theme] Error getting recently updated/created tools")
+        return []
+    return sorted_tools[:num]
 
 
 

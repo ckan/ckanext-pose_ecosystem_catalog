@@ -15,14 +15,11 @@ class PoseThemePlugin(plugins.SingletonPlugin):
     # IFacets
     def dataset_facets(self, facets_dict, package_type):
         """Customize the facets displayed for datasets."""
-        if package_type == "site":
-            if facets_dict is None:
-                # Ensure facets_dict is a dictionary
-                facets_dict = {}
-            # Remove the "license" facet if it exists
+        if facets_dict is None:
+            facets_dict = {}
+        if package_type in ("site", "tool"):
             if "license_id" in facets_dict:
                 del facets_dict["license_id"]
-            # Remove the "format" facet if it exists
             if "res_format" in facets_dict:
                 del facets_dict["res_format"]
         # Return the modified facets dictionary
@@ -56,6 +53,9 @@ class PoseThemePlugin(plugins.SingletonPlugin):
             'version': helper.version_builder,
             'pose_theme_get_maptiler_api_key': helper.get_maptiler_api_key,
             'get_latest_editor': helper.get_latest_editor,
+            'pose_theme_tools': helper.tools,
+            'pose_theme_featured_tools': helper.featured_tools,
+            'pose_theme_recent_tools': helper.recent_tools,
         }
 
     def get_commands(self):
