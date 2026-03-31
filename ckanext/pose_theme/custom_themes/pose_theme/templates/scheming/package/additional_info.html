@@ -21,7 +21,13 @@
     'sotm_month',
     ] -%}
 
-{% set org = h.get_organization(pkg_dict.owner_org) %} 
+{% set org = h.get_organization(pkg_dict.owner_org) %}
+{%- set _num_datasets = pkg_dict.get('num_datasets', 0)|string|int -%}
+{%- set _num_organizations = pkg_dict.get('num_organizations', 0)|string|int -%}
+{%- set _num_groups = pkg_dict.get('num_groups', 0)|string|int -%}
+{%- if _num_datasets == 0 and _num_organizations == 0 and _num_groups == 0 -%}
+  {%- set exclude_fields = exclude_fields + ['num_datasets', 'num_organizations', 'num_groups'] -%}
+{%- endif -%}
 {% block package_additional_info %}
 {% if h.check_access('package_update',{'id':pkg_dict.id}) %}
 
