@@ -1,5 +1,5 @@
 {#
-Displays a single of dataset.
+Displays a single dataset card with type-based iconography and color coding.
 
 package        - A package to display.
 item_class     - The class name to use on the list item.
@@ -22,10 +22,42 @@ Example:
   {% set package_url = h.url_for(package.type ~ '.read', id=package.name) %}
 {% endif %}
 
+{# --- Type iconography config --- #}
+{% if package.type == 'extension' %}
+  {% set type_css   = 'dataset-item--extension' %}
+  {% set type_icon  = 'fa-puzzle-piece' %}
+  {% set type_label = _('Extension') %}
+{% elif package.type == 'site' %}
+  {% set type_css   = 'dataset-item--site' %}
+  {% set type_icon  = 'fa-globe' %}
+  {% set type_label = _('Site') %}
+{% elif package.type == 'tool' %}
+  {% set type_css   = 'dataset-item--tool' %}
+  {% set type_icon  = 'fa-wrench' %}
+  {% set type_label = _('Tool') %}
+{% elif package.type == 'showcase' %}
+  {% set type_css   = 'dataset-item--showcase' %}
+  {% set type_icon  = 'fa-star' %}
+  {% set type_label = _('Showcase') %}
+{% else %}
+  {% set type_css   = 'dataset-item--dataset' %}
+  {% set type_icon  = 'fa-database' %}
+  {% set type_label = _('Dataset') %}
+{% endif %}
+
 {% block package_item %}
-  <li class="{{ item_class or "dataset-item" }}">
+  <li class="{{ item_class or 'dataset-item' }} {{ type_css }}">
     {% block content %}
       <div class="dataset-content">
+
+        {# --- Type icon + badge row --- #}
+        <div class="dataset-type-row">
+          <div class="dataset-type-icon">
+            <i class="fa {{ type_icon }}"></i>
+          </div>
+          <span class="dataset-type-badge">{{ type_label }}</span>
+        </div>
+
         {% block heading %}
           <div class="dataset-heading-wrapper">
             <h3 class="dataset-heading">
@@ -47,7 +79,7 @@ Example:
             {% endblock %}
           </div>
         {% endblock %}
-        
+
         {% block notes %}
           {% if note_type == 'updated' %}
             {% if package.metadata_modified %}
@@ -72,53 +104,83 @@ Example:
             {% endif %}
           {% endif %}
         {% endblock %}
-        
-      
-          
+
       </div>
     {% endblock %}
   </li>
 {% endblock %}
 
 <style>
-/* Dataset Item Styling */
+/* =====================================================
+   Type color tokens
+   ===================================================== */
+.dataset-item--extension { --type-color: #e8503a; --type-rgb: 232, 80, 58; }
+.dataset-item--site      { --type-color: #3b82f6; --type-rgb: 59, 130, 246; }
+.dataset-item--tool      { --type-color: #f59e0b; --type-rgb: 245, 158, 11; }
+.dataset-item--showcase  { --type-color: #10b981; --type-rgb: 16, 185, 129; }
+.dataset-item--dataset   { --type-color: #6366f1; --type-rgb: 99, 102, 241; }
+
+/* =====================================================
+   Card base
+   ===================================================== */
 .dataset-item {
   background: #ffffff;
-  border: 2px solid #f2f4f7;
-  border-radius: 16px;
+  border: 1px solid #f2f4f7;
+  border-top: 4px solid var(--type-color, #6366f1);
+  border-radius: 4px;
   padding: 24px;
-  transition: all 0.3s ease;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
   position: relative;
-  overflow: hidden;
-}
-
-.dataset-item::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: #d9534f;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease;
 }
 
 .dataset-item:hover {
-  border-color: #e4e7ec;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
 
-.dataset-item:hover::before {
-  transform: scaleX(1);
+/* =====================================================
+   Type icon + badge row
+   ===================================================== */
+.dataset-type-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
 
-/* Dataset Content */
+.dataset-type-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  background: rgba(var(--type-rgb, 99, 102, 241), 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dataset-type-icon .fa {
+  font-size: 17px;
+  color: var(--type-color, #6366f1);
+}
+
+.dataset-type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: rgba(var(--type-rgb, 99, 102, 241), 0.08);
+  color: var(--type-color, #6366f1);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* =====================================================
+   Card content (unchanged from before)
+   ===================================================== */
 .dataset-content {
   position: relative;
-  z-index: 1;
 }
 
 .dataset-heading-wrapper {
@@ -137,17 +199,16 @@ Example:
 .dataset-heading a {
   font-size: 18px;
   font-weight: 600;
-  color: #000;
+  color: #0f172a;
   text-decoration: none;
   line-height: 1.4;
   transition: color 0.2s ease;
 }
 
 .dataset-heading a:hover {
-  color: #d9534f;
+  color: var(--type-color, #6366f1);
 }
 
-/* Meta Badges */
 .dataset-meta-badges {
   display: flex;
   gap: 8px;
@@ -176,101 +237,32 @@ Example:
   color: #d9534f;
 }
 
-/* Update/Views Info */
 .dataset-update,
 .dataset-views {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
-  color: #667085;
-  margin-bottom: 16px;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 8px;
 }
 
 .update-icon,
 .views-icon {
   flex-shrink: 0;
-  color: #98a2b3;
+  color: #94a3b8;
 }
 
-/* Resources Section */
-.dataset-resources-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.dataset-resources {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.dataset-resources li {
-  margin: 0;
-}
-
-.resource-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  color: #ffffff !important;
-}
-
-.resource-badge:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Private Badge */
-.dataset-private {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.05);
-  color: #475467;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.lock-icon {
-  flex-shrink: 0;
-  color: #667085;
-}
-
-/* Responsive */
+/* =====================================================
+   Responsive
+   ===================================================== */
 @media (max-width: 768px) {
   .dataset-item {
     padding: 20px;
   }
-  
-  .dataset-heading-wrapper {
-    flex-direction: column;
-    gap: 12px;
-  }
-  
+
   .dataset-heading a {
     font-size: 16px;
-  }
-  
-  .dataset-resources-wrapper {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
 </style>
