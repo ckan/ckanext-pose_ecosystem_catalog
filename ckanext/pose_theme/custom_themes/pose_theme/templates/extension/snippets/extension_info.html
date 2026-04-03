@@ -35,19 +35,5 @@ Example:
             </div>
         </section>
 
-        <section class="module module-narrow">
-            <h3 class="module-heading"><i class="fa fa-sitemap icon-medium icon-sitemap"></i> {{ _('Datasets in Extension') }}</h2>
-                {% if packages %}
-                    <ul class="nav nav-simple">
-                        {% for package in packages %}
-                            {% set truncate_title = truncate_title or 80 %}
-                            {% set title = package.title or package.name %}
-                            <li class="nav-item">{{ h.link_to(title|truncate(truncate_title), h.url_for('dataset.read', id=package.name)) }}</li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="module-content empty">{{_('There are no Datasets in this Extension')}}</p>
-                {% endif %}
-        </section>
     {% endif %}
 {% endblock %}
