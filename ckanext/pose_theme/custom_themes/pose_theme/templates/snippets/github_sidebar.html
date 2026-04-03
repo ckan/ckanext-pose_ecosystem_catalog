@@ -1,0 +1,309 @@
+{#
+  Shared GitHub sidebar: Repository Stats + Recent Activity sections.
+  Parameters:
+    github_url  - full GitHub repo URL (e.g. https://github.com/owner/repo)
+#}
+
+<section class="module module-narrow module-github-stats">
+    <h3 class="module-heading">
+        <i class="fab fa-github icon-medium"></i> {{ _('Repository Stats') }}
+    </h3>
+    <div class="module-content" id="github-stats-content" data-github-url="{{ github_url }}">
+        <p class="text-muted">
+            <i class="fa fa-spinner fa-spin"></i> {{ _('Loading stats…') }}
+        </p>
+    </div>
+</section>
+
+<section class="module module-narrow module-github-activity">
+    <h3 class="module-heading">
+        <i class="fa fa-history icon-medium"></i> {{ _('Recent Activity') }}
+    </h3>
+    <div class="module-content" id="github-activity-content" data-github-url="{{ github_url }}">
+        <p class="text-muted">
+            <i class="fa fa-spinner fa-spin"></i> {{ _('Loading activity…') }}
+        </p>
+    </div>
+</section>
+
+<style>
+    /* --- Repository Stats --- */
+    .module-github-stats .github-stats-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 12px 0;
+    }
+    .module-github-stats .github-stats-list li {
+        padding: 5px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .module-github-stats .github-stats-list li:last-child {
+        border-bottom: none;
+    }
+    .module-github-stats .github-stats-list .stat-value {
+        font-weight: bold;
+        margin-left: auto;
+    }
+    .module-github-stats .github-stats-list i {
+        width: 16px;
+        text-align: center;
+        color: #555;
+    }
+    .module-github-stats .github-stats-error {
+        color: #999;
+        font-size: 13px;
+    }
+
+    /* --- Recent Activity --- */
+    .module-github-activity .gh-event-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 12px 0;
+    }
+    .module-github-activity .gh-event-list li {
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+    .module-github-activity .gh-event-list li:last-child {
+        border-bottom: none;
+    }
+    .module-github-activity .gh-event-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .module-github-activity .gh-event-avatar {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+    .module-github-activity .gh-event-body {
+        min-width: 0;
+        flex: 1;
+    }
+    .module-github-activity .gh-event-time {
+        color: #999;
+        font-size: 11px;
+        margin-right: 4px;
+    }
+    .module-github-activity .gh-event-actor {
+        font-weight: 600;
+        color: #333;
+    }
+    .module-github-activity .gh-event-detail {
+        display: block;
+        margin-top: 2px;
+        color: #555;
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .module-github-activity .gh-event-detail a {
+        color: #555;
+    }
+    .module-github-activity .gh-event-detail a:hover {
+        text-decoration: underline;
+    }
+    .module-github-activity .github-stats-error {
+        color: #999;
+        font-size: 13px;
+    }
+</style>
+
+<script>
+(function () {
+    /* ---- Shared helpers ---- */
+    function timeAgo(dateStr) {
+        var diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+        if (diff < 60) return diff + 's ago';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        if (diff < 2592000) return Math.floor(diff / 86400) + 'd ago';
+        return new Date(dateStr).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function extractRepo(url) {
+        var m = (url || '').match(/github\.com\/([^\/]+\/[^\/\?#]+)/);
+        return m ? m[1].replace(/\.git$/, '') : null;
+    }
+
+    function fromCache(key, ttl) {
+        try {
+            var raw = localStorage.getItem(key);
+            if (raw) {
+                var entry = JSON.parse(raw);
+                if (Date.now() - entry.ts < ttl) return entry.data;
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    function toCache(key, data) {
+        try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data: data })); } catch (e) {}
+    }
+
+    /* ---- Repository Stats ---- */
+    (function () {
+        var container = document.getElementById('github-stats-content');
+        if (!container) return;
+        var repo = extractRepo(container.getAttribute('data-github-url'));
+        if (!repo) return;
+        var cacheKey = 'gh_stats_' + repo.replace('/', '_');
+
+        function render(data) {
+            var updated = new Date(data.pushed_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+            var licenseHtml = data.license
+                ? '<li><i class="fa fa-balance-scale"></i> {{ _("License") }} <span class="stat-value">' + data.license.spdx_id + '</span></li>'
+                : '';
+            container.innerHTML =
+                '<ul class="github-stats-list">' +
+                '<li><i class="fa fa-star"></i> {{ _("Stars") }} <span class="stat-value">' + data.stargazers_count.toLocaleString() + '</span></li>' +
+                '<li><i class="fa fa-code-fork"></i> {{ _("Forks") }} <span class="stat-value">' + data.forks_count.toLocaleString() + '</span></li>' +
+                '<li><i class="fa fa-exclamation-circle"></i> {{ _("Open Issues") }} <span class="stat-value">' + data.open_issues_count.toLocaleString() + '</span></li>' +
+                '<li><i class="fa fa-eye"></i> {{ _("Watchers") }} <span class="stat-value">' + data.subscribers_count.toLocaleString() + '</span></li>' +
+                licenseHtml +
+                '<li><i class="fa fa-clock-o"></i> {{ _("Last Push") }} <span class="stat-value">' + updated + '</span></li>' +
+                '</ul>';
+        }
+
+        var cached = fromCache(cacheKey, 60 * 60 * 1000); // 1 hour
+        if (cached) { render(cached); return; }
+
+        fetch('https://api.github.com/repos/' + repo, {
+            headers: { 'Accept': 'application/vnd.github.v3+json' }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.message) {
+                container.innerHTML = '<p class="github-stats-error"><i class="fa fa-exclamation-triangle"></i> ' + data.message + '</p>';
+                return;
+            }
+            toCache(cacheKey, data);
+            render(data);
+        })
+        .catch(function () {
+            container.innerHTML = '<p class="github-stats-error"><i class="fa fa-exclamation-triangle"></i> {{ _("Could not load stats.") }}</p>';
+        });
+    })();
+
+    /* ---- Recent Activity ---- */
+    (function () {
+        var container = document.getElementById('github-activity-content');
+        if (!container) return;
+        var repo = extractRepo(container.getAttribute('data-github-url'));
+        if (!repo) return;
+        var cacheKey = 'gh_events_' + repo.replace('/', '_');
+
+        function describeEvent(item) {
+            var actor = item.actor.login;
+            var repoName = item.repo.name;
+            var p = item.payload;
+            var desc = '', detail = '', detailUrl = '';
+            switch (item.type) {
+                case 'IssuesEvent':
+                    desc = actor + ' ' + p.action + ' an issue on ' + repoName;
+                    if (p.issue) { detail = 'Issue #' + p.issue.number + ': ' + p.issue.title; detailUrl = p.issue.html_url; }
+                    break;
+                case 'IssueCommentEvent':
+                    desc = actor + ' commented on an issue on ' + repoName;
+                    if (p.issue) { detail = 'Issue #' + p.issue.number + ': ' + p.issue.title; detailUrl = p.comment ? p.comment.html_url : p.issue.html_url; }
+                    break;
+                case 'PullRequestEvent':
+                    desc = actor + ' ' + p.action + ' a pull request on ' + repoName;
+                    if (p.pull_request) { detail = 'PR #' + p.pull_request.number + ': ' + p.pull_request.title; detailUrl = p.pull_request.html_url; }
+                    break;
+                case 'PullRequestReviewEvent':
+                    desc = actor + ' reviewed a pull request on ' + repoName;
+                    if (p.pull_request) { detail = 'PR #' + p.pull_request.number + ': ' + p.pull_request.title; detailUrl = p.pull_request.html_url; }
+                    break;
+                case 'PushEvent':
+                    var n = p.commits ? p.commits.length : 0;
+                    desc = actor + ' pushed ' + n + ' commit' + (n !== 1 ? 's' : '') + ' to ' + repoName;
+                    if (p.commits && p.commits.length) { var c = p.commits[p.commits.length - 1]; detail = c.message.split('\n')[0]; detailUrl = 'https://github.com/' + repoName + '/commit/' + c.sha; }
+                    break;
+                case 'WatchEvent':
+                    desc = actor + ' started watching ' + repoName;
+                    break;
+                case 'ForkEvent':
+                    desc = actor + ' forked ' + repoName;
+                    if (p.forkee) { detail = 'into ' + p.forkee.full_name; detailUrl = p.forkee.html_url; }
+                    break;
+                case 'CreateEvent':
+                    desc = actor + ' created ' + p.ref_type + (p.ref ? ' ' + p.ref : '') + ' on ' + repoName;
+                    break;
+                case 'DeleteEvent':
+                    desc = actor + ' deleted ' + p.ref_type + ' ' + p.ref + ' on ' + repoName;
+                    break;
+                case 'ReleaseEvent':
+                    desc = actor + ' ' + p.action + ' a release on ' + repoName;
+                    if (p.release) { detail = p.release.tag_name + (p.release.name ? ': ' + p.release.name : ''); detailUrl = p.release.html_url; }
+                    break;
+                case 'MemberEvent':
+                    desc = actor + ' ' + p.action + ' a collaborator on ' + repoName;
+                    break;
+                default:
+                    desc = actor + ' performed activity on ' + repoName;
+            }
+            return { desc: desc, detail: detail, detailUrl: detailUrl };
+        }
+
+        function render(events) {
+            if (!events.length) {
+                container.innerHTML = '<p class="text-muted" style="font-size:13px;">{{ _("No recent activity found.") }}</p>';
+                return;
+            }
+            var html = '<ul class="gh-event-list">';
+            events.forEach(function (item) {
+                var time = timeAgo(item.created_at);
+                var avatarUrl = item.actor.avatar_url ? item.actor.avatar_url + '&s=40' : 'https://github.com/ghost.png';
+                var profileUrl = 'https://github.com/' + item.actor.login;
+                var ev = describeEvent(item);
+                var detailHtml = ev.detail
+                    ? '<span class="gh-event-detail">' + (ev.detailUrl ? '<a href="' + ev.detailUrl + '" target="_blank" rel="noopener">' + ev.detail + '</a>' : ev.detail) + '</span>'
+                    : '';
+                html += '<li><div class="gh-event-row">' +
+                    '<a href="' + profileUrl + '" target="_blank" rel="noopener" tabindex="-1">' +
+                    '<img class="gh-event-avatar" src="' + avatarUrl + '" alt="' + item.actor.login + '" loading="lazy"></a>' +
+                    '<div class="gh-event-body">' +
+                    '<span class="gh-event-time">' + time + '</span>' +
+                    '<a class="gh-event-actor" href="' + profileUrl + '" target="_blank" rel="noopener">' + item.actor.login + '</a> ' +
+                    ev.desc.replace(item.actor.login + ' ', '') +
+                    detailHtml +
+                    '</div></div></li>';
+            });
+            html += '</ul>' +
+                '<a href="https://github.com/' + repo + '" class="btn btn-default btn-block" target="_blank" rel="noopener">' +
+                '<i class="fab fa-github"></i> {{ _("View on GitHub") }}</a>';
+            container.innerHTML = html;
+        }
+
+        var cached = fromCache(cacheKey, 30 * 60 * 1000); // 30 minutes
+        if (cached) { render(cached); return; }
+
+        fetch('https://api.github.com/repos/' + repo + '/events?per_page=5', {
+            headers: { 'Accept': 'application/vnd.github.v3+json' }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!Array.isArray(data)) {
+                container.innerHTML = '<p class="github-stats-error"><i class="fa fa-exclamation-triangle"></i> ' + (data.message || '{{ _("Could not load activity.") }}') + '</p>';
+                return;
+            }
+            toCache(cacheKey, data);
+            render(data);
+        })
+        .catch(function () {
+            container.innerHTML = '<p class="github-stats-error"><i class="fa fa-exclamation-triangle"></i> {{ _("Could not load activity.") }}</p>';
+        });
+    })();
+})();
+</script>

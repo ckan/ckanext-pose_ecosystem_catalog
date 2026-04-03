@@ -21,16 +21,23 @@
     'sotm_month',
     ] -%}
 
-{% set org = h.get_organization(pkg_dict.owner_org) %} 
+{% set org = h.get_organization(pkg_dict.owner_org) %}
 {% block package_additional_info %}
 {% if h.check_access('package_update',{'id':pkg_dict.id}) %}
 
 {% endif %}
   {%- set always_show_fields = ['contributors', 'ckan_version', 'extension_type'] -%}
+  {%- set site_stat_fields = ['num_datasets', 'num_organizations', 'num_groups'] -%}
+  {%- set all_site_stats_zero = (
+      pkg_dict.get('num_datasets', '0') | string in ['0', '', 'None', 'none'] and
+      pkg_dict.get('num_organizations', '0') | string in ['0', '', 'None', 'none'] and
+      pkg_dict.get('num_groups', '0') | string in ['0', '', 'None', 'none']
+  ) -%}
   {%- for field in schema.dataset_fields -%}
     {%- set field_value = pkg_dict.get(field.field_name) -%}
     {%- if field.field_name not in exclude_fields
         and field.display_snippet is not none
+        and not (field.field_name in site_stat_fields and all_site_stats_zero)
         and (field.field_name in always_show_fields
              or (field_value is not none
                  and field_value != ''
