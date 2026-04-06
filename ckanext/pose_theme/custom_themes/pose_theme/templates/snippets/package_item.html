@@ -19,7 +19,47 @@
     {% endif %}
 {% endif %}
 
+{# --- Per-type label and color --- #}
+{% if package.type == 'extension' %}
+  {% set type_label = _('Extension') %}
+  {% set type_class = 'badge-type--extension' %}
+  {% set type_color = '#d9534f' %}
+{% elif package.type == 'site' %}
+  {% set type_label = _('Site') %}
+  {% set type_class = 'badge-type--site' %}
+  {% set type_color = '#337ab7' %}
+{% elif package.type == 'tool' %}
+  {% set type_label = _('Tool') %}
+  {% set type_class = 'badge-type--tool' %}
+  {% set type_color = '#d4930a' %}
+{% elif package.type == 'showcase' %}
+  {% set type_label = _('Showcase') %}
+  {% set type_class = 'badge-type--showcase' %}
+  {% set type_color = '#1d8fad' %}
+{% else %}
+  {% set type_label = _('Dataset') %}
+  {% set type_class = 'badge-type--dataset' %}
+  {% set type_color = '#3d8b3d' %}
+{% endif %}
+
 {% block package_item %}
+<style>
+.dataset-meta-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.badge-type { font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; margin-bottom: 8px; }
+
+.badge-type--extension { background: rgba(217, 83, 79, 0.08)  !important; color: #d9534f !important; }
+.badge-type--tool      { background: rgba(212, 147, 10, 0.10) !important; color: #d4930a !important; }
+.badge-type--site      { background: rgba(51, 122, 183, 0.08) !important; color: #337ab7 !important; }
+.badge-type--showcase  { background: rgba(91, 192, 222, 0.10) !important; color: #1d8fad !important; }
+.badge-type--dataset   { background: rgba(92, 184, 92, 0.08)  !important; color: #3d8b3d !important; }
+</style>
   <li class="dataset-item">
     {% block content %}
       <div class="dataset-content d-flex">
@@ -35,6 +75,16 @@
         {% endif %}
 
         <div class="dataset-info flex-grow-1">
+          {% block heading_meta %}
+            <div class="dataset-meta-badges">
+              <span class="badge-type {{ type_class }}">{{ type_label }}</span>
+              {% if package.get('state', '').startswith('draft') %}
+                <span class="label label-info">{{ _('Draft') }}</span>
+              {% elif package.get('state', '').startswith('deleted') %}
+                <span class="label label-important">{{ _('Deleted') }}</span>
+              {% endif %}
+            </div>
+          {% endblock %}
           {% block heading %}
             <h3 class="dataset-heading">
               {% block heading_title %}
@@ -58,19 +108,12 @@
                   <p class="empty">{{ h.humanize_entity_type('package', package.type, 'no description') or _("There is no description for this dataset") }}</p>
                 {% endif %}
               {% endblock %}
-              {% block heading_meta %}
-                {% if package.get('state', '').startswith('draft') %}
-                  <span class="label label-info">{{ _('Draft') }}</span>
-                {% elif package.get('state', '').startswith('deleted') %}
-                  <span class="label label-important">{{ _('Deleted') }}</span>
-                {% endif %}
-              {% endblock %}
             </h3>
           {% endblock %}
-          
 
-          
-          {% block resources %}
+
+
+          {# {% block resources %}
             {% if package.resources and not hide_resources %}
               {% block resources_outer %}
                 <ul class="dataset-resources list-unstyled">
@@ -112,7 +155,7 @@
                 </ul>
               {% endblock %}
             {% endif %}
-          {% endblock %}
+          {% endblock %} #}
         </div>
       </div>
     {% endblock %}
