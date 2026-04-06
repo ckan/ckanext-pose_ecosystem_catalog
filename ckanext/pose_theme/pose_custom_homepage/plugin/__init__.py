@@ -58,6 +58,7 @@ class PoseThemeHomepagePlugin(MixinPlugin):
             'pose_theme_search_document_page_exists': helper.search_document_page_exists,
             'pose_theme_get_featured_extensions': helper.featured_extensions,
             'pose_theme_get_featured_sites': helper.featured_sites,
+            'pose_theme_get_featured_tools': helper.featured_tools,
             'pose_theme_get_site_of_month': helper.site_of_month,
             'version': helper.version_builder,
             'is_activity_enabled': helper.is_activity_enabled,

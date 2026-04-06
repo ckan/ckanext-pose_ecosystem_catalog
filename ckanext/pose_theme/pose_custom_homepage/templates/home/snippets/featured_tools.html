@@ -1,0 +1,47 @@
+{% set featured_tools = h.pose_theme_get_featured_tools() %}
+{% if featured_tools %}
+<section class="main-browse section global-datasets featured-tools-dataset">
+  <div class="module-content">
+    <div class="container">
+      <h4 class="heading-explanation above-heading">
+        Browse featured tools below
+      </h4>
+      <h2 class="heading">
+        <a href="/dataset?q=type:tool&extras_is_featured=TRUE&sort=views_recent+desc">{{ h.pose_theme_get_custom_name('featured-tools-custom-name', 'Featured Tools') }}</a>
+      </h2>
+      <section class="popular-ds">
+        {% snippet 'home/snippets/package_list.html', packages=featured_tools %}
+      </section>
+    </div>
+  </div>
+</section>
+
+<style>
+.main-browse.featured-tools-dataset .module-content {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.main-browse.featured-tools-dataset .heading-explanation.above-heading {
+  font-size: 1rem;
+  color: #d9534f;
+  margin-bottom: 0.5rem;
+}
+
+.main-browse.featured-tools-dataset .heading {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 0 0 2rem 0;
+}
+
+.main-browse.featured-tools-dataset .heading a {
+  color: #000;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.main-browse.featured-tools-dataset .heading a:hover {
+  color: #d9534f;
+}
+</style>
+{% endif %}
