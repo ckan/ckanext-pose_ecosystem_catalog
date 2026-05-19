@@ -18,11 +18,14 @@
         <ul class="discourse-topics-list">
           {% for topic in topics %}
             <li class="discourse-topic-item">
-              <span class="discourse-topic-icon">
-                {% if topic.avatar_url %}
-                  <img src="{{ topic.avatar_url }}" alt="{{ topic.last_poster }}'s avatar" class="discourse-avatar">
+              <span class="discourse-avatars">
+                {% if topic.op_avatar_url %}
+                  <img src="{{ topic.op_avatar_url }}" alt="{{ topic.op_username }}" class="discourse-avatar discourse-avatar-op" title="{{ topic.op_username }} (OP)">
+                  <img src="{{ topic.avatar_url }}" alt="{{ topic.last_poster }}" class="discourse-avatar discourse-avatar-reply" title="{{ topic.last_poster }} (latest reply)">
+                {% elif topic.avatar_url %}
+                  <img src="{{ topic.avatar_url }}" alt="{{ topic.last_poster }}" class="discourse-avatar discourse-avatar-single" title="{{ topic.last_poster }}">
                 {% else %}
-                  <i class="fa fa-user"></i>
+                  <span class="discourse-avatar-fallback"><i class="fa fa-user"></i></span>
                 {% endif %}
               </span>
               <div class="discourse-topic-body">
@@ -117,26 +120,45 @@
 .discourse-topic-item:last-child {
   border-bottom: none;
 }
-.discourse-topic-icon {
+.discourse-avatars {
   flex-shrink: 0;
-  width: 2rem;
+  display: flex;
+  align-items: center;
+  width: 3rem;
   height: 2rem;
+  position: relative;
+}
+.discourse-avatar {
+  width: 1.75rem;
+  height: 1.75rem;
   border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  position: absolute;
+}
+.discourse-avatar-single {
+  left: 0.5rem;
+}
+.discourse-avatar-op {
+  left: 0;
+  z-index: 1;
+}
+.discourse-avatar-reply {
+  left: 1.1rem;
+  z-index: 2;
+}
+.discourse-avatar-fallback {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background-color: #0089d1;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
   color: #fff;
-  background-color: #0089d1;
-  margin-top: 0.15rem;
-  overflow: hidden;
-}
-.discourse-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-  display: block;
+  font-size: 0.8rem;
+  position: absolute;
+  left: 0.5rem;
 }
 .discourse-topic-body {
   flex: 1;
