@@ -470,9 +470,23 @@ def get_discourse_url():
     url = (
         config.get('ckanext.pose_theme.discourse_url')
         or config.get('discourse.url')
-        or 'https://community.civicdataecosystem.org'
+        or 'https://discuss.okfn.org'
     )
     return url.rstrip('/')
+
+
+def get_discourse_topics_path():
+    return config.get(
+        'ckanext.pose_theme.discourse_topics_path',
+        '/c/ckan/35/l/latest.json'
+    )
+
+
+def get_discourse_category_url():
+    return config.get(
+        'ckanext.pose_theme.discourse_category_url',
+        get_discourse_url() + '/c/ckan/35'
+    )
 
 
 _discourse_cache = {'topics': None, 'expires': 0}
@@ -516,9 +530,10 @@ def discourse_latest_topics(num=6):
             return _discourse_cache['topics'][:num]
 
         forum_url = get_discourse_url()
+        topics_path = get_discourse_topics_path()
         try:
             req = Request(
-                forum_url + '/latest.json',
+                forum_url + topics_path,
                 headers={'Accept': 'application/json', 'User-Agent': 'CKAN-pose-ecosystem-catalog/1.0'},
             )
             with urlopen(req, timeout=5) as response:
