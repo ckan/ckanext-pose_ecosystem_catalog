@@ -470,9 +470,23 @@ def get_discourse_url():
     url = (
         config.get('ckanext.pose_theme.discourse_url')
         or config.get('discourse.url')
-        or 'https://community.civicdataecosystem.org'
+        or 'https://discuss.okfn.org'
     )
     return url.rstrip('/')
+
+
+def get_discourse_topics_path():
+    return config.get(
+        'ckanext.pose_theme.discourse_topics_path',
+        '/c/ckan/35/l/latest.json'
+    )
+
+
+def get_discourse_category_url():
+    return config.get(
+        'ckanext.pose_theme.discourse_category_url',
+        get_discourse_url() + '/c/ckan/35'
+    )
 
 
 _discourse_cache = {'topics': None, 'expires': 0}
@@ -516,23 +530,28 @@ def discourse_latest_topics(num=6):
             return _discourse_cache['topics'][:num]
 
         forum_url = get_discourse_url()
+        topics_path = get_discourse_topics_path()
         try:
             req = Request(
-                forum_url + '/latest.json',
+                forum_url + topics_path,
                 headers={'Accept': 'application/json', 'User-Agent': 'CKAN-pose-ecosystem-catalog/1.0'},
             )
             with urlopen(req, timeout=5) as response:
                 data = json.loads(response.read().decode('utf-8'))
 
-            # Build a username → avatar_url lookup from the top-level users list
+            # Build username → avatar_url and user_id → username lookups
             user_avatars = {}
+            user_id_to_username = {}
             for u in data.get('users', []):
                 template = u.get('avatar_template', '')
-                if template:
+                username = u.get('username', '')
+                if template and username:
                     avatar_url = template.replace('{size}', '40')
                     if avatar_url.startswith('/'):
                         avatar_url = forum_url + avatar_url
-                    user_avatars[u['username']] = avatar_url
+                    user_avatars[username] = avatar_url
+                if username and u.get('id'):
+                    user_id_to_username[u['id']] = username
 
             raw = data.get('topic_list', {}).get('topics', [])
             topics = []
@@ -541,6 +560,13 @@ def discourse_latest_topics(num=6):
                     continue
                 last_posted = t.get('last_posted_at') or t.get('created_at', '')
                 username = t.get('last_poster_username', '')
+
+                op_username = ''
+                for poster in t.get('posters', []):
+                    if 'Original Poster' in poster.get('description', ''):
+                        op_username = user_id_to_username.get(poster.get('user_id'), '')
+                        break
+
                 topics.append({
                     'title': t.get('title', ''),
                     'url': '{}/t/{}/{}'.format(forum_url, t.get('slug', ''), t.get('id', '')),
@@ -548,6 +574,8 @@ def discourse_latest_topics(num=6):
                     'relative_time': _relative_time(last_posted),
                     'last_poster': username,
                     'avatar_url': user_avatars.get(username, ''),
+                    'op_username': op_username,
+                    'op_avatar_url': user_avatars.get(op_username, '') if op_username != username else '',
                     'excerpt': t.get('excerpt', '').split('\n')[0][:120].strip(),
                 })
                 if len(topics) >= 20:  # cap fetch; cache the full set
