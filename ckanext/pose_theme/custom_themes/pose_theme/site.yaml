@@ -296,7 +296,7 @@ dataset_fields:
   validators: ignore_missing
   form_placeholder: "e.g. 2026-03"
   help_text: "Set to YYYY-MM (e.g. 2026-03) to feature this site as Site of the Month for that month. Only one site should have a given month value."
-  form_snippet: null
+  form_snippet: scheming/form_snippets/hidden.html
 
 - field_name: topic_id
   label: Topic ID

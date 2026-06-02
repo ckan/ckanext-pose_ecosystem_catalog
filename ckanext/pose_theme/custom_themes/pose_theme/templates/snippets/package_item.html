@@ -59,6 +59,7 @@
 .badge-type--site      { background: rgba(51, 122, 183, 0.08) !important; color: #337ab7 !important; }
 .badge-type--showcase  { background: rgba(91, 192, 222, 0.10) !important; color: #1d8fad !important; }
 .badge-type--dataset   { background: rgba(92, 184, 92, 0.08)  !important; color: #3d8b3d !important; }
+.badge-sotm { font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight: 600; letter-spacing: 0.5px; display: inline-flex; align-items: center; margin-bottom: 8px; background: rgba(217, 83, 79, 0.08) !important; color: #d9534f !important; }
 </style>
   <li class="dataset-item">
     {% block content %}
@@ -78,6 +79,9 @@
           {% block heading_meta %}
             <div class="dataset-meta-badges">
               <span class="badge-type {{ type_class }}">{{ type_label }}</span>
+              {% if package.sotm_month %}
+                <span class="badge-sotm"><i class="fa fa-trophy" style="margin-right:4px;font-size:10px;"></i>{{ _('SOTM') }} {{ h.render_datetime(package.sotm_month + '-01', date_format='%b %Y') }}</span>
+              {% endif %}
               {% if package.get('state', '').startswith('draft') %}
                 <span class="label label-info">{{ _('Draft') }}</span>
               {% elif package.get('state', '').startswith('deleted') %}

@@ -115,12 +115,53 @@
       max-width: 100%;
       margin-bottom: 20px;
     }
-    
+
     .app-site-image {
       max-width: 100%;
       height: auto;
       border: 1px solid #ddd;
       border-radius: 4px;
+    }
+
+    .app-site-image-wrap {
+      position: relative;
+      overflow: hidden;
+      border-radius: 4px;
+      display: inline-block;
+      max-width: 100%;
+    }
+
+    .app-site-image-wrap .sotm-ribbon {
+      position: absolute;
+      top: 22px;
+      left: -36px;
+      width: 160px;
+      background: #d9534f;
+      color: #fff;
+      text-align: center;
+      padding: 6px 0 5px;
+      transform: rotate(-45deg);
+      transform-origin: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+      z-index: 2;
+      pointer-events: none;
+      line-height: 1.2;
+    }
+
+    .app-site-image-wrap .sotm-ribbon-label {
+      display: block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+
+    .app-site-image-wrap .sotm-ribbon-date {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
     }
     
     /* Visit application button */
@@ -283,13 +324,21 @@
                     {% endif %}
                     
                     {% if image_url %}
-                        {% if pkg.url %}
-                            <a href="{{ pkg.url }}" target="_blank">
+                        <div class="app-site-image-wrap">
+                            {% if pkg.url %}
+                                <a href="{{ pkg.url }}" target="_blank">
+                                    <img src="{{ h.get_image_url(image_url) }}" alt="{{ name }}" class="app-site-image">
+                                </a>
+                            {% else %}
                                 <img src="{{ h.get_image_url(image_url) }}" alt="{{ name }}" class="app-site-image">
-                            </a>
-                        {% else %}
-                            <img src="{{ h.get_image_url(image_url) }}" alt="{{ name }}" class="app-site-image">
-                        {% endif %}
+                            {% endif %}
+                            {% if pkg.sotm_month %}
+                                <div class="sotm-ribbon">
+                                    <span class="sotm-ribbon-label">{{ _('SOTM') }}</span>
+                                    <span class="sotm-ribbon-date">{{ h.render_datetime(pkg.sotm_month + '-01', date_format='%b %Y') }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
                     {% endif %}
                 </div>
 
