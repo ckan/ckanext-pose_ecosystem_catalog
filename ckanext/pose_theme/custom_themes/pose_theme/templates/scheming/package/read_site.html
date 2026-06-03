@@ -326,7 +326,7 @@
                     {% if image_url %}
                         <div class="app-site-image-wrap">
                             {% if pkg.url %}
-                                <a href="{{ pkg.url }}" target="_blank">
+                                <a href="{{ pkg.url }}" target="_blank" rel="noopener noreferrer">
                                     <img src="{{ h.get_image_url(image_url) }}" alt="{{ name }}" class="app-site-image">
                                 </a>
                             {% else %}
@@ -366,6 +366,11 @@
               {% block package_search_results_list %}
               {% endblock %}
     </section>
+    {% block discourse_comments %}
+        {% if h.discourse_comments is defined %}
+            {{ h.discourse_comments(pkg) }}
+        {% endif %}
+    {% endblock %}
 
 
 {% endblock %}
