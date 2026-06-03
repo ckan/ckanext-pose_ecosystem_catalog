@@ -129,7 +129,9 @@
     <a class="btn btn-success" href="{{ pkg.url }}/discussions" target="_blank" rel="noopener noreferrer"><i class="fa fa-comments"></i> {{ _('Go to Discussions') }}</a>
 {% else %}
     {% block discourse_comments %}
-        {{ h.discourse_comments(pkg) }}
+        {% if h.discourse_comments is defined %}
+            {{ h.discourse_comments(pkg) }}
+        {% endif %}
     {% endblock %}
 {% endif %}
     
