@@ -1,6 +1,6 @@
 import logging
 
-from flask import Blueprint, make_response, request
+from flask import Blueprint, make_response, redirect, url_for, request
 import ckanext.pose_theme.custom_themes.pose_theme.utils as utils
 
 log = logging.getLogger(__name__)
@@ -59,6 +59,21 @@ def allow_tool_finish_without_resources():
         return  # fall through to CKAN's normal handling
 
 
+# Discourse SSO / topic-creation POSTs back to the originating page URL.
+# The scheming read routes only accept GET, so redirect POST → GET.
+discourse_post_compat = Blueprint(u'discourse_post_compat', __name__)
+
+
+@discourse_post_compat.route(u'/site/<id>', methods=[u'POST'])
+def site_read_post(id):
+    return redirect(url_for(u'site.read', id=id), 303)
+
+
+@discourse_post_compat.route(u'/extension/<id>', methods=[u'POST'])
+def extension_read_post(id):
+    return redirect(url_for(u'extension.read', id=id), 303)
+
+
 def get_blueprints():
-    return [datastore_dictionary]
+    return [datastore_dictionary, discourse_post_compat]
  

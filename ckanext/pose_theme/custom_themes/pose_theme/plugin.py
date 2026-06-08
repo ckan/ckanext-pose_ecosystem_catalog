@@ -11,6 +11,7 @@ class PoseThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IFacets, inherit=True)
     plugins.implements(plugins.IClick)
+    plugins.implements(plugins.IPackageController, inherit=True)
 
     # IFacets
     def dataset_facets(self, facets_dict, package_type):
@@ -67,3 +68,9 @@ class PoseThemePlugin(plugins.SingletonPlugin):
         blueprints = view.get_blueprints()
         blueprints.extend(contact.get_blueprints())
         return blueprints
+
+    # IPackageController
+    def after_dataset_show(self, context, pkg_dict):
+        # Ensure topic_id is present so ckanext-discourse doesn't crash on
+        # site/extension/tool packages that were saved before the field existed.
+        pkg_dict.setdefault('topic_id', '')
