@@ -1,4 +1,4 @@
-.container, .navbar-expand-lg .container, .navbar-fixed-top .container, .navbar-fixed-bottom .container {
+.homepage .container {
   max-width: 1360px !important;
 }
 .homepage [role=main] {
