@@ -57,6 +57,7 @@ class PoseThemePlugin(plugins.SingletonPlugin):
             'pose_theme_tools': helper.tools,
             'pose_theme_featured_tools': helper.featured_tools,
             'pose_theme_recent_tools': helper.recent_tools,
+            'pose_theme_get_user_organizations': helper.get_user_organizations,
         }
 
     def get_commands(self):
