@@ -91,6 +91,16 @@ def organization(num=12):
     return groups[:num]
 
 
+def get_user_organizations(user_id):
+    """Return organizations the given user belongs to."""
+    try:
+        return toolkit.get_action('organization_list_for_user')(
+            {}, {'id': user_id, 'permission': 'read', 'include_dataset_count': False}
+        )
+    except Exception:
+        return []
+
+
 def popular_datasets(num=6):
     """Return a list of popular datasets."""
     datasets = []

@@ -1,0 +1,18 @@
+{% ckan_extends %}
+
+{% block user_info %}
+{{ super() }}
+{% set orgs = h.pose_theme_get_user_organizations(user.id) %}
+{% if orgs %}
+<div class="info">
+  <dl>
+    <dt>{{ _('Organization') if orgs|length == 1 else _('Organizations') }}</dt>
+    <dd>
+      {% for org in orgs %}
+      <div><a href="{{ h.url_for('organization.read', id=org.name) }}">{{ org.display_name or org.title or org.name }}</a></div>
+      {% endfor %}
+    </dd>
+  </dl>
+</div>
+{% endif %}
+{% endblock %}
