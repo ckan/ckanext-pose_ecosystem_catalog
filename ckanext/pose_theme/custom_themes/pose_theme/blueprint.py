@@ -59,6 +59,28 @@ def allow_tool_finish_without_resources():
         return  # fall through to CKAN's normal handling
 
 
+@datastore_dictionary.before_app_request
+def redirect_dataset_to_typed_url():
+    """
+    Redirect /dataset/<id> to the correct type-specific URL (301) when the
+    package is not a plain 'dataset' type. Prevents duplicate-content issues
+    for site/extension/tool/showcase packages.
+    """
+    if request.endpoint != u'dataset.read' or request.method != u'GET':
+        return
+    pkg_id = (request.view_args or {}).get(u'id')
+    if not pkg_id:
+        return
+    try:
+        from ckan.plugins.toolkit import get_action
+        pkg = get_action(u'package_show')({}, {u'id': pkg_id})
+        pkg_type = pkg.get(u'type', u'dataset')
+        if pkg_type != u'dataset':
+            return redirect(url_for(u'{}.read'.format(pkg_type), id=pkg[u'name']), 301)
+    except Exception:
+        return
+
+
 # Discourse SSO / topic-creation POSTs back to the originating page URL.
 # The scheming read routes only accept GET, so redirect POST → GET.
 discourse_post_compat = Blueprint(u'discourse_post_compat', __name__)
