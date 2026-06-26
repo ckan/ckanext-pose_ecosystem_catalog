@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 
 import ckan.model as model
 
+from ckan.lib.redis import connect_to_redis
 from ckan.plugins import toolkit
 from ckan.plugins.toolkit import config
 from packaging.version import Version
@@ -499,23 +500,41 @@ def get_discourse_category_url():
     )
 
 
-_discourse_cache = {'topics': None, 'expires': 0}
+# Prevents multiple threads in the same worker from stampeding the Discourse
+# API on a cold cache. Cross-worker contention is bounded by the Redis cache.
 _discourse_cache_lock = threading.Lock()
-_DISCOURSE_CACHE_TTL = 300  # seconds
+_DISCOURSE_CACHE_KEY = 'discourse:latest_topics'
+_DEFAULT_DISCOURSE_TOPICS_TTL = 300  # seconds
+
+
+def _get_discourse_topics_ttl():
+    return toolkit.asint(
+        config.get('ckanext.pose_theme.discourse_topics_cache_age',
+                   _DEFAULT_DISCOURSE_TOPICS_TTL)
+    )
 
 
 def discourse_latest_topics(num=6):
     """Fetch the latest non-pinned topics from the configured Discourse forum.
 
-    Results are cached in-memory for _DISCOURSE_CACHE_TTL seconds to avoid
-    hammering the Discourse API on every homepage request.
+    Results are cached in Redis (shared across all uWSGI workers) so the
+    Discourse API is hit at most once per TTL period regardless of how many
+    workers or crawler requests are served. TTL comes from
+    ckanext.pose_theme.discourse_topics_cache_age (default 300s).
     """
-    global _discourse_cache
     from urllib.request import urlopen, Request
 
+    # Fast path: serve from the shared Redis cache if present.
+    redis = None
+    try:
+        redis = connect_to_redis()
+        cached = redis.get(_DISCOURSE_CACHE_KEY)
+        if cached is not None:
+            return json.loads(cached)[:num]
+    except Exception as e:
+        logger.debug("[pose_theme] Discourse topics cache read failed: %s", e)
+
     now = time.time()
-    if _discourse_cache['topics'] is not None and now < _discourse_cache['expires']:
-        return _discourse_cache['topics'][:num]
 
     def _relative_time(date_str):
         try:
@@ -535,9 +554,14 @@ def discourse_latest_topics(num=6):
             return ''
 
     with _discourse_cache_lock:
-        # Re-check inside the lock — another thread may have just refreshed
-        if _discourse_cache['topics'] is not None and now < _discourse_cache['expires']:
-            return _discourse_cache['topics'][:num]
+        # Re-check Redis inside the lock — another thread may have just refreshed
+        if redis is not None:
+            try:
+                cached = redis.get(_DISCOURSE_CACHE_KEY)
+                if cached is not None:
+                    return json.loads(cached)[:num]
+            except Exception:
+                pass
 
         forum_url = get_discourse_url()
         topics_path = get_discourse_topics_path()
@@ -590,11 +614,16 @@ def discourse_latest_topics(num=6):
                 })
                 if len(topics) >= 20:  # cap fetch; cache the full set
                     break
-            _discourse_cache = {'topics': topics, 'expires': now + _DISCOURSE_CACHE_TTL}
+            if redis is not None:
+                try:
+                    redis.set(_DISCOURSE_CACHE_KEY, json.dumps(topics),
+                              ex=_get_discourse_topics_ttl())
+                except Exception as e:
+                    logger.debug("[pose_theme] Discourse topics cache write failed: %s", e)
             return topics[:num]
         except Exception as e:
             logger.debug("[pose_theme] Error fetching Discourse topics: %s", e)
-            return _discourse_cache['topics'][:num] if _discourse_cache['topics'] else []
+            return []
 
 
 EXCLUDED_EDITORS = {'ckan_bot', 'a5dur'}
