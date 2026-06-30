@@ -508,10 +508,11 @@ _DEFAULT_DISCOURSE_TOPICS_TTL = 300  # seconds
 
 
 def _get_discourse_topics_ttl():
-    return toolkit.asint(
+    ttl = toolkit.asint(
         config.get('ckanext.pose_theme.discourse_topics_cache_age',
                    _DEFAULT_DISCOURSE_TOPICS_TTL)
     )
+    return ttl if ttl and ttl > 0 else _DEFAULT_DISCOURSE_TOPICS_TTL
 
 
 def discourse_latest_topics(num=6):
