@@ -505,6 +505,10 @@ def get_discourse_category_url():
 _discourse_cache_lock = threading.Lock()
 _DISCOURSE_CACHE_KEY = 'discourse:latest_topics'
 _DEFAULT_DISCOURSE_TOPICS_TTL = 300  # seconds
+_discourse_fallback_cache = {
+    'topics': None,
+    'expires_at': 0,
+}
 
 
 def _get_discourse_topics_ttl():
@@ -513,6 +517,17 @@ def _get_discourse_topics_ttl():
                    _DEFAULT_DISCOURSE_TOPICS_TTL)
     )
     return ttl if ttl and ttl > 0 else _DEFAULT_DISCOURSE_TOPICS_TTL
+
+
+def _get_discourse_fallback_topics():
+    if _discourse_fallback_cache['expires_at'] > time.time():
+        return _discourse_fallback_cache['topics']
+    return None
+
+
+def _set_discourse_fallback_topics(topics):
+    _discourse_fallback_cache['topics'] = topics
+    _discourse_fallback_cache['expires_at'] = time.time() + _get_discourse_topics_ttl()
 
 
 def discourse_latest_topics(num=6):
@@ -534,6 +549,9 @@ def discourse_latest_topics(num=6):
             return json.loads(cached)[:num]
     except Exception as e:
         logger.debug("[pose_theme] Discourse topics cache read failed: %s", e)
+        cached = _get_discourse_fallback_topics()
+        if cached is not None:
+            return cached[:num]
 
 
     def _relative_time(date_str):
@@ -561,7 +579,11 @@ def discourse_latest_topics(num=6):
                 if cached is not None:
                     return json.loads(cached)[:num]
             except Exception:
-                pass
+                redis = None
+        if redis is None:
+            cached = _get_discourse_fallback_topics()
+            if cached is not None:
+                return cached[:num]
 
         forum_url = get_discourse_url()
         topics_path = get_discourse_topics_path()
@@ -614,6 +636,7 @@ def discourse_latest_topics(num=6):
                 })
                 if len(topics) >= 20:  # cap fetch; cache the full set
                     break
+            _set_discourse_fallback_topics(topics)
             if redis is not None:
                 try:
                     redis.set(_DISCOURSE_CACHE_KEY, json.dumps(topics),
