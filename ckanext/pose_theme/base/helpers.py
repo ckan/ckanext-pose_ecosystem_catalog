@@ -519,8 +519,10 @@ def _get_discourse_topics_ttl():
     return ttl if ttl and ttl > 0 else _DEFAULT_DISCOURSE_TOPICS_TTL
 
 
-def _get_discourse_fallback_topics():
-    if _discourse_fallback_cache['expires_at'] > time.time():
+def _get_discourse_fallback_topics(allow_stale=False):
+    if _discourse_fallback_cache['topics'] is None:
+        return None
+    if allow_stale or _discourse_fallback_cache['expires_at'] > time.time():
         return _discourse_fallback_cache['topics']
     return None
 
@@ -646,6 +648,9 @@ def discourse_latest_topics(num=6):
             return topics[:num]
         except Exception as e:
             logger.debug("[pose_theme] Error fetching Discourse topics: %s", e)
+            cached = _get_discourse_fallback_topics(allow_stale=True)
+            if cached is not None:
+                return cached[:num]
             return []
 
 
