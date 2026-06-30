@@ -518,9 +518,9 @@ def _get_discourse_topics_ttl():
 def discourse_latest_topics(num=6):
     """Fetch the latest non-pinned topics from the configured Discourse forum.
 
-    Results are cached in Redis (shared across all uWSGI workers) so the
-    Discourse API is hit at most once per TTL period regardless of how many
-    workers or crawler requests are served. TTL comes from
+    Results are cached in Redis (shared across all uWSGI workers) to reduce
+    Discourse API calls across processes. Without a distributed lock, multiple
+    workers may still refresh concurrently on a simultaneous expiry miss. TTL comes from
     ckanext.pose_theme.discourse_topics_cache_age (default 300s).
     """
     from urllib.request import urlopen, Request
