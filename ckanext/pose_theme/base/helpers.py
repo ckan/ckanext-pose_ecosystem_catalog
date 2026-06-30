@@ -535,7 +535,6 @@ def discourse_latest_topics(num=6):
     except Exception as e:
         logger.debug("[pose_theme] Discourse topics cache read failed: %s", e)
 
-    now = time.time()
 
     def _relative_time(date_str):
         try:
