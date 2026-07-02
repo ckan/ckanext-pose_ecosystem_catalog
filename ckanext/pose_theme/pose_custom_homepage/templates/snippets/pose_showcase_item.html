@@ -13,7 +13,7 @@
 {% set image_url = h.get_value_from_showcase_extras(showcase.extras, 'image_url') %}
 
 {% if not image_url %}
-    {% set image_url = showcase.resources[0].url if showcase.resources else None %}
+    {% set image_url = h.pose_theme_thumbnail_url(showcase) %}
 {% endif %}
 {% block showcase_item %}
 <div class="media-item">

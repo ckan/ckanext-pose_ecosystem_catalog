@@ -71,9 +71,13 @@ def get_recent_showcase_list(num=12):
 
 
 def get_image_url(image_url):
-    if 'https://' in image_url or 'http://' in image_url:
+    if not image_url:
         return image_url
-    print("***********************************", tk.h.url_for_static(image_url))
+    # Already-usable URLs (absolute http(s) or root-relative like
+    # /assets/thumbnails/<id>) are returned as-is; only bare filenames are
+    # resolved against the static assets directory.
+    if image_url.startswith(('http://', 'https://', '/')):
+        return image_url
     return tk.h.url_for_static(image_url)
 
 def get_package_showcase_list(package_id):

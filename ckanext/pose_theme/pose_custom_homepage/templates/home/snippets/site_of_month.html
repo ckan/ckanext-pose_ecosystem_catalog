@@ -1,6 +1,6 @@
 {% set site = h.pose_theme_get_site_of_month() %}
 {% if site %}
-{% set image_url = site.resources[0].url if site.resources else None %}
+{% set image_url = h.pose_theme_thumbnail_url(site) %}
 <section class="section site-of-month">
   <div class="module-content">
     <div class="container">

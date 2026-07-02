@@ -92,6 +92,24 @@ def organization(num=12):
     return groups[:num]
 
 
+def get_thumbnail_url(pkg):
+    """Return a thumbnail URL for a package's first resource.
+
+    For uploaded files, returns a static-looking /assets/thumbnails/<id> URL
+    instead of the /dataset/<id>/resource/<id>/download/<file> path. Cloudflare
+    gates the /dataset path behind its bot challenge, so those images don't load
+    until the visitor is verified; /assets/* is served by the static-asset cache
+    rule with no challenge. External (http) resource URLs are returned as-is.
+    """
+    resources = (pkg.get('resources') if isinstance(pkg, dict) else None) or []
+    if not resources:
+        return None
+    res = resources[0]
+    if res.get('url_type') == 'upload':
+        return toolkit.url_for('pose_thumbnails.thumbnail', resource_id=res['id'])
+    return res.get('url')
+
+
 def get_user_organizations(user_id):
     """Return organizations the given user belongs to."""
     try:
