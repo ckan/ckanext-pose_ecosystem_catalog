@@ -125,13 +125,27 @@ thumbnails = Blueprint(u'pose_thumbnails', __name__)
 
 @thumbnails.route(u'/assets/thumbnails/<resource_id>')
 def thumbnail(resource_id):
-    from ckan.plugins.toolkit import get_action, ObjectNotFound, NotAuthorized
+    from ckan.plugins.toolkit import abort, get_action, ObjectNotFound, NotAuthorized
     from ckan.views.resource import download as resource_download
+    from ckan.common import current_user
+    import ckan.model as model
+
+    # Use the real request user so authorized viewers of private packages are
+    # not falsely 404'd by an anonymous ({}) context.
+    context = {
+        u'model': model,
+        u'session': model.Session,
+        u'user': current_user.name,
+        u'auth_user_obj': current_user,
+    }
     try:
-        resource = get_action(u'resource_show')({}, {u'id': resource_id})
-        pkg = get_action(u'package_show')({}, {u'id': resource[u'package_id']})
+        resource = get_action(u'resource_show')(context, {u'id': resource_id})
+        # This alias is only for uploaded thumbnails; reject link/datastore
+        # resources so it can't be used to redirect to arbitrary URLs.
+        if resource.get(u'url_type') != u'upload':
+            return abort(404)
+        pkg = get_action(u'package_show')(context, {u'id': resource[u'package_id']})
     except (ObjectNotFound, NotAuthorized):
-        from ckan.plugins.toolkit import abort
         return abort(404)
     return resource_download(
         package_type=pkg.get(u'type', u'dataset'),
