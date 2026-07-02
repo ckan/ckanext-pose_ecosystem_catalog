@@ -126,8 +126,8 @@ thumbnails = Blueprint(u'pose_thumbnails', __name__)
 @thumbnails.route(u'/assets/thumbnails/<resource_id>')
 def thumbnail(resource_id):
     from ckan.plugins.toolkit import abort, get_action, ObjectNotFound, NotAuthorized
-    from ckan.views.resource import download as resource_download
     from ckan.common import current_user
+    from flask import current_app
     import ckan.model as model
 
     # Use the real request user so authorized viewers of private packages are
@@ -147,8 +147,18 @@ def thumbnail(resource_id):
         pkg = get_action(u'package_show')(context, {u'id': resource[u'package_id']})
     except (ObjectNotFound, NotAuthorized):
         return abort(404)
-    return resource_download(
-        package_type=pkg.get(u'type', u'dataset'),
+
+    # Delegate to whichever resource-download view is actually registered so
+    # the active filestore serves the file. ckanext-s3filestore overrides the
+    # download route (endpoint 's3_resource.resource_download') to stream from
+    # S3; importing ckan.views.resource.download directly would bypass that and
+    # read from local disk, which fails when files live on S3.
+    pkg_type = pkg.get(u'type', u'dataset')
+    view = (current_app.view_functions.get(u's3_resource.resource_download')
+            or current_app.view_functions.get(u'{}_resource.download'.format(pkg_type))
+            or current_app.view_functions.get(u'resource.download'))
+    return view(
+        package_type=pkg_type,
         id=pkg[u'id'],
         resource_id=resource_id,
     )
