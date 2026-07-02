@@ -106,7 +106,7 @@ def get_thumbnail_url(pkg):
         return None
     res = resources[0]
     if res.get('url_type') == 'upload':
-        return '/assets/thumbnails/' + res['id']
+        return toolkit.url_for('pose_thumbnails.thumbnail', resource_id=res['id'])
     return res.get('url')
 
 
