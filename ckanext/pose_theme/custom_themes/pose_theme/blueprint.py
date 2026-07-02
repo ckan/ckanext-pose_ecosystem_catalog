@@ -112,6 +112,34 @@ def extension_read_post(id):
     return redirect(url_for(u'extension.read', id=id), 303)
 
 
+# Serve dataset-resource thumbnails under a static-looking /assets/thumbnails/
+# path instead of /dataset/<id>/resource/<id>/download/<file>. The homepage
+# thumbnails are dataset resources; on the /dataset/* path Cloudflare's bot
+# challenge gates them so they don't load until the visitor is verified.
+# /assets/* is covered by the static-asset cache rule (no challenge), so the
+# images load immediately. This is a URL alias — it streams/redirects to the
+# live resource, so there's no file duplication and it works for both local
+# and S3 (s3filestore) storage.
+thumbnails = Blueprint(u'pose_thumbnails', __name__)
+
+
+@thumbnails.route(u'/assets/thumbnails/<resource_id>')
+def thumbnail(resource_id):
+    from ckan.plugins.toolkit import get_action, ObjectNotFound, NotAuthorized
+    from ckan.views.resource import download as resource_download
+    try:
+        resource = get_action(u'resource_show')({}, {u'id': resource_id})
+        pkg = get_action(u'package_show')({}, {u'id': resource[u'package_id']})
+    except (ObjectNotFound, NotAuthorized):
+        from ckan.plugins.toolkit import abort
+        return abort(404)
+    return resource_download(
+        package_type=pkg.get(u'type', u'dataset'),
+        id=pkg[u'id'],
+        resource_id=resource_id,
+    )
+
+
 def get_blueprints():
-    return [datastore_dictionary, discourse_post_compat]
+    return [datastore_dictionary, discourse_post_compat, thumbnails]
  

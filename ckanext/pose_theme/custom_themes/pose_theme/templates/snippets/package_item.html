@@ -13,7 +13,7 @@
 
 {% if not image_url %}
     {% if package.resources %}
-      {% set image_url = package.resources[0].url %}
+      {% set image_url = h.pose_theme_thumbnail_url(package) %}
     {% else %}
       {% set image_url = h.get_image_url(package.image_url) if package.image_url else None %}
     {% endif %}

@@ -69,7 +69,7 @@
         </h1>
           {% set image_url = h.get_value_from_showcase_extras(pkg.extras, 'image_url') %}
           {% if not image_url %}
-            {% set image_url = pkg.resources[0].url if pkg.resources else None %}
+            {% set image_url = h.pose_theme_thumbnail_url(pkg) %}
           {% endif %}
           <p class="ckanext-showcase-image-container">
             {% if pkg.url %}

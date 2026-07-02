@@ -320,7 +320,7 @@
             <div class="app-site-sidebar">
                 <div class="app-site-image-container">
                     {% if not image_url %}
-                        {% set image_url = pkg.resources[0].url if pkg.resources else None %}
+                        {% set image_url = h.pose_theme_thumbnail_url(pkg) %}
                     {% endif %}
                     
                     {% if image_url %}
