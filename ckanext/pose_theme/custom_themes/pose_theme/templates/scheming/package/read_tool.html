@@ -125,6 +125,12 @@
     {% block package_search_results_list %}
     {% endblock %}
 
+    {% block discourse_comments %}
+        {% if h.discourse_comments is defined %}
+            {{ h.discourse_comments(pkg) }}
+        {% endif %}
+    {% endblock %}
+
 
 {% endblock %}
 
