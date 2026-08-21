@@ -112,6 +112,14 @@ def extension_read_post(id):
     return redirect(url_for(u'extension.read', id=id), 303)
 
 
+@discourse_post_compat.route(u'/tool/<id>', methods=[u'POST'])
+def tool_read_post(id):
+    if id == u'new':
+        from flask import current_app
+        return current_app.view_functions[u'tool.new'](package_type=u'tool')
+    return redirect(url_for(u'tool.read', id=id), 303)
+
+
 # Serve dataset-resource thumbnails under a static-looking /assets/thumbnails/
 # path instead of /dataset/<id>/resource/<id>/download/<file>. The homepage
 # thumbnails are dataset resources; on the /dataset/* path Cloudflare's bot

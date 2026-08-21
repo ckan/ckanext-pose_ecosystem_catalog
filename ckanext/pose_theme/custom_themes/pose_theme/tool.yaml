@@ -180,6 +180,13 @@ dataset_fields:
       label: Maintainer-curated
   help_text: "Indicates how the description was created."
 
+- field_name: topic_id
+  label: Topic ID
+  validators: ignore_missing
+  form_placeholder: Enter the topic ID
+  form_snippet: null
+  help_text: Unique identifier for the discourse topic
+
 resource_fields:
 
 - field_name: url
