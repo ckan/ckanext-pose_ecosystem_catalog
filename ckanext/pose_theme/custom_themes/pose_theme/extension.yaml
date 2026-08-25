@@ -204,6 +204,13 @@ dataset_fields:
   help_text: Total unique contributors to the repository
   form_snippet: null
 
+- field_name: instances_count
+  label: Instances Using
+  validators: ignore_missing int_validator
+  form_placeholder: Number of CKAN instances running this extension
+  form_snippet: null
+  help_text: Catalogued CKAN instances observed running this extension in the most recent crawl of the ecosystem. Left empty when no instance reported it.
+
 - field_name: contributors
   label: Contributors
   preset: multiple_text
