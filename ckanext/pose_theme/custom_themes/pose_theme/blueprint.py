@@ -1,6 +1,7 @@
 import logging
 
-from flask import Blueprint, make_response, redirect, url_for, request
+from flask import (Blueprint, current_app, make_response, redirect,
+                   request, url_for)
 import ckanext.pose_theme.custom_themes.pose_theme.utils as utils
 
 log = logging.getLogger(__name__)
@@ -96,28 +97,14 @@ def redirect_dataset_to_typed_url():
 discourse_post_compat = Blueprint(u'discourse_post_compat', __name__)
 
 
-@discourse_post_compat.route(u'/site/<id>', methods=[u'POST'])
-def site_read_post(id):
+@discourse_post_compat.route(
+    u'/<any(dataset, site, extension, tool):package_type>/<id>',
+    methods=[u'POST'])
+def package_read_post(package_type, id):
     if id == u'new':
-        from flask import current_app
-        return current_app.view_functions[u'site.new'](package_type=u'site')
-    return redirect(url_for(u'site.read', id=id), 303)
-
-
-@discourse_post_compat.route(u'/extension/<id>', methods=[u'POST'])
-def extension_read_post(id):
-    if id == u'new':
-        from flask import current_app
-        return current_app.view_functions[u'extension.new'](package_type=u'extension')
-    return redirect(url_for(u'extension.read', id=id), 303)
-
-
-@discourse_post_compat.route(u'/tool/<id>', methods=[u'POST'])
-def tool_read_post(id):
-    if id == u'new':
-        from flask import current_app
-        return current_app.view_functions[u'tool.new'](package_type=u'tool')
-    return redirect(url_for(u'tool.read', id=id), 303)
+        return current_app.view_functions[package_type + u'.new'](
+            package_type=package_type)
+    return redirect(url_for(u'{}.read'.format(package_type), id=id), 303)
 
 
 # Serve dataset-resource thumbnails under a static-looking /assets/thumbnails/
