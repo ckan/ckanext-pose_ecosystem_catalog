@@ -24,8 +24,6 @@ class PoseThemeCustomCSSPlugin(MixinPlugin):
         toolkit.add_template_directory(ckan_config, '../templates')
         toolkit.add_public_directory(ckan_config, '../assets')
         toolkit.add_resource('../assets', 'pose_custom_css_resource')
-        toolkit.add_ckan_admin_tab(ckan_config, 'custom-css.custom_css',
-                                   'Custom CSS', icon='file-code-o')
 
     def update_config_schema(self, schema):
         ignore_missing = toolkit.get_validator('ignore_missing')
