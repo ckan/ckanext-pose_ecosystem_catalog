@@ -367,7 +367,7 @@
               {% endblock %}
     </section>
     {% block discourse_comments %}
-        {% if h.discourse_comments is defined %}
+        {% if 'discourse_comments' in h %}
             {{ h.discourse_comments(pkg) }}
         {% endif %}
     {% endblock %}
