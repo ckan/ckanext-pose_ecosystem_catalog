@@ -1,3 +1,4 @@
+{% set pkg = pkg_dict %}
 {% if pkg.type == 'extension' %}
 	{% include 'scheming/package/read_extension.html' %}
 {% elif pkg.type == 'site' %}

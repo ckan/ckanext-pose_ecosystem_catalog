@@ -26,9 +26,6 @@ class PoseThemeHeaderPlugin(MixinPlugin):
     # IConfigurer
     def update_config(self, ckan_config):
         tk.add_template_directory(ckan_config, "../templates")
-        tk.add_ckan_admin_tab(
-            ckan_config, "custom-header.custom_header", "Header", icon="file-code-o"
-        )
 
     def update_config_schema(self, schema):
         ignore_missing = tk.get_validator("ignore_missing")
