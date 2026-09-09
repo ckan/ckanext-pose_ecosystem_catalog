@@ -56,15 +56,15 @@
 
     </div>
     {% block package_description %}
-        {% if pkg.private %}
-            <span class="dataset-private label label-inverse pull-right">
-                <i class="fa fa-lock icon-lock"></i>
-                {{ _('Private') }}
-            </span>
-        {% endif %}
         <h1>
             {% block page_heading %}
                 {{ name }}
+                {% if pkg.private %}
+                    <span class="dataset-private">
+                        <i class="fa fa-lock"></i>
+                        {{ _('Private') }}
+                    </span>
+                {% endif %}
                 {% if pkg.state.startswith('draft') %}
                     [{{ _('Draft') }}]
                 {% endif %}
