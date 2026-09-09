@@ -1,0 +1,682 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('CKAN Ecosystem Insights') }}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li class="active">{{ h.nav_link(_('Insights'), named_route='insights.insights_view') }}</li>
+{% endblock %}
+
+{% block styles %}
+  {{ super() }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  {% raw %}<style>
+.ckan-insights{
+  --paper:#E7EAE3; --panel:#F6F8F3; --line:#CBD2C7;
+  --ink:#16211D; --mute:#68766D;
+  --teal:#0E6E63; --sand:#BE8420; --rust:#9C4530; --slate:#8D9A92;
+  --r:3px;
+}
+.ckan-insights *{box-sizing:border-box}
+
+.ckan-insights{background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 80px}
+h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-weight:700;margin:0;letter-spacing:-.02em}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+
+header{padding:44px 0 26px}
+h1{font-size:clamp(36px,5.6vw,62px);line-height:.96;font-weight:800;max-width:15ch}
+h1 em{font-style:normal;color:var(--teal)}
+.sub{margin-top:16px;max-width:60ch;color:var(--mute)}
+.meta{margin-top:18px;display:flex;gap:18px;flex-wrap:wrap}
+.meta span{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--mute)}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:8px 0 44px}
+.stat{background:var(--panel);padding:18px}
+.stat b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:34px;font-weight:700;line-height:1;letter-spacing:-.03em}
+.stat small{display:block;margin-top:7px;font-size:12px;color:var(--mute);line-height:1.35}
+
+section{margin-bottom:56px}
+.shead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:10px;border-bottom:1.5px solid var(--ink)}
+.shead h2{font-size:23px}
+.shead p{margin:0;font-size:13px;color:var(--mute);max-width:54ch}
+.cols{display:grid;grid-template-columns:1.35fr 1fr;gap:34px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.card+.card{margin-top:16px}
+.card h3{font-size:15px;margin-bottom:4px}
+.card .hint{font-size:12px;color:var(--mute);margin:0 0 12px}
+
+/* weekly columns chart */
+.chart{display:flex;gap:3px;align-items:flex-end;height:210px;padding:14px 14px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r) var(--r) 0 0;border-bottom:0}
+.col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;position:relative;min-width:0;border:0;background:none;padding:0}
+.col i{display:block;width:100%}
+.col:hover i,.col.sel i{filter:saturate(1.4) brightness(1.06)}
+.col.sel{box-shadow:inset 0 0 0 1px var(--ink)}
+.col.bad{opacity:.5}
+.col.bad::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent 0 3px,rgba(22,33,29,.22) 3px 4px)}
+.xaxis{display:flex;gap:3px;padding:8px 14px 12px;background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 var(--r) var(--r)}
+.xaxis span{flex:1;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:9px;color:var(--mute);min-width:0;overflow:hidden;white-space:nowrap}
+.s-current{background:var(--teal)} .s-behind{background:var(--sand)}
+.s-eol{background:var(--rust)} .s-unknown{background:#D3D8D2}
+.readout{margin-top:12px;font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;min-height:52px}
+.readout .ph{color:var(--mute)}
+.readout a{color:var(--teal)}
+.warn{display:inline-block;margin-left:6px;font-family:"IBM Plex Mono",monospace;font-size:11px;padding:1px 6px;border-radius:2px;background:#F0E2C6;color:#8A5E12}
+
+/* fleet strip */
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 10px;font-size:12.5px;align-items:center}
+.legend b{display:flex;align-items:center;gap:7px;font-weight:400}
+.legend button{all:unset;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:12.5px;padding:3px 8px 3px 4px;border-radius:var(--r)}
+.legend button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.legend button[aria-pressed="true"]{background:#fff;box-shadow:inset 0 0 0 1px var(--line)}
+.legend button.off{opacity:.38}
+.key{width:11px;height:11px;border-radius:2px;flex:none}
+.legend .n{font-family:"IBM Plex Mono",monospace;color:var(--mute);font-size:11.5px}
+.fleet{display:flex;flex-wrap:wrap;gap:2px;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.tile{width:11px;height:16px;border-radius:1px;border:0;padding:0;cursor:pointer;transition:transform .08s}
+.tile:hover,.tile:focus-visible{transform:scaleY(1.45);outline:none;box-shadow:0 0 0 1px var(--ink)}
+.tile.dim{opacity:.14;pointer-events:none}
+
+/* ledger */
+.ledger{border-top:1px solid var(--line);max-height:520px;overflow:auto}
+.ev{display:grid;grid-template-columns:82px 22px 1fr;gap:12px;padding:9px 4px;border-bottom:1px solid var(--line);font-size:13px}
+.ev.sus{background:#EFEDE2}
+.ev time{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--mute);padding-top:2px}
+.ev .glyph{font-family:"IBM Plex Mono",monospace;font-size:13px;text-align:center;padding-top:1px}
+.ev.v .glyph{color:var(--teal)} .ev.x .glyph{color:var(--sand)}
+.ev .body a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
+.ev .body a:hover{color:var(--teal);border-color:var(--teal)}
+.ev .det{display:block;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--mute);margin-top:2px;word-break:break-word}
+.ev .det ins{background:#DCE9E4;color:var(--teal);text-decoration:none;padding:0 3px;border-radius:2px}
+.ev .det del{background:#EFDCD5;color:var(--rust);text-decoration:none;padding:0 3px;border-radius:2px}
+.arrow{color:var(--mute);padding:0 4px}
+
+/* controls */
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;align-items:center}
+input[type=search]{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);color:var(--ink);min-width:190px;flex:1}
+input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel)}
+.seg button{all:unset;cursor:pointer;padding:6px 11px;font-size:12.5px;color:var(--mute)}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.seg button:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+
+/* ranks */
+.ranks{border-top:1px solid var(--line)}
+.rank{display:grid;grid-template-columns:28px 1fr 74px auto;gap:10px;align-items:center;padding:8px 6px;border:0;border-bottom:1px solid var(--line);width:100%;text-align:left;font:inherit;color:inherit;background:none;cursor:pointer}
+.rank[aria-pressed="true"]{background:#fff}
+.rank:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+.rank .i{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--mute)}
+.rank .nm{display:flex;align-items:center;gap:8px;min-width:0}
+.rank .nm span:first-child{font-family:"IBM Plex Mono",monospace;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag{font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:1px 5px;border-radius:2px;flex:none}
+.tag.core{background:#DCE9E4;color:var(--teal)} .tag.third{background:#E4E8E2;color:var(--mute)}
+.rank .ct{font-family:"IBM Plex Mono",monospace;font-size:12.5px;white-space:nowrap;text-align:right}
+.rank .ct em{font-style:normal;color:var(--mute);font-size:11px}
+.spark{display:block}
+.delta{font-family:"IBM Plex Mono",monospace;font-size:11.5px;white-space:nowrap}
+.delta.up{color:var(--teal)} .delta.dn{color:var(--rust)} .delta.flat{color:var(--mute)}
+.bar{grid-column:2/5;height:5px;background:#DCE2D9;border-radius:2px;overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;background:var(--teal)}
+.rank.third .bar i{background:var(--sand)}
+.more{padding:12px 0}
+.more button{all:unset;cursor:pointer;font-size:12.5px;color:var(--teal);border-bottom:1px solid var(--teal)}
+.more button:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+
+/* side panels */
+.rows{font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dotted var(--line)}
+.row:last-child{border-bottom:0}
+.row b{font-weight:500}
+.row .v{color:var(--mute)}
+.vbar{position:relative;padding:5px 0;border-bottom:1px dotted var(--line)}
+.vbar:last-child{border-bottom:0}
+.vbar .lbl{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+.vbar .track{display:flex;height:6px;margin-top:5px;border-radius:2px;overflow:hidden;background:#DCE2D9}
+.vbar .track i{display:block;height:100%}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{position:sticky;top:0;background:var(--paper);text-align:left;font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding:8px;border-bottom:1.5px solid var(--ink);cursor:pointer;white-space:nowrap}
+thead th:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+thead th.num{text-align:right}
+th .caret{opacity:.35}
+th[aria-sort] .caret{opacity:1;color:var(--ink)}
+tbody td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:hover{background:var(--panel)}
+td.num{text-align:right;font-family:"IBM Plex Mono",monospace}
+td.nm a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
+td.nm a:hover{border-color:var(--teal);color:var(--teal)}
+td.nm .ex{display:block;font-size:11px;color:var(--mute);margin-top:2px;font-family:"IBM Plex Mono",monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46ch}
+.uptime{display:flex;gap:1px}
+.uptime i{display:block;width:3px;height:13px;background:var(--teal);border-radius:1px}
+.uptime i.down{background:#DCC7C0}
+.pill{font-family:"IBM Plex Mono",monospace;font-size:11.5px;padding:2px 7px;border-radius:2px;white-space:nowrap;display:inline-block}
+.p-current{background:#D7E5E1;color:var(--teal)}
+.p-behind{background:#F0E2C6;color:#8A5E12}
+.p-eol{background:#EFD8D1;color:var(--rust)}
+.p-unknown{background:#E0E4E0;color:var(--mute)}
+.tblhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0 8px}
+.count{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--mute)}
+.empty{padding:26px;text-align:center;color:var(--mute);font-size:13px}
+footer{border-top:1px solid var(--line);padding-top:18px;font-size:12px;color:var(--mute)}
+footer p{max-width:88ch}
+footer code{font-family:"IBM Plex Mono",monospace;background:var(--panel);padding:1px 4px;border-radius:2px}
+
+@media (max-width:900px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .cols{grid-template-columns:1fr;gap:26px}
+  .wrap{padding:0 16px 60px}
+  td.nm .ex{max-width:28ch}
+  .hide-s{display:none}
+  .xaxis span{font-size:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</style>{% endraw %}
+{% endblock %}
+
+{% block primary_content %}
+<div class="ckan-insights">
+{% raw %}
+<div class="wrap">
+
+<header>
+  <p class="eyebrow" id="range">CKAN ecosystem crawl</p>
+  <h1 id="hed">The CKAN fleet, <em>week by week</em>.</h1>
+  <p class="sub">Every public CKAN portal the ecosystem catalogue tracks: what version it runs, whether that version still gets security patches, which plugins it loads, and how all of that has moved across the archived crawls.</p>
+  <p class="meta"><span id="m-weeks"></span><span id="m-baseline">patch baseline: 2.11.5 / 2.10.10</span><span>source: sites-history/</span></p>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<section>
+  <div class="shead">
+    <h2>Week by week</h2>
+    <p>One column per archived crawl, split by support status. Hatched columns are crawls that reached almost nothing — a crawler failure, not a fleet collapse. Click a column to read its numbers.</p>
+  </div>
+  <div class="legend" id="chartLegend"></div>
+  <div class="chart" id="chart"></div>
+  <div class="xaxis" id="xaxis"></div>
+  <div class="readout" id="weekReadout"></div>
+</section>
+
+<section id="fleet">
+  <div class="shead">
+    <h2>The fleet</h2>
+    <p>One tile per instance in the latest crawl, grouped newest version first. Click a status to filter the table at the bottom.</p>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="fleet" id="fleetStrip"></div>
+  <div class="readout" id="readout"><span class="ph">Hover or tap a tile for instance details.</span></div>
+</section>
+
+<section>
+  <div class="shead">
+    <h2>What actually changed</h2>
+    <p>Every version bump and every plugin install or removal detected between consecutive crawls. Shaded rows come from crawls where a large share of the fleet changed at once — a re-baselined crawler or a long gap between crawls — and should not be read as real upgrades.</p>
+  </div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Event type">
+      <button data-ev="all" aria-pressed="true">All events</button>
+      <button data-ev="v" aria-pressed="false">Version bumps</button>
+      <button data-ev="x" aria-pressed="false">Plugin changes</button>
+      <button data-ev="real" aria-pressed="false">Excluding re-baselines</button>
+    </div>
+    <input type="search" id="evSearch" placeholder="filter by instance or plugin…" aria-label="Filter events">
+    <span class="count" id="evCount"></span>
+  </div>
+  <div class="ledger" id="ledger"></div>
+</section>
+
+<section>
+  <div class="shead">
+    <h2>Extension adoption</h2>
+    <p id="extHint">Counts are from the latest crawl. Trend and delta come from the stable cohort — the instances that answered in every crawl of the trailing window — so movement is a real install, not a missed crawl.</p>
+  </div>
+  <div class="cols">
+    <div>
+      <div class="controls">
+        <input type="search" id="extSearch" placeholder="filter extensions…" aria-label="Filter extensions">
+        <div class="seg" role="group" aria-label="Sort">
+          <button data-sort="count" aria-pressed="true">By install base</button>
+          <button data-sort="delta" aria-pressed="false">By movement</button>
+        </div>
+        <div class="seg" role="group" aria-label="Type">
+          <button data-kind="all" aria-pressed="true">All</button>
+          <button data-kind="third" aria-pressed="false">Third-party</button>
+          <button data-kind="core" aria-pressed="false">Core</button>
+        </div>
+      </div>
+      <div class="ranks" id="ranks"></div>
+      <div class="more"><button id="moreBtn"></button></div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 id="pairTitle">Ships alongside</h3>
+        <p class="hint" id="pairHint">Pick an extension to see its co-installs and its cohort line.</p>
+        <div id="pairChart"></div>
+        <div class="rows" id="pairRows"></div>
+      </div>
+      <div class="card">
+        <h3>Upstream packages</h3>
+        <p class="hint">Plugins rolled up to the repo that provides them, latest crawl.</p>
+        <div class="rows" id="famRows"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="shead">
+    <h2>Version spread</h2>
+    <p>Only the newest patch of 2.10 and 2.11 is officially supported. Everything else is on its own.</p>
+  </div>
+  <div class="cols">
+    <div><div class="card"><h3>By release branch</h3><p class="hint">Split by patch status within each branch.</p><div id="branchRows"></div></div></div>
+    <div>
+      <div class="card"><h3>Exact versions in the wild</h3><p class="hint">Top 14 reported version strings.</p><div class="rows" id="verRows"></div></div>
+      <div class="card"><h3>Where they live</h3><p class="hint">Top-level domain of each portal's host.</p><div class="rows" id="tldRows"></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="shead">
+    <h2>Crawl reliability</h2>
+    <p>How often each portal actually answered, counted only over the crawls that worked. Flaky endpoints are a crawler problem as much as a portal problem.</p>
+  </div>
+  <div class="cols">
+    <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
+    <div><div class="card"><h3>Flakiest endpoints</h3><p class="hint">Answered some crawls, not others. Worth a retry policy.</p><div class="rows" id="flakyRows"></div></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="shead">
+    <h2>Instances</h2>
+    <p>Every instance the archive has seen, at its most recent crawl, with the uptime strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name, host, version, or plugin.</p>
+  </div>
+  <div class="tblhead">
+    <input type="search" id="tblSearch" placeholder="search instances…" aria-label="Search instances">
+    <span class="count" id="tblCount"></span>
+  </div>
+  <table>
+    <thead><tr>
+      <th data-sort="n">Instance <span class="caret">↕</span></th>
+      <th data-sort="v">Version <span class="caret">↕</span></th>
+      <th data-sort="up" class="hide-s">Uptime <span class="caret">↕</span></th>
+      <th data-sort="d" class="num">Datasets <span class="caret">↕</span></th>
+      <th data-sort="growth" class="num hide-s">Cohort Δ <span class="caret">↕</span></th>
+      <th data-sort="x" class="num">Exts <span class="caret">↕</span></th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="empty" id="tblEmpty" hidden>Nothing matches that filter.</div>
+</section>
+
+<footer>
+  <p id="foot"></p>
+</footer>
+</div>
+{% endraw %}
+</div>
+{% endblock %}
+
+{% block secondary_content %}{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  {% raw %}<script>
+(async function () {
+  const SRC = 'https://raw.githubusercontent.com/dathere/pose-ckanext-metadata/main/dashboard-data/dashboard.json';
+  const fail = msg => {
+    document.getElementById('hed').textContent = 'The crawl data could not be loaded.';
+    document.getElementById('range').textContent = msg;
+  };
+  let D;
+  try {
+    const resp = await fetch(SRC, {cache: 'no-cache'});
+    if (!resp.ok) return fail('HTTP ' + resp.status + ' fetching the weekly crawl payload.');
+    D = await resp.json();
+  } catch (err) {
+    return fail('Network error fetching the weekly crawl payload.');
+  }
+const NAMES = D.ext_names, W = D.weeks, NW = W.length, VW = D.vweeks, NVW = VW.length;
+const fmt = n => n.toLocaleString('en-US');
+const pct = (a,b) => b ? Math.round(100*a/b) : 0;
+const short = w => w.slice(5).replace('-','/');
+const ORDER = ['current','behind','eol','unknown'];
+const STATUS = {
+  current:{label:'On latest patch', desc:'newest patch of a supported branch'},
+  behind:{label:'Behind on patches', desc:'supported branch, older patch'},
+  eol:{label:'End of life', desc:'2.9 or older'},
+  unknown:{label:'No response', desc:'no version reported'}
+};
+let selectedExt = null;
+let active = new Set(ORDER);
+
+/* ---------- header ---------- */
+const latest = D.timeline[NW-1];
+const realUpgrades = D.upgrades.filter(u => !u.sus && u.k === 'upgrade').length;
+const realExtEvents = D.ext_events.filter(x => !x.sus).length;
+document.getElementById('range').textContent = `CKAN ecosystem crawl · ${W[0]} → ${W[NW-1]}`;
+document.getElementById('hed').innerHTML =
+  `${fmt(D.latest_total)} portals, <em>${pct(D.statuses.eol||0, D.reachable)}%</em> of them past end of life.`;
+document.getElementById('m-weeks').textContent =
+  `${NW} crawls · ${NVW} with version data · ${fmt(D.total)} instances seen`;
+document.getElementById('stats').innerHTML = [
+  [fmt(D.latest_total), `portals in the latest crawl, ${fmt(D.reachable)} of them answering`],
+  [pct(D.statuses.eol||0, D.reachable) + '%', 'of responding portals run a branch that no longer gets patches'],
+  [fmt(D.unique_ext_all), `distinct plugin names seen across the archive, ${fmt(D.unique_ext)} in the latest crawl`],
+  [realUpgrades + ' / ' + realExtEvents, 'genuine version upgrades and plugin changes recorded']
+].map(([b,s]) => `<div class="stat"><b>${b}</b><small>${s}</small></div>`).join('');
+
+/* ---------- weekly chart ---------- */
+const chart = document.getElementById('chart');
+const maxRows = Math.max(...D.timeline.map(t => t.rows));
+chart.innerHTML = D.timeline.map((t,i) => {
+  const h = 100*t.rows/maxRows;
+  const seg = ORDER.map(s => t[s] ? `<i class="s-${s}" style="height:${100*t[s]/t.rows}%"></i>` : '').join('');
+  return `<button class="col ${t.q==='ok'?'':'bad'}" data-i="${i}" aria-label="${W[i]}" style="height:${h}%">${seg}</button>`;
+}).join('');
+document.getElementById('xaxis').innerHTML =
+  W.map((w,i) => `<span>${i%3===0 || i===NW-1 ? short(w) : ''}</span>`).join('');
+document.getElementById('chartLegend').innerHTML = ORDER.map(s =>
+  `<b><span class="key s-${s}"></span>${STATUS[s].label}</b>`).join('');
+const weekReadout = document.getElementById('weekReadout');
+function showWeek(i){
+  const t = D.timeline[i];
+  chart.querySelectorAll('.col').forEach((c,j) => c.classList.toggle('sel', j===i));
+  const flags = [
+    t.q === 'none' ? '<span class="warn">no version data in this crawl</span>' : '',
+    t.q === 'partial' ? `<span class="warn">crawl reached only ${pct(t.up,t.rows)}% of listed portals</span>` : '',
+    t.sus ? '<span class="warn">bulk step: too much changed at once to read as real upgrades</span>' : ''
+  ].join('');
+  weekReadout.innerHTML = `<b class="mono">${t.w}</b> &nbsp;·&nbsp; ${fmt(t.up)} of ${fmt(t.rows)} answered${flags}<br>
+    <span class="pill p-current">${t.current} current</span>
+    <span class="pill p-behind">${t.behind} behind</span>
+    <span class="pill p-eol">${t.eol} EOL</span>
+    <span class="pill p-unknown">${t.unknown} silent</span>
+    <span class="mono" style="font-size:12px;color:var(--mute)"> &nbsp;·&nbsp; ${fmt(t.ds)} datasets reported${
+      t.coh_ds != null ? ` · cohort held ${fmt(t.coh_ds)}` : ''} · ${t.ev} change event${t.ev===1?'':'s'}</span>`;
+}
+chart.addEventListener('click', e => { const c = e.target.closest('.col'); if(c) showWeek(+c.dataset.i); });
+chart.addEventListener('mouseover', e => { const c = e.target.closest('.col'); if(c) showWeek(+c.dataset.i); });
+showWeek(NW-1);
+
+/* ---------- fleet strip ---------- */
+function verKey(i){
+  if(!i.v) return [-1,-1,-1];
+  const p = i.v.split('.').map(x => parseInt(x,10)||0);
+  return [p[0]||0, p[1]||0, p[2]||0];
+}
+const LATEST_SET = D.instances.filter(i => i.seen > 0 || i.v || i.e.length);
+const fleetOrder = LATEST_SET.slice().sort((a,b) => {
+  const A = verKey(a), B = verKey(b);
+  for(let k=0;k<3;k++) if(A[k]!==B[k]) return B[k]-A[k];
+  return b.d-a.d;
+});
+const strip = document.getElementById('fleetStrip');
+strip.innerHTML = fleetOrder.map((i,ix) =>
+  `<button class="tile s-${i.s}" data-ix="${ix}" title="${i.n}" aria-label="${i.n}, ${i.v||'no version'}"></button>`
+).join('');
+const readout = document.getElementById('readout');
+function showInstance(i){
+  readout.innerHTML = `<b class="mono">${i.n}</b> &nbsp;<span class="pill p-${i.s}">${i.v||'no version'}</span><br>
+    <a href="${i.u}" target="_blank" rel="noopener">${i.h||i.u}</a>
+    &nbsp;·&nbsp; ${fmt(i.d)} datasets &nbsp;·&nbsp; ${fmt(i.o)} orgs &nbsp;·&nbsp; ${i.e.length} extensions
+    &nbsp;·&nbsp; answered ${i.seen}/${i.of} crawls`;
+}
+['mouseover','focusin','click'].forEach(ev => strip.addEventListener(ev, e => {
+  const t = e.target.closest('.tile'); if(t) showInstance(fleetOrder[+t.dataset.ix]);
+}));
+
+/* ---------- status filter ---------- */
+const legend = document.getElementById('legend');
+legend.innerHTML = ORDER.map(s =>
+  `<button data-s="${s}" aria-pressed="true"><span class="key s-${s}"></span>${STATUS[s].label}
+   <span class="n">${fmt(D.statuses[s]||0)}</span></button>`).join('');
+legend.addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const s = b.dataset.s;
+  if(active.has(s) && active.size===ORDER.length) active = new Set([s]);
+  else if(active.has(s)){ active.delete(s); if(!active.size) active = new Set(ORDER); }
+  else active.add(s);
+  legend.querySelectorAll('button').forEach(x => {
+    const on = active.has(x.dataset.s);
+    x.setAttribute('aria-pressed', on); x.classList.toggle('off', !on);
+  });
+  const all = active.size===ORDER.length;
+  strip.querySelectorAll('.tile').forEach(t =>
+    t.classList.toggle('dim', !all && !active.has(fleetOrder[+t.dataset.ix].s)));
+  renderTable();
+});
+
+/* ---------- ledger ---------- */
+let evKind = 'all', evQuery = '';
+const EVENTS = [
+  ...D.upgrades.map(u => ({t:'v', w:u.w, n:u.n, sus:u.sus, u})),
+  ...D.ext_events.map(x => ({t:'x', w:x.w, n:x.n, sus:x.sus, x}))
+].sort((a,b) => a.w < b.w ? 1 : a.w > b.w ? -1 : a.n.localeCompare(b.n));
+const HOST = Object.fromEntries(D.instances.map(i => [i.n, i.u]));
+function renderLedger(){
+  const rows = EVENTS.filter(e => {
+    if(evKind === 'real' && e.sus) return false;
+    if(evKind !== 'all' && evKind !== 'real' && e.t !== evKind) return false;
+    if(!evQuery) return true;
+    if(e.n.includes(evQuery)) return true;
+    if(e.t === 'v') return (e.u.from + ' ' + e.u.to).includes(evQuery);
+    return [...e.x.add, ...e.x.rem].some(p => p.includes(evQuery));
+  });
+  document.getElementById('evCount').textContent =
+    `${fmt(rows.length)} event${rows.length===1?'':'s'}` + (rows.length > 400 ? ' · showing first 400' : '');
+  document.getElementById('ledger').innerHTML = rows.slice(0,400).map(e => {
+    const link = `<a href="${HOST[e.n]||'#'}" target="_blank" rel="noopener">${e.n}</a>`;
+    const sus = e.sus ? ' sus' : '';
+    if(e.t === 'v'){
+      const glyph = e.u.k === 'downgrade' ? '↓' : '↑';
+      return `<div class="ev v${sus}"><time>${e.w}</time><span class="glyph">${glyph}</span>
+        <span class="body">${link}${e.u.major?' <span class="pill p-current">minor release</span>':''}
+        <span class="det">${e.u.from}<span class="arrow">→</span>${e.u.to}</span></span></div>`;
+    }
+    const add = e.x.add.map(p => `<ins>+${p}</ins>`).join(' ');
+    const rem = e.x.rem.map(p => `<del>−${p}</del>`).join(' ');
+    return `<div class="ev x${sus}"><time>${e.w}</time><span class="glyph">◇</span>
+      <span class="body">${link}<span class="det">${[add,rem].filter(Boolean).join(' ')}</span></span></div>`;
+  }).join('') || '<div class="empty">No events match that.</div>';
+}
+document.querySelectorAll('[data-ev]').forEach(b => b.addEventListener('click', () => {
+  evKind = b.dataset.ev;
+  document.querySelectorAll('[data-ev]').forEach(x => x.setAttribute('aria-pressed', x===b));
+  renderLedger();
+}));
+document.getElementById('evSearch').addEventListener('input', e => {
+  evQuery = e.target.value.trim().toLowerCase(); renderLedger();
+});
+renderLedger();
+
+/* ---------- sparkline ---------- */
+function spark(series, w=68, h=18){
+  if(!series || series.length < 2) return '';
+  const mn = Math.min(...series), mx = Math.max(...series), rng = (mx-mn)||1;
+  const pts = series.map((v,i) =>
+    `${(i/(series.length-1)*(w-2)+1).toFixed(1)},${(h-1-((v-mn)/rng)*(h-2)).toFixed(1)}`).join(' ');
+  const rising = series[series.length-1] >= series[0];
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">
+    <polyline points="${pts}" fill="none" stroke="${rising?'var(--teal)':'var(--rust)'}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+}
+
+/* ---------- extension ranks ---------- */
+let extKind = 'all', extQuery = '', extSort = 'count', extLimit = 25;
+const ranks = document.getElementById('ranks'), moreBtn = document.getElementById('moreBtn');
+document.getElementById('extHint').textContent =
+  `Counts are from the latest crawl (${fmt(D.with_ext)} portals reported a plugin list). Trend and delta come from the `
+  + `${fmt(D.cohort_n)} instances that answered in every crawl from ${D.cohort_weeks[0]} on, so movement is a real install, not a missed crawl.`;
+function extList(){
+  let l = D.exts.filter(e =>
+    (extKind === 'all' || (extKind === 'core') === !!e.core) &&
+    (!extQuery || e.name.includes(extQuery) || (e.family||'').includes(extQuery)));
+  if(extSort === 'delta') l = l.filter(e => e.delta).sort((a,b) => Math.abs(b.delta)-Math.abs(a.delta));
+  return l;
+}
+function renderExts(){
+  const list = extList(), top = list.slice(0, extLimit);
+  const max = D.exts.length ? D.exts[0].count : 1;
+  ranks.innerHTML = top.map((e,ix) => {
+    const d = e.delta, cls = d>0?'up':d<0?'dn':'flat';
+    return `<button class="rank ${e.core?'':'third'}" data-e="${e.name}" aria-pressed="${selectedExt===e.name}">
+      <span class="i">${ix+1}</span>
+      <span class="nm"><span>${e.name}</span><span class="tag ${e.core?'core':'third'}">${e.core?'core':'ext'}</span></span>
+      <span>${spark(e.cohort)}</span>
+      <span class="ct">${fmt(e.count)} <em>${e.pct}%</em><br><span class="delta ${cls}">${d>0?'+':''}${d||'·'}</span></span>
+      <span class="bar"><i style="width:${Math.max(1.5,100*e.count/max)}%"></i></span>
+    </button>`;
+  }).join('') || '<div class="empty">Nothing matches that.</div>';
+  moreBtn.parentElement.hidden = list.length <= 25;
+  moreBtn.textContent = extLimit >= list.length ? 'show fewer' : `show all ${fmt(list.length)} →`;
+}
+ranks.addEventListener('click', e => {
+  const b = e.target.closest('.rank'); if(!b) return;
+  selectedExt = selectedExt === b.dataset.e ? null : b.dataset.e;
+  renderExts(); renderPairs(); renderTable();
+});
+moreBtn.addEventListener('click', () => {
+  const n = extList().length; extLimit = extLimit >= n ? 25 : n; renderExts();
+});
+document.getElementById('extSearch').addEventListener('input', e => {
+  extQuery = e.target.value.trim().toLowerCase(); extLimit = 25; renderExts();
+});
+document.querySelectorAll('[data-kind]').forEach(b => b.addEventListener('click', () => {
+  extKind = b.dataset.kind; extLimit = 25;
+  document.querySelectorAll('[data-kind]').forEach(x => x.setAttribute('aria-pressed', x===b));
+  renderExts();
+}));
+document.querySelectorAll('.seg [data-sort]').forEach(b => b.addEventListener('click', () => {
+  extSort = b.dataset.sort; extLimit = 25;
+  b.closest('.seg').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x===b));
+  renderExts();
+}));
+function renderPairs(){
+  const T = document.getElementById('pairTitle'), H = document.getElementById('pairHint'),
+        C = document.getElementById('pairChart'), R = document.getElementById('pairRows');
+  if(!selectedExt){
+    T.textContent = 'Ships alongside';
+    H.textContent = 'Pick an extension to see its co-installs and its cohort line.';
+    C.innerHTML = ''; R.innerHTML = ''; return;
+  }
+  const self = D.exts.find(e => e.name === selectedExt);
+  const near = D.pairs.filter(p => p.a === selectedExt || p.b === selectedExt)
+    .map(p => ({name: p.a === selectedExt ? p.b : p.a, n: p.n}))
+    .sort((a,b) => b.n-a.n).slice(0,10);
+  const c = self.cohort;
+  T.innerHTML = `<span class="mono">${selectedExt}</span>`;
+  H.textContent = `${fmt(self.count)} instances load it${self.family?` · from ${self.family}`:''}`
+    + (c && c.length ? ` · cohort went ${c[0]} → ${c[c.length-1]}` : '');
+  C.innerHTML = spark(c, 300, 54);
+  R.innerHTML = near.length ? near.map(p =>
+    `<div class="row"><b>${p.name}</b><span class="v">${pct(p.n,self.count)}%</span></div>`).join('')
+    : '<div class="row"><span class="v">No common pairing.</span></div>';
+}
+document.getElementById('famRows').innerHTML = D.families.map(([f,n]) =>
+  `<div class="row"><b>${f.replace('ckanext-','')}</b><span class="v">${fmt(n)} · ${pct(n,D.with_ext)}%</span></div>`).join('');
+
+/* ---------- version spread ---------- */
+const byBranch = {};
+LATEST_SET.forEach(i => {
+  if(!i.b) return;
+  (byBranch[i.b] ||= {current:0, behind:0, eol:0, unknown:0, total:0});
+  byBranch[i.b][i.s]++; byBranch[i.b].total++;
+});
+const branchMax = Math.max(1, ...Object.values(byBranch).map(b => b.total));
+document.getElementById('branchRows').innerHTML = Object.entries(byBranch)
+  .sort((a,b) => b[1].total-a[1].total).map(([b,v]) => `
+  <div class="vbar">
+    <div class="lbl"><span>CKAN ${b}</span><span>${fmt(v.total)}</span></div>
+    <div class="track" style="width:${Math.max(8,100*v.total/branchMax)}%">
+      ${ORDER.map(s => v[s] ? `<i class="s-${s}" style="width:${100*v[s]/v.total}%"></i>` : '').join('')}
+    </div>
+  </div>`).join('');
+document.getElementById('verRows').innerHTML = D.versions.slice(0,14).map(([v,n]) =>
+  `<div class="row"><b>${v}</b><span class="v">${fmt(n)}</span></div>`).join('');
+document.getElementById('tldRows').innerHTML = D.tlds.map(([t,n]) =>
+  `<div class="row"><b>.${t}</b><span class="v">${fmt(n)}</span></div>`).join('');
+
+/* ---------- reliability ---------- */
+document.getElementById('relHint').textContent = `Across the ${NVW} crawls that returned version data.`;
+const relMax = Math.max(1, ...Object.values(D.reliability));
+const RELL = {always:[`Answered all ${NVW}`, 'var(--teal)'], flaky:['Answered some crawls','var(--sand)'], never:['Never answered','var(--rust)']};
+document.getElementById('relRows').innerHTML = ['always','flaky','never'].map(k => `
+  <div style="padding:6px 0;border-bottom:1px dotted var(--line)">
+    <div style="display:flex;justify-content:space-between" class="mono"><span>${RELL[k][0]}</span><span>${fmt(D.reliability[k])} · ${pct(D.reliability[k],D.total)}%</span></div>
+    <div style="height:6px;margin-top:5px;background:#DCE2D9;border-radius:2px"><i style="display:block;height:100%;border-radius:2px;background:${RELL[k][1]};width:${100*D.reliability[k]/relMax}%"></i></div>
+  </div>`).join('');
+document.getElementById('flakyRows').innerHTML = D.instances
+  .filter(i => i.seen > 0 && i.seen < i.of)
+  .sort((a,b) => (a.seen/a.of)-(b.seen/b.of)).slice(0,12)
+  .map(i => `<div class="row"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.n}</b><span class="v">${i.seen}/${i.of}</span></div>`)
+  .join('');
+
+/* ---------- table ---------- */
+const tbody = document.getElementById('tbody'), tblCount = document.getElementById('tblCount');
+let sortKey = 'd', sortDir = -1, tblQuery = '';
+const SV = {n:i=>i.n, v:i=>verKey(i).reduce((a,x)=>a*1000+x+1,0), up:i=>i.of?i.seen/i.of:-1,
+            d:i=>i.d, growth:i=>i.growth, x:i=>i.e.length};
+function renderTable(){
+  let rows = D.instances.filter(i => active.has(i.s));
+  if(selectedExt){ const id = NAMES.indexOf(selectedExt); rows = rows.filter(i => i.e.includes(id)); }
+  if(tblQuery) rows = rows.filter(i =>
+    i.n.includes(tblQuery) || (i.h||'').includes(tblQuery) || (i.v||'').includes(tblQuery) ||
+    i.e.some(id => NAMES[id].includes(tblQuery)));
+  const get = SV[sortKey];
+  rows.sort((a,b) => { const A = get(a), B = get(b);
+    return typeof A === 'string' ? sortDir*A.localeCompare(B) : sortDir*(A-B); });
+  tbody.innerHTML = rows.slice(0,150).map(i => `
+    <tr>
+      <td class="nm"><a href="${i.u}" target="_blank" rel="noopener">${i.n}</a>${i.gone?' <span class="pill p-unknown">dropped</span>':''}
+        ${i.e.length?`<span class="ex">${i.e.slice(0,5).map(id=>NAMES[id]).join(' · ')}${i.e.length>5?' …':''}</span>`:''}</td>
+      <td><span class="pill p-${i.s}">${i.v||'—'}</span></td>
+      <td class="hide-s"><span class="uptime" title="${i.seen}/${i.of} crawls">${i.up.map(u=>`<i class="${u?'':'down'}"></i>`).join('')}</span></td>
+      <td class="num">${fmt(i.d)}</td>
+      <td class="num hide-s"><span class="delta ${i.growth>0?'up':i.growth<0?'dn':'flat'}">${i.growth?(i.growth>0?'+':'')+fmt(i.growth):'·'}</span></td>
+      <td class="num">${i.e.length||'—'}</td>
+    </tr>`).join('');
+  document.getElementById('tblEmpty').hidden = rows.length > 0;
+  tblCount.textContent = `${fmt(rows.length)} instance${rows.length===1?'':'s'}`
+    + (rows.length > 150 ? ' · showing first 150' : '')
+    + (selectedExt ? ` · running ${selectedExt}` : '');
+}
+document.querySelectorAll('thead th').forEach(th => {
+  th.tabIndex = 0;
+  const go = () => {
+    const k = th.dataset.sort;
+    if(sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = (k === 'n') ? 1 : -1; }
+    document.querySelectorAll('thead th').forEach(x => {
+      x.removeAttribute('aria-sort'); x.querySelector('.caret').textContent = '↕'; });
+    th.setAttribute('aria-sort', sortDir===1 ? 'ascending' : 'descending');
+    th.querySelector('.caret').textContent = sortDir===1 ? '↑' : '↓';
+    renderTable();
+  };
+  th.addEventListener('click', go);
+  th.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
+});
+document.getElementById('tblSearch').addEventListener('input', e => {
+  tblQuery = e.target.value.trim().toLowerCase(); renderTable();
+});
+
+/* ---------- footnote ---------- */
+document.getElementById('foot').innerHTML =
+  `A portal counts as answering in a crawl if it returned either a version or a plugin list. `
+  + `<code>${fmt(D.total)}</code> distinct instances appear across ${NW} archived crawls; the latest covers ${fmt(D.latest_total)}. `
+  + `${NW-NVW} crawls are excluded from every version, uptime and cohort figure: `
+  + `the earliest ones recorded dataset counts only, and a few reached almost no portals at all. `
+  + `Dataset totals are self-reported per portal and are not deduplicated across harvesting relationships, so aggregators double-count their sources. `
+  + (D.suspect_weeks.length ? `Crawls that changed more than 15% of the reporting fleet in a single step (<code>${D.suspect_weeks.join('</code>, <code>')}</code>) are treated as crawler re-baselines or post-gap catch-ups rather than real fleet movement, and are excluded from the headline counts. ` : '')
+  + `Generated by <code>build_dashboard.py</code> from the CSVs <code>derive_csvs.sh</code> builds with qsv.`;
+
+renderExts(); renderPairs(); renderTable();
+
+})();
+</script>{% endraw %}
+{% endblock %}

@@ -2,6 +2,8 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 import ckanext.pose_theme.base.helpers as helper
 import ckanext.pose_theme.custom_themes.pose_theme.blueprint as view
+import ckanext.pose_theme.custom_themes.pose_theme.ckan_map_blueprint as ckan_map
+import ckanext.pose_theme.custom_themes.pose_theme.insights_blueprint as insights
 import ckanext.pose_theme.custom_themes.pose_theme.cli as cli
 from ckanext.pose_theme.routes import contact
 
@@ -92,6 +94,11 @@ class PoseThemePlugin(plugins.SingletonPlugin):
         # Combine all blueprint lists
         blueprints = view.get_blueprints()
         blueprints.extend(contact.get_blueprints())
+        # ckan_map_blueprint has existed since the map was built but was never
+        # imported here, so /map has been a 404 in production. The homepage
+        # embeds its own copy of the map, which is why nobody noticed.
+        blueprints.extend(ckan_map.get_blueprints())
+        blueprints.extend(insights.get_blueprints())
         return blueprints
 
     # IConfigurable
