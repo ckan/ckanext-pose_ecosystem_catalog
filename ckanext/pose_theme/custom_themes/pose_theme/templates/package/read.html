@@ -1,0 +1,33 @@
+{% ckan_extends %}
+
+{# Core renders the Private badge before the <h1> with `badge-inverse
+   pull-right`, both dead Bootstrap 3 classes under CKAN 2.11's Bootstrap 5.
+   Put it inside the heading instead, matching the site/extension/tool pages.
+   package_notes is repeated verbatim from core because it is nested inside
+   the block being overridden. #}
+{% block package_description %}
+  <h1>
+    {% block page_heading %}
+      {{ h.dataset_display_name(pkg) }}
+      {% if pkg.private %}
+        <span class="dataset-private">
+          <i class="fa fa-lock"></i>
+          {{ _('Private') }}
+        </span>
+      {% endif %}
+      {% if pkg.state.startswith('draft') %}
+        [{{ _('Draft') }}]
+      {% endif %}
+      {% if pkg.state == 'deleted' %}
+        [{{ _('Deleted') }}]
+      {% endif %}
+    {% endblock %}
+  </h1>
+  {% block package_notes %}
+    {% if pkg.notes %}
+      <div class="notes embedded-content">
+        {{ h.render_markdown(h.get_translated(pkg, 'notes')) }}
+      </div>
+    {% endif %}
+  {% endblock %}
+{% endblock %}
