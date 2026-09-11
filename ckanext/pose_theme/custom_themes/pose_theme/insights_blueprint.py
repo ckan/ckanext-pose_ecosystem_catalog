@@ -27,13 +27,19 @@ TABS = [
     ('overview', '/insights', 'Overview'),
     ('trends', '/insights/trends', 'Trends'),
     ('instances', '/insights/instances', 'Instances'),
+    ('discussion', '/insights/discussion', 'Discussion'),
 ]
+
+# The standing forum thread for the dashboard:
+# https://discuss.okfn.org/t/ckan-ecosystem-catalog-insights-discussion/13041
+DISCUSSION_TOPIC_ID = '13041'
 
 
 def _render(tab):
     return toolkit.render('insights/index.html', extra_vars={
         'tab': tab,
         'insights_tabs': TABS,
+        'discussion_topic_id': DISCUSSION_TOPIC_ID,
     })
 
 
@@ -53,6 +59,12 @@ def insights_trends():
 def insights_instances():
     """Render the instances screen: instance table and crawl reliability."""
     return _render('instances')
+
+
+@insights.route('/insights/discussion')
+def insights_discussion():
+    """Render the discussion screen: the dashboard's Discourse thread."""
+    return _render('discussion')
 
 
 def get_blueprints():

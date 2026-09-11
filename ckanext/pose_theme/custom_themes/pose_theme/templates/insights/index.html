@@ -188,9 +188,17 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
 .ckan-insights [data-tab]{display:none}
 .ckan-insights.tab-overview [data-tab="overview"],
 .ckan-insights.tab-trends [data-tab="trends"],
-.ckan-insights.tab-instances [data-tab="instances"]{display:block}
+.ckan-insights.tab-instances [data-tab="instances"],
+.ckan-insights.tab-discussion [data-tab="discussion"]{display:block}
 .ckan-insights.tab-overview .stats[data-tab="overview"]{display:grid}
 .ckan-insights section:first-of-type .shead{margin-top:0}
+
+/* Discourse embed: it ships its own "Discussion" h3, which would repeat the
+   section heading, and its own link styling. */
+.insights-discussion #discourse-comments > h3{display:none}
+.insights-discussion .discourse-op{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:18px}
+.insights-discussion .discourse-op-link{display:inline-block;margin-bottom:10px;font-size:.875rem}
+.insights-discussion #discourse-comments-container{min-height:200px}
 
 /* Sidebar. Scoped outside .ckan-insights because the secondary column is
    rendered by page.html, not inside the dashboard wrapper. */
@@ -365,6 +373,27 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
   </div>
 </section>
 
+{% endraw %}
+
+{# Discussion screen. One standing Discourse topic, rendered through the same
+   helper the extension and site pages use, so it inherits the site's Discourse
+   settings rather than embedding anything of its own. #}
+<section id="discussion" data-tab="discussion" class="insights-discussion">
+  <div class="shead">
+    <h2>{{ _('Discussion') }}</h2>
+    <p>{{ _('A general thread for the Insights Dashboard. Posts and replies live on the CKAN forum.') }}</p>
+  </div>
+  {% if 'discourse_comments' in h %}
+    {{ h.discourse_comments({'topic_id': discussion_topic_id}) }}
+  {% else %}
+    <div class="card">
+      <p class="hint">{{ _('The Discourse extension is not enabled on this site, so the thread cannot be shown here.') }}</p>
+      <p><a href="https://discuss.okfn.org/t/{{ discussion_topic_id }}" target="_blank" rel="noopener">{{ _('Open the thread on the CKAN forum') }}</a></p>
+    </div>
+  {% endif %}
+</section>
+
+{% raw %}
 <footer>
   <p id="foot"></p>
 </footer>
@@ -374,6 +403,7 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
 {% endblock %}
 
 {% block secondary_content %}
+  {% if tab != 'discussion' %}
   <div class="module module-narrow module-shallow insights-side">
     <h2 class="module-heading"><i class="fa fa-chart-column"></i> {{ _('On this page') }}</h2>
     <nav class="insights-toc" aria-label="{{ _('Dashboard sections') }}">
@@ -390,6 +420,7 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
       {% endif %}
     </nav>
   </div>
+  {% endif %}
   <div class="module module-narrow module-shallow insights-side">
     <h2 class="module-heading">{{ _('About this data') }}</h2>
     <div class="insights-note">
@@ -503,7 +534,7 @@ strip.innerHTML = fleetOrder.map((i,ix) =>
 const readout = byId('readout');
 function showInstance(i){
   readout.innerHTML = `<b class="mono">${i.n}</b> &nbsp;<span class="pill p-${i.s}">${i.v||'no version'}</span><br>
-    <a href="${i.u}" target="_blank" rel="noopener">${i.h||i.u}</a>
+    <a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.h||i.u}</a>
     &nbsp;·&nbsp; ${fmt(i.d)} datasets &nbsp;·&nbsp; ${fmt(i.o)} orgs &nbsp;·&nbsp; ${i.e.length} extensions
     &nbsp;·&nbsp; answered ${i.seen}/${i.of} crawls`;
 }
@@ -538,7 +569,12 @@ const EVENTS = [
   ...D.upgrades.map(u => ({t:'v', w:u.w, n:u.n, sus:u.sus, u})),
   ...D.ext_events.map(x => ({t:'x', w:x.w, n:x.n, sus:x.sus, x}))
 ].sort((a,b) => a.w < b.w ? 1 : a.w > b.w ? -1 : a.n.localeCompare(b.n));
-const HOST = Object.fromEntries(D.instances.map(i => [i.n, i.u]));
+// Link to the catalogue entry, not the portal. Absolute on purpose: a local
+// or staging copy of this page has no crawl data of its own, so the links
+// should reach the live listings. CKAN redirects /dataset/<name> to the
+// type-specific route, so this works for site, tool and extension alike.
+const CATALOG = 'https://ecosystem.ckan.org';
+const catalogUrl = n => `${CATALOG}/dataset/${encodeURIComponent(n)}`;
 function renderLedger(){
   const rows = EVENTS.filter(e => {
     if(evKind === 'real' && e.sus) return false;
@@ -551,7 +587,7 @@ function renderLedger(){
   byId('evCount').textContent =
     `${fmt(rows.length)} event${rows.length===1?'':'s'}` + (rows.length > 400 ? ' · showing first 400' : '');
   byId('ledger').innerHTML = rows.slice(0,400).map(e => {
-    const link = `<a href="${HOST[e.n]||'#'}" target="_blank" rel="noopener">${e.n}</a>`;
+    const link = `<a href="${catalogUrl(e.n)}" target="_blank" rel="noopener">${e.n}</a>`;
     const sus = e.sus ? ' sus' : '';
     if(e.t === 'v'){
       const glyph = e.u.k === 'downgrade' ? '↓' : '↑';
@@ -693,7 +729,7 @@ byId('relRows').innerHTML = ['always','flaky','never'].map(k => `
 byId('flakyRows').innerHTML = D.instances
   .filter(i => i.seen > 0 && i.seen < i.of)
   .sort((a,b) => (a.seen/a.of)-(b.seen/b.of)).slice(0,12)
-  .map(i => `<div class="row"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.n}</b><span class="v">${i.seen}/${i.of}</span></div>`)
+  .map(i => `<div class="row"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a></b><span class="v">${i.seen}/${i.of}</span></div>`)
   .join('');
 
 /* ---------- table ---------- */
@@ -712,7 +748,7 @@ function renderTable(){
     return typeof A === 'string' ? sortDir*A.localeCompare(B) : sortDir*(A-B); });
   tbody.innerHTML = rows.slice(0, tblLimit).map(i => `
     <tr>
-      <td class="nm"><a href="${i.u}" target="_blank" rel="noopener">${i.n}</a>${i.gone?' <span class="pill p-unknown">dropped</span>':''}
+      <td class="nm"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a>${i.gone?' <span class="pill p-unknown">dropped</span>':''}
         ${i.e.length?`<span class="ex">${i.e.slice(0,5).map(id=>NAMES[id]).join(' · ')}${i.e.length>5?' …':''}</span>`:''}</td>
       <td><span class="pill p-${i.s}">${i.v||'—'}</span></td>
       <td class="hide-s"><span class="uptime" title="${i.seen}/${i.of} crawls">${i.up.map(u=>`<i class="${u?'':'down'}"></i>`).join('')}</span></td>
