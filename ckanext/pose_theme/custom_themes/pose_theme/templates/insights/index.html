@@ -97,9 +97,9 @@ section{margin-bottom:56px}
 /* ~74px a row: a 1.25rem line, a .875rem detail line and 20px of padding.
    740px shows ten of the tall ones, more where an event has no detail. */
 .ledger{border-top:1px solid var(--line);max-height:740px;overflow:auto}
-.ev{display:grid;grid-template-columns:82px 22px 1fr;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:1.25rem}
+.ev{display:grid;grid-template-columns:96px 22px 1fr;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:1.25rem}
 .ev.sus{background:var(--faint)}
-.ev time{font-family:var(--mono);font-size:.875rem;color:var(--mute);padding-top:2px}
+.ev time{font-family:var(--mono);font-size:.875rem;color:var(--mute);padding-top:2px;white-space:nowrap}
 .ev .glyph{font-family:var(--mono);font-size:1rem;text-align:center;padding-top:1px}
 .ev.v .glyph{color:var(--teal)} .ev.x .glyph{color:var(--sand)}
 .ev .body a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
