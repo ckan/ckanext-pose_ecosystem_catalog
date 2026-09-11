@@ -51,6 +51,22 @@ section{margin-bottom:56px}
 /* Reads as the last clause of the blurb, not a control beside the heading. */
 .shead-export{display:inline-flex;align-items:baseline;gap:6px;margin-left:6px;font-size:.875rem;color:#d9534f;text-decoration:none;white-space:nowrap}
 .shead-export:hover,.shead-export:focus{text-decoration:underline}
+
+/* Info affordance. Opens below its anchor so a tooltip on a sticky table
+   header is not clipped by the top of the viewport. */
+.tip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+  margin-left:6px;border:1px solid var(--line);border-radius:50%;
+  font-family:var(--sans);font-size:.75rem;font-weight:500;font-style:normal;
+  line-height:1;letter-spacing:0;text-transform:none;color:var(--mute);
+  cursor:help;position:relative;vertical-align:middle}
+.tip:hover,.tip:focus{color:var(--ink);border-color:var(--mute);outline:none}
+.tip::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);width:max-content;max-width:270px;
+  background:var(--ink);color:#fff;padding:8px 10px;border-radius:6px;
+  font-family:var(--sans);font-size:.75rem;font-weight:400;line-height:1.45;
+  text-align:left;text-transform:none;white-space:normal;
+  opacity:0;visibility:hidden;transition:opacity .12s;z-index:30;pointer-events:none}
+.tip:hover::after,.tip:focus::after{opacity:1;visibility:visible}
 .shead-export:hover,.shead-export:focus{color:#d9534f;text-decoration:none}
 .shead-export i{font-size:.75rem;opacity:.8}
 .shead h2{font-size:2rem;font-weight:500;line-height:1.125}
@@ -316,9 +332,9 @@ footer a code{color:inherit}
   <div class="controls">
     <div class="seg" role="group" aria-label="Event type">
       <button data-ev="all" aria-pressed="true">All events</button>
-      <button data-ev="v" aria-pressed="false">Version bumps</button>
-      <button data-ev="x" aria-pressed="false">Plugin changes</button>
-      <button data-ev="real" aria-pressed="false">Excluding re-baselines</button>
+      <button data-ev="v" aria-pressed="false">Version bumps<span class="tip" tabindex="0" role="note" aria-label="What counts as a version bump" data-tip="The reported CKAN version changed. Minor: 2.10.8 to 2.11.0. Patch: 2.11.5 to 2.11.6.">i</span></button>
+      <button data-ev="x" aria-pressed="false">Plugin changes<span class="tip" tabindex="0" role="note" aria-label="What counts as a plugin change" data-tip="A plugin appeared in, or vanished from, the portal's reported plugin list between two crawls.">i</span></button>
+      <button data-ev="real" aria-pressed="false">Excluding re-baselines<span class="tip" tabindex="0" role="note" aria-label="What a re-baseline is" data-tip="Hides crawls where more than 15% of the fleet changed at once: a crawler re-baseline or a catch-up after a gap, not real movement.">i</span></button>
     </div>
     <input type="search" id="evSearch" placeholder="filter by instance or plugin…" aria-label="Filter events">
     <span class="count" id="evCount"></span>
@@ -380,7 +396,7 @@ footer a code{color:inherit}
 <section id="instances" data-tab="instances">
   <div class="shead">
     <h2>Instances</h2>
-    <p>Every instance the archive has seen, at its most recent crawl, with the uptime strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name, host, version, or plugin.</p>
+    <p>Every instance the archive has seen, at its most recent crawl, with its crawl response strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name, host, version, or plugin.</p>
   </div>
   <div class="tblhead">
     <input type="search" id="tblSearch" placeholder="search instances…" aria-label="Search instances">
@@ -390,9 +406,9 @@ footer a code{color:inherit}
     <thead><tr>
       <th data-sort="n">Instance <span class="caret">↕</span></th>
       <th data-sort="v">Version <span class="caret">↕</span></th>
-      <th data-sort="up" class="hide-s">Uptime <span class="caret">↕</span></th>
+      <th data-sort="up" class="hide-s">Answered<span class="tip" tabindex="0" role="note" aria-label="What Answered measures" data-tip="Crawls this portal responded to, out of those that ran. A site can be up and still not answer the API.">i</span> <span class="caret">↕</span></th>
       <th data-sort="d" class="num">Datasets <span class="caret">↕</span></th>
-      <th data-sort="growth" class="num hide-s">Cohort Δ <span class="caret">↕</span></th>
+      <th data-sort="growth" class="num hide-s">Cohort Δ<span class="tip" tabindex="0" role="note" aria-label="What Cohort delta measures" data-tip="Change in reported dataset count between this portal's first and most recent answered crawl.">i</span> <span class="caret">↕</span></th>
       <th data-sort="x" class="num">Exts <span class="caret">↕</span></th>
     </tr></thead>
     <tbody id="tbody"></tbody>
@@ -831,6 +847,11 @@ function renderTable(){
 // table on the page -- the Flask debug toolbar alone adds a dozen -- and the
 // caret reset below then threw on the first one that has no .caret, aborting
 // the click before it reached renderTable().
+// The icons sit inside a sort header and inside a filter button, so swallow
+// their clicks rather than letting them trigger either.
+document.querySelectorAll('.tip').forEach(t =>
+  t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); }));
+
 const SORT_HEADS = document.querySelectorAll('#instances thead th[data-sort]');
 SORT_HEADS.forEach(th => {
   th.tabIndex = 0;
@@ -862,7 +883,7 @@ byId('tblMoreBtn').addEventListener('click', () => {
 byId('foot').innerHTML =
   `A portal counts as answering in a crawl if it returned either a version or a plugin list. `
   + `<code>${fmt(D.total)}</code> distinct instances appear across ${NW} archived crawls; the latest covers ${fmt(D.latest_total)}. `
-  + `${NW-NVW} crawls are excluded from every version, uptime and cohort figure: `
+  + `${NW-NVW} crawls are excluded from every version, response and cohort figure: `
   + `the earliest ones recorded dataset counts only, and a few reached almost no portals at all. `
   + `Dataset totals are self-reported per portal and are not deduplicated across harvesting relationships, so aggregators double-count their sources. `
   + (D.suspect_weeks.length ? `Crawls that changed more than 15% of the reporting fleet in a single step (<code>${D.suspect_weeks.join('</code>, <code>')}</code>) are treated as crawler re-baselines or post-gap catch-ups rather than real fleet movement, and are excluded from the headline counts. ` : '')
