@@ -181,6 +181,11 @@ td.nm .ex{display:block;font-size:.875rem;color:var(--mute);margin-top:2px;font-
 footer{border-top:1px solid var(--line);padding-top:18px;font-size:.875rem;color:var(--mute)}
 footer p{max-width:88ch}
 footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;border-radius:2px}
+/* Keep the footnote's own muted colour: the accent used elsewhere turns a
+   line of provenance into three highlights. Underline carries the link. */
+footer a{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:2px}
+footer a:hover,footer a:focus{color:var(--ink);text-decoration-color:currentColor}
+footer a code{color:inherit}
 
 @media (max-width:900px){
   .stats{grid-template-columns:repeat(2,1fr)}
