@@ -256,6 +256,8 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
 .insights-facts dd{margin:0;color:#101828;font-weight:500}
 .insights-links{margin:10px 0 0;padding:0;list-style:none}
 .insights-links li{margin-top:6px}
+.insights-report{display:inline-flex;align-items:center;gap:8px}
+.insights-report i{font-size:.75rem;opacity:.8}
 </style>{% endraw %}
 {% endblock %}
 
@@ -467,6 +469,15 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
           <li><a href="https://raw.githubusercontent.com/dathere/pose-ckanext-metadata/main/dashboard-data/dashboard.json" target="_blank" rel="noopener">{{ _('Raw data (JSON)') }}</a></li>
           <li><a href="https://discuss.okfn.org/t/{{ discussion_topic_id }}" target="_blank" rel="noopener">{{ _('Discussion thread') }}</a></li>
         </ul>
+      </div>
+    </div>
+
+    <div class="module module-narrow module-shallow insights-side">
+      <h2 class="module-heading">{{ _('Something look wrong?') }}</h2>
+      <div class="insights-note">
+        <p>{{ _('A portal listed with the wrong version, one that is missing, or a number that does not look right — tell us and we will look into it.') }}</p>
+        <p><a class="insights-report" href="{{ h.url_for('pose_contact.form') }}">
+          <i class="fa fa-envelope"></i>{{ _('Report an issue') }}</a></p>
       </div>
     </div>
   </div>
