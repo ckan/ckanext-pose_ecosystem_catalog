@@ -45,7 +45,7 @@ h1,h2,h3{font-family:var(--sans);color:var(--ink);margin:0}
 .stat small{display:block;margin-top:10px;font-size:.875rem;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;line-height:1.4}
 
 section{margin-bottom:56px}
-.shead{display:flex;align-items:baseline;gap:8px 20px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.shead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
 /* Opens the section's chart as a standalone Plotly page on GitHub Pages,
    which carries the crawl date and Plotly's image export. */
 /* Reads as the last clause of the blurb, not a control beside the heading. */
@@ -53,8 +53,8 @@ section{margin-bottom:56px}
 .shead-export:hover,.shead-export:focus{text-decoration:underline}
 .shead-export:hover,.shead-export:focus{color:#d9534f;text-decoration:none}
 .shead-export i{font-size:.75rem;opacity:.8}
-.shead h2{order:0;font-size:2rem;font-weight:500;line-height:1.125}
-.shead p{order:2;flex:1 0 100%;margin:0;font-size:1rem;color:var(--mute);max-width:66ch;line-height:1.5}
+.shead h2{font-size:2rem;font-weight:500;line-height:1.125}
+.shead p{margin:0;font-size:1rem;color:var(--mute);max-width:66ch;line-height:1.5;text-align:right}
 .cols{display:grid;grid-template-columns:1.35fr 1fr;gap:34px;align-items:start}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
 .card+.card{margin-top:16px}
