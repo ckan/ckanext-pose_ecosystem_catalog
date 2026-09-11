@@ -3,50 +3,56 @@
 {% block subtitle %}{{ _('CKAN Ecosystem Insights') }}{% endblock %}
 
 {% block breadcrumb_content %}
-  <li class="active">{{ h.nav_link(_('Insights'), named_route='insights.insights_view') }}</li>
+  <li>{{ h.nav_link(_('Insights'), named_route='insights.insights_view') }}</li>
+  {% if tab != 'overview' %}
+    <li class="active"><a href="#">{{ _(tab|capitalize) }}</a></li>
+  {% endif %}
 {% endblock %}
 
 {% block styles %}
   {{ super() }}
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   {% raw %}<style>
 .ckan-insights{
-  --paper:#E7EAE3; --panel:#F6F8F3; --line:#CBD2C7;
-  --ink:#16211D; --mute:#68766D;
-  --teal:#0E6E63; --sand:#BE8420; --rust:#9C4530; --slate:#8D9A92;
-  --r:3px;
+  /* Mapped onto the catalogue's Bootstrap tokens so the dashboard reads as
+     part of the site rather than an embedded island. Variable names are kept
+     so the chart/table code that references them is untouched. */
+  /* Type scale and colours taken from the theme stylesheet, so the dashboard
+     matches an ordinary content page (e.g. /dataset/<name>): 1rem body on
+     #101828, headings at weight 500 in rem, #667085 secondary text, #e4e7ec
+     rules on white cards, and the #d9534f accent. */
+  --paper:transparent; --panel:#ffffff; --faint:#f2f4f7; --line:#e4e7ec;
+  --ink:#101828; --body:#101828; --mute:#667085;
+  --teal:#3A833A; --sand:#fd7e14; --rust:#d9534f; --slate:#98a2b3;
+  /* Chart fills at 80% so large areas of colour sit back from the text. */
+  --teal-f:rgba(58,131,58,.8); --sand-f:rgba(253,126,20,.8);
+  --rust-f:rgba(217,83,79,.8); --slate-f:rgba(152,162,179,.8);
+  --sans:"Satoshi",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px; --r-sm:6px;
 }
 .ckan-insights *{box-sizing:border-box}
 
-.ckan-insights{background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:15px;line-height:1.5}
-.wrap{max-width:1180px;margin:0 auto;padding:0 24px 80px}
-h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-weight:700;margin:0;letter-spacing:-.02em}
-.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
-.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.ckan-insights{background:var(--paper);color:var(--body);font-family:var(--sans);font-size:1.25rem;font-weight:400;line-height:1.5}
+.wrap{max-width:none;margin:0;padding:0 0 56px}
+h1,h2,h3{font-family:var(--sans);color:var(--ink);margin:0}
+.mono{font-family:var(--mono)}
+.eyebrow{font-size:1rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--mute)}
 
-header{padding:44px 0 26px}
-h1{font-size:clamp(36px,5.6vw,62px);line-height:.96;font-weight:800;max-width:15ch}
-h1 em{font-style:normal;color:var(--teal)}
-.sub{margin-top:16px;max-width:60ch;color:var(--mute)}
-.meta{margin-top:18px;display:flex;gap:18px;flex-wrap:wrap}
-.meta span{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--mute)}
 
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:8px 0 44px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:0 0 32px}
 .stat{background:var(--panel);padding:18px}
-.stat b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:34px;font-weight:700;line-height:1;letter-spacing:-.03em}
-.stat small{display:block;margin-top:7px;font-size:12px;color:var(--mute);line-height:1.35}
+.stat b{display:block;font-family:var(--sans);font-size:2.5rem;font-weight:500;color:var(--ink);line-height:1.125}
+.stat small{display:block;margin-top:10px;font-size:.875rem;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;line-height:1.4}
 
 section{margin-bottom:56px}
-.shead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:10px;border-bottom:1.5px solid var(--ink)}
-.shead h2{font-size:23px}
-.shead p{margin:0;font-size:13px;color:var(--mute);max-width:54ch}
+.shead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.shead h2{font-size:2rem;font-weight:500;line-height:1.125}
+.shead p{margin:0;font-size:1rem;color:var(--mute);max-width:66ch;line-height:1.5}
 .cols{display:grid;grid-template-columns:1.35fr 1fr;gap:34px;align-items:start}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
 .card+.card{margin-top:16px}
-.card h3{font-size:15px;margin-bottom:4px}
-.card .hint{font-size:12px;color:var(--mute);margin:0 0 12px}
+.card h3{font-size:1.5rem;font-weight:500;line-height:1.125;margin-bottom:6px}
+.card .hint{font-size:1rem;color:var(--mute);margin:0 0 12px}
 
 /* weekly columns chart */
 .chart{display:flex;gap:3px;align-items:flex-end;height:210px;padding:14px 14px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r) var(--r) 0 0;border-bottom:0}
@@ -57,23 +63,23 @@ section{margin-bottom:56px}
 .col.bad{opacity:.5}
 .col.bad::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent 0 3px,rgba(22,33,29,.22) 3px 4px)}
 .xaxis{display:flex;gap:3px;padding:8px 14px 12px;background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 var(--r) var(--r)}
-.xaxis span{flex:1;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:9px;color:var(--mute);min-width:0;overflow:hidden;white-space:nowrap}
-.s-current{background:var(--teal)} .s-behind{background:var(--sand)}
-.s-eol{background:var(--rust)} .s-unknown{background:#D3D8D2}
-.readout{margin-top:12px;font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;min-height:52px}
+.xaxis span{flex:1;text-align:center;font-family:var(--mono);font-size:.875rem;color:var(--mute);min-width:0;overflow:hidden;white-space:nowrap}
+.s-current{background:var(--teal-f)} .s-behind{background:var(--sand-f)}
+.s-eol{background:var(--rust-f)} .s-unknown{background:var(--slate-f)}
+.readout{margin-top:12px;font-size:1rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;min-height:52px}
 .readout .ph{color:var(--mute)}
 .readout a{color:var(--teal)}
-.warn{display:inline-block;margin-left:6px;font-family:"IBM Plex Mono",monospace;font-size:11px;padding:1px 6px;border-radius:2px;background:#F0E2C6;color:#8A5E12}
+.warn{display:inline-block;margin-left:6px;font-size:.875rem;padding:1px 7px;border-radius:4px;background:var(--faint);color:var(--mute)}
 
 /* fleet strip */
-.legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 10px;font-size:12.5px;align-items:center}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 10px;font-size:1rem;align-items:center}
 .legend b{display:flex;align-items:center;gap:7px;font-weight:400}
-.legend button{all:unset;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:12.5px;padding:3px 8px 3px 4px;border-radius:var(--r)}
+.legend button{all:unset;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:1rem;padding:3px 8px 3px 4px;border-radius:var(--r-sm)}
 .legend button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 .legend button[aria-pressed="true"]{background:#fff;box-shadow:inset 0 0 0 1px var(--line)}
 .legend button.off{opacity:.38}
-.key{width:11px;height:11px;border-radius:2px;flex:none}
-.legend .n{font-family:"IBM Plex Mono",monospace;color:var(--mute);font-size:11.5px}
+.key{width:11px;height:11px;border-radius:3px;flex:none}
+.legend .n{font-family:var(--mono);color:var(--mute);font-size:.875rem}
 .fleet{display:flex;flex-wrap:wrap;gap:2px;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
 .tile{width:11px;height:16px;border-radius:1px;border:0;padding:0;cursor:pointer;transition:transform .08s}
 .tile:hover,.tile:focus-visible{transform:scaleY(1.45);outline:none;box-shadow:0 0 0 1px var(--ink)}
@@ -81,24 +87,24 @@ section{margin-bottom:56px}
 
 /* ledger */
 .ledger{border-top:1px solid var(--line);max-height:520px;overflow:auto}
-.ev{display:grid;grid-template-columns:82px 22px 1fr;gap:12px;padding:9px 4px;border-bottom:1px solid var(--line);font-size:13px}
-.ev.sus{background:#EFEDE2}
-.ev time{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--mute);padding-top:2px}
-.ev .glyph{font-family:"IBM Plex Mono",monospace;font-size:13px;text-align:center;padding-top:1px}
+.ev{display:grid;grid-template-columns:82px 22px 1fr;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:1.25rem}
+.ev.sus{background:var(--faint)}
+.ev time{font-family:var(--mono);font-size:.875rem;color:var(--mute);padding-top:2px}
+.ev .glyph{font-family:var(--mono);font-size:1rem;text-align:center;padding-top:1px}
 .ev.v .glyph{color:var(--teal)} .ev.x .glyph{color:var(--sand)}
 .ev .body a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
 .ev .body a:hover{color:var(--teal);border-color:var(--teal)}
-.ev .det{display:block;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--mute);margin-top:2px;word-break:break-word}
-.ev .det ins{background:#DCE9E4;color:var(--teal);text-decoration:none;padding:0 3px;border-radius:2px}
-.ev .det del{background:#EFDCD5;color:var(--rust);text-decoration:none;padding:0 3px;border-radius:2px}
+.ev .det{display:block;font-family:var(--mono);font-size:.875rem;color:var(--mute);margin-top:2px;word-break:break-word}
+.ev .det ins{background:rgba(58,131,58,.12);color:var(--teal);text-decoration:none;padding:0 4px;border-radius:4px}
+.ev .det del{background:rgba(217,83,79,.12);color:var(--rust);text-decoration:none;padding:0 4px;border-radius:4px}
 .arrow{color:var(--mute);padding:0 4px}
 
 /* controls */
 .controls{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;align-items:center}
-input[type=search]{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);color:var(--ink);min-width:190px;flex:1}
+input[type=search]{font:inherit;font-size:1rem;padding:7px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel);color:var(--ink);min-width:190px;flex:1}
 input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
-.seg{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel)}
-.seg button{all:unset;cursor:pointer;padding:6px 11px;font-size:12.5px;color:var(--mute)}
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;background:var(--panel)}
+.seg button{all:unset;cursor:pointer;padding:7px 12px;font-size:1rem;color:var(--mute)}
 .seg button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
 .seg button:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
 
@@ -107,62 +113,62 @@ input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
 .rank{display:grid;grid-template-columns:28px 1fr 74px auto;gap:10px;align-items:center;padding:8px 6px;border:0;border-bottom:1px solid var(--line);width:100%;text-align:left;font:inherit;color:inherit;background:none;cursor:pointer}
 .rank[aria-pressed="true"]{background:#fff}
 .rank:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
-.rank .i{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--mute)}
+.rank .i{font-family:var(--mono);font-size:.875rem;color:var(--mute)}
 .rank .nm{display:flex;align-items:center;gap:8px;min-width:0}
-.rank .nm span:first-child{font-family:"IBM Plex Mono",monospace;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tag{font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:1px 5px;border-radius:2px;flex:none}
-.tag.core{background:#DCE9E4;color:var(--teal)} .tag.third{background:#E4E8E2;color:var(--mute)}
-.rank .ct{font-family:"IBM Plex Mono",monospace;font-size:12.5px;white-space:nowrap;text-align:right}
-.rank .ct em{font-style:normal;color:var(--mute);font-size:11px}
+.rank .nm span:first-child{font-family:var(--mono);font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag{font-size:.875rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:4px;flex:none}
+.tag.core{background:rgba(58,131,58,.12);color:var(--teal)} .tag.third{background:var(--faint);color:var(--mute)}
+.rank .ct{font-family:var(--mono);font-size:1rem;white-space:nowrap;text-align:right}
+.rank .ct em{font-style:normal;color:var(--mute);font-size:.875rem}
 .spark{display:block}
-.delta{font-family:"IBM Plex Mono",monospace;font-size:11.5px;white-space:nowrap}
+.delta{font-family:var(--mono);font-size:.875rem;white-space:nowrap}
 .delta.up{color:var(--teal)} .delta.dn{color:var(--rust)} .delta.flat{color:var(--mute)}
-.bar{grid-column:2/5;height:5px;background:#DCE2D9;border-radius:2px;overflow:hidden;margin-top:5px}
+.bar{grid-column:2/5;height:5px;background:var(--faint);border-radius:3px;overflow:hidden;margin-top:5px}
 .bar i{display:block;height:100%;background:var(--teal)}
 .rank.third .bar i{background:var(--sand)}
 .more{padding:12px 0}
-.more button{all:unset;cursor:pointer;font-size:12.5px;color:var(--teal);border-bottom:1px solid var(--teal)}
+.more button{all:unset;cursor:pointer;font-size:1rem;color:var(--teal);border-bottom:1px solid var(--teal)}
 .more button:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
 
 /* side panels */
-.rows{font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+.rows{font-family:var(--mono);font-size:1rem}
 .row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dotted var(--line)}
 .row:last-child{border-bottom:0}
 .row b{font-weight:500}
 .row .v{color:var(--mute)}
 .vbar{position:relative;padding:5px 0;border-bottom:1px dotted var(--line)}
 .vbar:last-child{border-bottom:0}
-.vbar .lbl{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:12.5px}
-.vbar .track{display:flex;height:6px;margin-top:5px;border-radius:2px;overflow:hidden;background:#DCE2D9}
+.vbar .lbl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:1rem}
+.vbar .track{display:flex;height:6px;margin-top:5px;border-radius:3px;overflow:hidden;background:var(--faint)}
 .vbar .track i{display:block;height:100%}
 
 /* table */
-table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{position:sticky;top:0;background:var(--paper);text-align:left;font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding:8px;border-bottom:1.5px solid var(--ink);cursor:pointer;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:1rem}
+thead th{position:sticky;top:0;background:var(--paper);text-align:left;font-weight:700;font-size:.875rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);padding:8px 8px 10px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
 thead th:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
 thead th.num{text-align:right}
 th .caret{opacity:.35}
 th[aria-sort] .caret{opacity:1;color:var(--ink)}
 tbody td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 tbody tr:hover{background:var(--panel)}
-td.num{text-align:right;font-family:"IBM Plex Mono",monospace}
+td.num{text-align:right;font-family:var(--mono)}
 td.nm a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
 td.nm a:hover{border-color:var(--teal);color:var(--teal)}
-td.nm .ex{display:block;font-size:11px;color:var(--mute);margin-top:2px;font-family:"IBM Plex Mono",monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46ch}
+td.nm .ex{display:block;font-size:.875rem;color:var(--mute);margin-top:2px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46ch}
 .uptime{display:flex;gap:1px}
 .uptime i{display:block;width:3px;height:13px;background:var(--teal);border-radius:1px}
-.uptime i.down{background:#DCC7C0}
-.pill{font-family:"IBM Plex Mono",monospace;font-size:11.5px;padding:2px 7px;border-radius:2px;white-space:nowrap;display:inline-block}
-.p-current{background:#D7E5E1;color:var(--teal)}
-.p-behind{background:#F0E2C6;color:#8A5E12}
-.p-eol{background:#EFD8D1;color:var(--rust)}
-.p-unknown{background:#E0E4E0;color:var(--mute)}
+.uptime i.down{background:rgba(217,83,79,.28)}
+.pill{font-family:var(--mono);font-size:.875rem;padding:2px 7px;border-radius:2px;white-space:nowrap;display:inline-block}
+.p-current{background:rgba(58,131,58,.12);color:var(--teal)}
+.p-behind{background:rgba(253,126,20,.14);color:#b54708}
+.p-eol{background:rgba(217,83,79,.12);color:var(--rust)}
+.p-unknown{background:var(--faint);color:var(--mute)}
 .tblhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0 8px}
-.count{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--mute)}
-.empty{padding:26px;text-align:center;color:var(--mute);font-size:13px}
-footer{border-top:1px solid var(--line);padding-top:18px;font-size:12px;color:var(--mute)}
+.count{font-family:var(--mono);font-size:.875rem;color:var(--mute)}
+.empty{padding:26px;text-align:center;color:var(--mute);font-size:1rem}
+footer{border-top:1px solid var(--line);padding-top:18px;font-size:.875rem;color:var(--mute)}
 footer p{max-width:88ch}
-footer code{font-family:"IBM Plex Mono",monospace;background:var(--panel);padding:1px 4px;border-radius:2px}
+footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;border-radius:2px}
 
 @media (max-width:900px){
   .stats{grid-template-columns:repeat(2,1fr)}
@@ -173,25 +179,67 @@ footer code{font-family:"IBM Plex Mono",monospace;background:var(--panel);paddin
   .xaxis span{font-size:0}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-</style>
+
+/* anchors clear the sticky masthead */
+.ckan-insights section{scroll-margin-top:90px}
+
+/* Screens. Every section is in the DOM on every screen so the one data fetch
+   populates all of them; the active tab decides what is shown. */
+.ckan-insights [data-tab]{display:none}
+.ckan-insights.tab-overview [data-tab="overview"],
+.ckan-insights.tab-trends [data-tab="trends"],
+.ckan-insights.tab-instances [data-tab="instances"]{display:block}
+.ckan-insights.tab-overview .stats[data-tab="overview"]{display:grid}
+.ckan-insights section:first-of-type .shead{margin-top:0}
+
+/* Sidebar. Scoped outside .ckan-insights because the secondary column is
+   rendered by page.html, not inside the dashboard wrapper. */
+.insights-tabs{margin:0 0 22px}
+.insights-tabs .nav-link{
+  font-family:"Satoshi",system-ui,sans-serif;font-size:1.25rem;font-weight:500;
+  color:#667085;border:0;border-bottom:2px solid transparent;padding:10px 16px;
+}
+.insights-tabs .nav-link:hover{color:#101828;border-bottom-color:#e4e7ec;background:none}
+.insights-tabs .nav-link.active{color:#101828;font-weight:500;background:none;border-bottom-color:#d9534f}
+
+.insights-side{font-family:"Satoshi",system-ui,sans-serif}
+.insights-side .module-heading{font-size:1.25rem;font-weight:500}
+.insights-side .module-heading i{margin-right:6px;opacity:.7}
+.insights-toc{display:flex;flex-direction:column;padding:6px 0}
+.insights-toc a{
+  display:block;padding:7px 15px;font-size:1rem;line-height:1.35;
+  color:#667085;text-decoration:none;
+  border-left:2px solid transparent;
+}
+.insights-toc a:hover,.insights-toc a:focus{
+  background:#f2f4f7;
+  color:#d9534f;
+  border-left-color:#d9534f;
+}
+.insights-note{padding:4px 15px 14px;font-size:1rem;line-height:1.5;color:#667085}
+.insights-note p{margin:0 0 8px}
+.insights-note-src{font-size:.875rem}
+@media (min-width:992px){
+  .insights-side:first-child{position:sticky;top:80px}
+}
 </style>{% endraw %}
 {% endblock %}
 
 {% block primary_content %}
-<div class="ckan-insights">
+<ul class="nav nav-tabs insights-tabs">
+  {% for id, url, label in insights_tabs %}
+    <li class="nav-item">
+      <a class="nav-link{% if tab == id %} active{% endif %}" href="{{ url }}">{{ _(label) }}</a>
+    </li>
+  {% endfor %}
+</ul>
+<div class="ckan-insights tab-{{ tab }}">
 {% raw %}
 <div class="wrap">
 
-<header>
-  <p class="eyebrow" id="range">CKAN ecosystem crawl</p>
-  <h1 id="hed">The CKAN fleet, <em>week by week</em>.</h1>
-  <p class="sub">Every public CKAN portal the ecosystem catalogue tracks: what version it runs, whether that version still gets security patches, which plugins it loads, and how all of that has moved across the archived crawls.</p>
-  <p class="meta"><span id="m-weeks"></span><span id="m-baseline">patch baseline: 2.11.5 / 2.10.10</span><span>source: sites-history/</span></p>
-</header>
+<div class="stats" id="stats" data-tab="overview"></div>
 
-<div class="stats" id="stats"></div>
-
-<section>
+<section id="weekly" data-tab="overview">
   <div class="shead">
     <h2>Week by week</h2>
     <p>One column per archived crawl, split by support status. Hatched columns are crawls that reached almost nothing — a crawler failure, not a fleet collapse. Click a column to read its numbers.</p>
@@ -202,7 +250,7 @@ footer code{font-family:"IBM Plex Mono",monospace;background:var(--panel);paddin
   <div class="readout" id="weekReadout"></div>
 </section>
 
-<section id="fleet">
+<section id="fleet" data-tab="overview">
   <div class="shead">
     <h2>The fleet</h2>
     <p>One tile per instance in the latest crawl, grouped newest version first. Click a status to filter the table at the bottom.</p>
@@ -212,7 +260,7 @@ footer code{font-family:"IBM Plex Mono",monospace;background:var(--panel);paddin
   <div class="readout" id="readout"><span class="ph">Hover or tap a tile for instance details.</span></div>
 </section>
 
-<section>
+<section id="changes" data-tab="trends">
   <div class="shead">
     <h2>What actually changed</h2>
     <p>Every version bump and every plugin install or removal detected between consecutive crawls. Shaded rows come from crawls where a large share of the fleet changed at once — a re-baselined crawler or a long gap between crawls — and should not be read as real upgrades.</p>
@@ -230,7 +278,7 @@ footer code{font-family:"IBM Plex Mono",monospace;background:var(--panel);paddin
   <div class="ledger" id="ledger"></div>
 </section>
 
-<section>
+<section id="adoption" data-tab="trends">
   <div class="shead">
     <h2>Extension adoption</h2>
     <p id="extHint">Counts are from the latest crawl. Trend and delta come from the stable cohort — the instances that answered in every crawl of the trailing window — so movement is a real install, not a missed crawl.</p>
@@ -268,7 +316,7 @@ footer code{font-family:"IBM Plex Mono",monospace;background:var(--panel);paddin
   </div>
 </section>
 
-<section>
+<section id="versions" data-tab="overview">
   <div class="shead">
     <h2>Version spread</h2>
     <p>Only the newest patch of 2.10 and 2.11 is officially supported. Everything else is on its own.</p>
@@ -282,18 +330,7 @@ footer code{font-family:"IBM Plex Mono",monospace;background:var(--panel);paddin
   </div>
 </section>
 
-<section>
-  <div class="shead">
-    <h2>Crawl reliability</h2>
-    <p>How often each portal actually answered, counted only over the crawls that worked. Flaky endpoints are a crawler problem as much as a portal problem.</p>
-  </div>
-  <div class="cols">
-    <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
-    <div><div class="card"><h3>Flakiest endpoints</h3><p class="hint">Answered some crawls, not others. Worth a retry policy.</p><div class="rows" id="flakyRows"></div></div></div>
-  </div>
-</section>
-
-<section>
+<section id="instances" data-tab="instances">
   <div class="shead">
     <h2>Instances</h2>
     <p>Every instance the archive has seen, at its most recent crawl, with the uptime strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name, host, version, or plugin.</p>
@@ -314,6 +351,18 @@ footer code{font-family:"IBM Plex Mono",monospace;background:var(--panel);paddin
     <tbody id="tbody"></tbody>
   </table>
   <div class="empty" id="tblEmpty" hidden>Nothing matches that filter.</div>
+  <div class="more"><button id="tblMoreBtn"></button></div>
+</section>
+
+<section id="reliability" data-tab="instances">
+  <div class="shead">
+    <h2>Crawl reliability</h2>
+    <p>How often each portal actually answered, counted only over the crawls that worked. Flaky endpoints are a crawler problem as much as a portal problem.</p>
+  </div>
+  <div class="cols">
+    <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
+    <div><div class="card"><h3>Flakiest endpoints</h3><p class="hint">Answered some crawls, not others. Worth a retry policy.</p><div class="rows" id="flakyRows"></div></div></div>
+  </div>
 </section>
 
 <footer>
@@ -324,16 +373,45 @@ footer code{font-family:"IBM Plex Mono",monospace;background:var(--panel);paddin
 </div>
 {% endblock %}
 
-{% block secondary_content %}{% endblock %}
+{% block secondary_content %}
+  <div class="module module-narrow module-shallow insights-side">
+    <h2 class="module-heading"><i class="fa fa-chart-column"></i> {{ _('On this page') }}</h2>
+    <nav class="insights-toc" aria-label="{{ _('Dashboard sections') }}">
+      {% if tab == 'overview' %}
+        <a href="#weekly">{{ _('Week by week') }}</a>
+        <a href="#fleet">{{ _('The fleet') }}</a>
+        <a href="#versions">{{ _('Version spread') }}</a>
+      {% elif tab == 'trends' %}
+        <a href="#changes">{{ _('What actually changed') }}</a>
+        <a href="#adoption">{{ _('Extension adoption') }}</a>
+      {% else %}
+        <a href="#instances">{{ _('Instances') }}</a>
+        <a href="#reliability">{{ _('Crawl reliability') }}</a>
+      {% endif %}
+    </nav>
+  </div>
+  <div class="module module-narrow module-shallow insights-side">
+    <h2 class="module-heading">{{ _('About this data') }}</h2>
+    <div class="insights-note">
+      <p>{{ _('Rebuilt from the weekly crawl of every public CKAN portal the catalogue tracks. The page reads the published rollup directly, so the numbers change without a redeploy.') }}</p>
+      <p class="insights-note-src">{{ _('Source') }}: <a href="https://github.com/dathere/pose-ckanext-metadata" rel="noopener">pose-ckanext-metadata</a></p>
+    </div>
+  </div>
+{% endblock %}
 
 {% block scripts %}
   {{ super() }}
   {% raw %}<script>
+// Elements can legitimately be absent: the hero was removed and each tab only
+// renders its own sections. Return a detached stand-in instead of null so a
+// missing node cannot abort the rest of the script.
+const _sink = document.createElement('div');
+const byId = id => document.getElementById(id) || _sink;
 (async function () {
   const SRC = 'https://raw.githubusercontent.com/dathere/pose-ckanext-metadata/main/dashboard-data/dashboard.json';
   const fail = msg => {
-    document.getElementById('hed').textContent = 'The crawl data could not be loaded.';
-    document.getElementById('range').textContent = msg;
+    byId('hed').textContent = 'The crawl data could not be loaded.';
+    byId('range').textContent = msg;
   };
   let D;
   try {
@@ -361,12 +439,12 @@ let active = new Set(ORDER);
 const latest = D.timeline[NW-1];
 const realUpgrades = D.upgrades.filter(u => !u.sus && u.k === 'upgrade').length;
 const realExtEvents = D.ext_events.filter(x => !x.sus).length;
-document.getElementById('range').textContent = `CKAN ecosystem crawl · ${W[0]} → ${W[NW-1]}`;
-document.getElementById('hed').innerHTML =
+byId('range').textContent = `CKAN ecosystem crawl · ${W[0]} → ${W[NW-1]}`;
+byId('hed').innerHTML =
   `${fmt(D.latest_total)} portals, <em>${pct(D.statuses.eol||0, D.reachable)}%</em> of them past end of life.`;
-document.getElementById('m-weeks').textContent =
+byId('m-weeks').textContent =
   `${NW} crawls · ${NVW} with version data · ${fmt(D.total)} instances seen`;
-document.getElementById('stats').innerHTML = [
+byId('stats').innerHTML = [
   [fmt(D.latest_total), `portals in the latest crawl, ${fmt(D.reachable)} of them answering`],
   [pct(D.statuses.eol||0, D.reachable) + '%', 'of responding portals run a branch that no longer gets patches'],
   [fmt(D.unique_ext_all), `distinct plugin names seen across the archive, ${fmt(D.unique_ext)} in the latest crawl`],
@@ -374,18 +452,18 @@ document.getElementById('stats').innerHTML = [
 ].map(([b,s]) => `<div class="stat"><b>${b}</b><small>${s}</small></div>`).join('');
 
 /* ---------- weekly chart ---------- */
-const chart = document.getElementById('chart');
+const chart = byId('chart');
 const maxRows = Math.max(...D.timeline.map(t => t.rows));
 chart.innerHTML = D.timeline.map((t,i) => {
   const h = 100*t.rows/maxRows;
   const seg = ORDER.map(s => t[s] ? `<i class="s-${s}" style="height:${100*t[s]/t.rows}%"></i>` : '').join('');
   return `<button class="col ${t.q==='ok'?'':'bad'}" data-i="${i}" aria-label="${W[i]}" style="height:${h}%">${seg}</button>`;
 }).join('');
-document.getElementById('xaxis').innerHTML =
+byId('xaxis').innerHTML =
   W.map((w,i) => `<span>${i%3===0 || i===NW-1 ? short(w) : ''}</span>`).join('');
-document.getElementById('chartLegend').innerHTML = ORDER.map(s =>
+byId('chartLegend').innerHTML = ORDER.map(s =>
   `<b><span class="key s-${s}"></span>${STATUS[s].label}</b>`).join('');
-const weekReadout = document.getElementById('weekReadout');
+const weekReadout = byId('weekReadout');
 function showWeek(i){
   const t = D.timeline[i];
   chart.querySelectorAll('.col').forEach((c,j) => c.classList.toggle('sel', j===i));
@@ -399,7 +477,7 @@ function showWeek(i){
     <span class="pill p-behind">${t.behind} behind</span>
     <span class="pill p-eol">${t.eol} EOL</span>
     <span class="pill p-unknown">${t.unknown} silent</span>
-    <span class="mono" style="font-size:12px;color:var(--mute)"> &nbsp;·&nbsp; ${fmt(t.ds)} datasets reported${
+    <span class="mono" style="font-size:.875rem;color:var(--mute)"> &nbsp;·&nbsp; ${fmt(t.ds)} datasets reported${
       t.coh_ds != null ? ` · cohort held ${fmt(t.coh_ds)}` : ''} · ${t.ev} change event${t.ev===1?'':'s'}</span>`;
 }
 chart.addEventListener('click', e => { const c = e.target.closest('.col'); if(c) showWeek(+c.dataset.i); });
@@ -418,11 +496,11 @@ const fleetOrder = LATEST_SET.slice().sort((a,b) => {
   for(let k=0;k<3;k++) if(A[k]!==B[k]) return B[k]-A[k];
   return b.d-a.d;
 });
-const strip = document.getElementById('fleetStrip');
+const strip = byId('fleetStrip');
 strip.innerHTML = fleetOrder.map((i,ix) =>
   `<button class="tile s-${i.s}" data-ix="${ix}" title="${i.n}" aria-label="${i.n}, ${i.v||'no version'}"></button>`
 ).join('');
-const readout = document.getElementById('readout');
+const readout = byId('readout');
 function showInstance(i){
   readout.innerHTML = `<b class="mono">${i.n}</b> &nbsp;<span class="pill p-${i.s}">${i.v||'no version'}</span><br>
     <a href="${i.u}" target="_blank" rel="noopener">${i.h||i.u}</a>
@@ -434,7 +512,7 @@ function showInstance(i){
 }));
 
 /* ---------- status filter ---------- */
-const legend = document.getElementById('legend');
+const legend = byId('legend');
 legend.innerHTML = ORDER.map(s =>
   `<button data-s="${s}" aria-pressed="true"><span class="key s-${s}"></span>${STATUS[s].label}
    <span class="n">${fmt(D.statuses[s]||0)}</span></button>`).join('');
@@ -470,9 +548,9 @@ function renderLedger(){
     if(e.t === 'v') return (e.u.from + ' ' + e.u.to).includes(evQuery);
     return [...e.x.add, ...e.x.rem].some(p => p.includes(evQuery));
   });
-  document.getElementById('evCount').textContent =
+  byId('evCount').textContent =
     `${fmt(rows.length)} event${rows.length===1?'':'s'}` + (rows.length > 400 ? ' · showing first 400' : '');
-  document.getElementById('ledger').innerHTML = rows.slice(0,400).map(e => {
+  byId('ledger').innerHTML = rows.slice(0,400).map(e => {
     const link = `<a href="${HOST[e.n]||'#'}" target="_blank" rel="noopener">${e.n}</a>`;
     const sus = e.sus ? ' sus' : '';
     if(e.t === 'v'){
@@ -492,7 +570,7 @@ document.querySelectorAll('[data-ev]').forEach(b => b.addEventListener('click', 
   document.querySelectorAll('[data-ev]').forEach(x => x.setAttribute('aria-pressed', x===b));
   renderLedger();
 }));
-document.getElementById('evSearch').addEventListener('input', e => {
+byId('evSearch').addEventListener('input', e => {
   evQuery = e.target.value.trim().toLowerCase(); renderLedger();
 });
 renderLedger();
@@ -510,8 +588,8 @@ function spark(series, w=68, h=18){
 
 /* ---------- extension ranks ---------- */
 let extKind = 'all', extQuery = '', extSort = 'count', extLimit = 25;
-const ranks = document.getElementById('ranks'), moreBtn = document.getElementById('moreBtn');
-document.getElementById('extHint').textContent =
+const ranks = byId('ranks'), moreBtn = byId('moreBtn');
+byId('extHint').textContent =
   `Counts are from the latest crawl (${fmt(D.with_ext)} portals reported a plugin list). Trend and delta come from the `
   + `${fmt(D.cohort_n)} instances that answered in every crawl from ${D.cohort_weeks[0]} on, so movement is a real install, not a missed crawl.`;
 function extList(){
@@ -545,7 +623,7 @@ ranks.addEventListener('click', e => {
 moreBtn.addEventListener('click', () => {
   const n = extList().length; extLimit = extLimit >= n ? 25 : n; renderExts();
 });
-document.getElementById('extSearch').addEventListener('input', e => {
+byId('extSearch').addEventListener('input', e => {
   extQuery = e.target.value.trim().toLowerCase(); extLimit = 25; renderExts();
 });
 document.querySelectorAll('[data-kind]').forEach(b => b.addEventListener('click', () => {
@@ -559,8 +637,8 @@ document.querySelectorAll('.seg [data-sort]').forEach(b => b.addEventListener('c
   renderExts();
 }));
 function renderPairs(){
-  const T = document.getElementById('pairTitle'), H = document.getElementById('pairHint'),
-        C = document.getElementById('pairChart'), R = document.getElementById('pairRows');
+  const T = byId('pairTitle'), H = byId('pairHint'),
+        C = byId('pairChart'), R = byId('pairRows');
   if(!selectedExt){
     T.textContent = 'Ships alongside';
     H.textContent = 'Pick an extension to see its co-installs and its cohort line.';
@@ -579,7 +657,7 @@ function renderPairs(){
     `<div class="row"><b>${p.name}</b><span class="v">${pct(p.n,self.count)}%</span></div>`).join('')
     : '<div class="row"><span class="v">No common pairing.</span></div>';
 }
-document.getElementById('famRows').innerHTML = D.families.map(([f,n]) =>
+byId('famRows').innerHTML = D.families.map(([f,n]) =>
   `<div class="row"><b>${f.replace('ckanext-','')}</b><span class="v">${fmt(n)} · ${pct(n,D.with_ext)}%</span></div>`).join('');
 
 /* ---------- version spread ---------- */
@@ -590,7 +668,7 @@ LATEST_SET.forEach(i => {
   byBranch[i.b][i.s]++; byBranch[i.b].total++;
 });
 const branchMax = Math.max(1, ...Object.values(byBranch).map(b => b.total));
-document.getElementById('branchRows').innerHTML = Object.entries(byBranch)
+byId('branchRows').innerHTML = Object.entries(byBranch)
   .sort((a,b) => b[1].total-a[1].total).map(([b,v]) => `
   <div class="vbar">
     <div class="lbl"><span>CKAN ${b}</span><span>${fmt(v.total)}</span></div>
@@ -598,29 +676,29 @@ document.getElementById('branchRows').innerHTML = Object.entries(byBranch)
       ${ORDER.map(s => v[s] ? `<i class="s-${s}" style="width:${100*v[s]/v.total}%"></i>` : '').join('')}
     </div>
   </div>`).join('');
-document.getElementById('verRows').innerHTML = D.versions.slice(0,14).map(([v,n]) =>
+byId('verRows').innerHTML = D.versions.slice(0,14).map(([v,n]) =>
   `<div class="row"><b>${v}</b><span class="v">${fmt(n)}</span></div>`).join('');
-document.getElementById('tldRows').innerHTML = D.tlds.map(([t,n]) =>
+byId('tldRows').innerHTML = D.tlds.map(([t,n]) =>
   `<div class="row"><b>.${t}</b><span class="v">${fmt(n)}</span></div>`).join('');
 
 /* ---------- reliability ---------- */
-document.getElementById('relHint').textContent = `Across the ${NVW} crawls that returned version data.`;
+byId('relHint').textContent = `Across the ${NVW} crawls that returned version data.`;
 const relMax = Math.max(1, ...Object.values(D.reliability));
-const RELL = {always:[`Answered all ${NVW}`, 'var(--teal)'], flaky:['Answered some crawls','var(--sand)'], never:['Never answered','var(--rust)']};
-document.getElementById('relRows').innerHTML = ['always','flaky','never'].map(k => `
+const RELL = {always:[`Answered all ${NVW}`, 'var(--teal-f)'], flaky:['Answered some crawls','var(--sand-f)'], never:['Never answered','var(--rust-f)']};
+byId('relRows').innerHTML = ['always','flaky','never'].map(k => `
   <div style="padding:6px 0;border-bottom:1px dotted var(--line)">
     <div style="display:flex;justify-content:space-between" class="mono"><span>${RELL[k][0]}</span><span>${fmt(D.reliability[k])} · ${pct(D.reliability[k],D.total)}%</span></div>
-    <div style="height:6px;margin-top:5px;background:#DCE2D9;border-radius:2px"><i style="display:block;height:100%;border-radius:2px;background:${RELL[k][1]};width:${100*D.reliability[k]/relMax}%"></i></div>
+    <div style="height:6px;margin-top:5px;background:#f2f4f7;border-radius:3px"><i style="display:block;height:100%;border-radius:2px;background:${RELL[k][1]};width:${100*D.reliability[k]/relMax}%"></i></div>
   </div>`).join('');
-document.getElementById('flakyRows').innerHTML = D.instances
+byId('flakyRows').innerHTML = D.instances
   .filter(i => i.seen > 0 && i.seen < i.of)
   .sort((a,b) => (a.seen/a.of)-(b.seen/b.of)).slice(0,12)
   .map(i => `<div class="row"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.n}</b><span class="v">${i.seen}/${i.of}</span></div>`)
   .join('');
 
 /* ---------- table ---------- */
-const tbody = document.getElementById('tbody'), tblCount = document.getElementById('tblCount');
-let sortKey = 'd', sortDir = -1, tblQuery = '';
+const tbody = byId('tbody'), tblCount = byId('tblCount');
+let sortKey = 'd', sortDir = -1, tblQuery = '', tblLimit = 25, tblRows = 0;
 const SV = {n:i=>i.n, v:i=>verKey(i).reduce((a,x)=>a*1000+x+1,0), up:i=>i.of?i.seen/i.of:-1,
             d:i=>i.d, growth:i=>i.growth, x:i=>i.e.length};
 function renderTable(){
@@ -632,7 +710,7 @@ function renderTable(){
   const get = SV[sortKey];
   rows.sort((a,b) => { const A = get(a), B = get(b);
     return typeof A === 'string' ? sortDir*A.localeCompare(B) : sortDir*(A-B); });
-  tbody.innerHTML = rows.slice(0,150).map(i => `
+  tbody.innerHTML = rows.slice(0, tblLimit).map(i => `
     <tr>
       <td class="nm"><a href="${i.u}" target="_blank" rel="noopener">${i.n}</a>${i.gone?' <span class="pill p-unknown">dropped</span>':''}
         ${i.e.length?`<span class="ex">${i.e.slice(0,5).map(id=>NAMES[id]).join(' · ')}${i.e.length>5?' …':''}</span>`:''}</td>
@@ -642,10 +720,15 @@ function renderTable(){
       <td class="num hide-s"><span class="delta ${i.growth>0?'up':i.growth<0?'dn':'flat'}">${i.growth?(i.growth>0?'+':'')+fmt(i.growth):'·'}</span></td>
       <td class="num">${i.e.length||'—'}</td>
     </tr>`).join('');
-  document.getElementById('tblEmpty').hidden = rows.length > 0;
+  byId('tblEmpty').hidden = rows.length > 0;
+  tblRows = rows.length;
+  const shown = Math.min(rows.length, tblLimit);
   tblCount.textContent = `${fmt(rows.length)} instance${rows.length===1?'':'s'}`
-    + (rows.length > 150 ? ' · showing first 150' : '')
+    + (rows.length > shown ? ` · showing first ${fmt(shown)}` : '')
     + (selectedExt ? ` · running ${selectedExt}` : '');
+  const more = byId('tblMoreBtn');
+  more.parentElement.hidden = rows.length <= 25;
+  more.textContent = tblLimit >= rows.length ? 'show fewer' : `show all ${fmt(rows.length)} →`;
 }
 document.querySelectorAll('thead th').forEach(th => {
   th.tabIndex = 0;
@@ -661,12 +744,18 @@ document.querySelectorAll('thead th').forEach(th => {
   th.addEventListener('click', go);
   th.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
 });
-document.getElementById('tblSearch').addEventListener('input', e => {
-  tblQuery = e.target.value.trim().toLowerCase(); renderTable();
+byId('tblSearch').addEventListener('input', e => {
+  tblQuery = e.target.value.trim().toLowerCase(); tblLimit = 25; renderTable();
+});
+byId('tblMoreBtn').addEventListener('click', () => {
+  // toggle against what the last render actually matched, so the search box
+  // and the extension filter are both accounted for
+  tblLimit = tblLimit >= tblRows ? 25 : Number.MAX_SAFE_INTEGER;
+  renderTable();
 });
 
 /* ---------- footnote ---------- */
-document.getElementById('foot').innerHTML =
+byId('foot').innerHTML =
   `A portal counts as answering in a crawl if it returned either a version or a plugin list. `
   + `<code>${fmt(D.total)}</code> distinct instances appear across ${NW} archived crawls; the latest covers ${fmt(D.latest_total)}. `
   + `${NW-NVW} crawls are excluded from every version, uptime and cohort figure: `

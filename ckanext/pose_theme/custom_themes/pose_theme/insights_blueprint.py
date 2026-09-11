@@ -20,10 +20,39 @@ log = logging.getLogger(__name__)
 insights = Blueprint('insights', __name__)
 
 
+# The dashboard is split into three screens so it is not one long scroll.
+# Every screen renders the same template and the same client-side data; the
+# active tab decides which sections are shown.
+TABS = [
+    ('overview', '/insights', 'Overview'),
+    ('trends', '/insights/trends', 'Trends'),
+    ('instances', '/insights/instances', 'Instances'),
+]
+
+
+def _render(tab):
+    return toolkit.render('insights/index.html', extra_vars={
+        'tab': tab,
+        'insights_tabs': TABS,
+    })
+
+
 @insights.route('/insights')
 def insights_view():
-    """Render the insights dashboard page."""
-    return toolkit.render('insights/index.html')
+    """Render the overview screen: headline stats, weekly crawl, fleet, versions."""
+    return _render('overview')
+
+
+@insights.route('/insights/trends')
+def insights_trends():
+    """Render the trends screen: change ledger and extension adoption."""
+    return _render('trends')
+
+
+@insights.route('/insights/instances')
+def insights_instances():
+    """Render the instances screen: instance table and crawl reliability."""
+    return _render('instances')
 
 
 def get_blueprints():
