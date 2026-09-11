@@ -223,20 +223,20 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
 .insights-tabs .nav-link.active{color:#101828;font-weight:500;background:none;border-bottom-color:#d9534f}
 
 .insights-side{font-family:"Satoshi",system-ui,sans-serif}
-.insights-side .module-heading{font-size:1.25rem;font-weight:500}
+.insights-side .module-heading{font-size:.875rem}
 .insights-side .module-heading i{margin-right:6px;opacity:.7}
 .insights-toc{display:flex;flex-direction:column;padding:6px 0}
 .insights-toc a{
-  display:block;padding:7px 15px;font-size:1rem;line-height:1.35;
+  display:block;padding:7px 0.75rem;font-size:1rem;font-weight:500;line-height:1.4;
   color:#667085;text-decoration:none;
   border-left:2px solid transparent;
 }
 .insights-toc a:hover,.insights-toc a:focus{
-  background:#f2f4f7;
+  background:#e4e7ec;
   color:#d9534f;
   border-left-color:#d9534f;
 }
-.insights-note{padding:4px 15px 14px;font-size:1rem;line-height:1.5;color:#667085}
+.insights-note{padding:4px 0.75rem 16px;font-size:1rem;line-height:1.5;color:#667085}
 .insights-note p{margin:0 0 8px}
 .insights-note-src{font-size:.875rem}
 @media (min-width:992px){
@@ -249,9 +249,9 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
 }
 .insights-toc .toc-screen:first-child{margin-top:0}
 .insights-toc .toc-screen.is-current{border-left-color:#d9534f;color:#d9534f}
-.insights-toc .toc-section{padding-left:27px;font-size:.875rem}
-.insights-facts{margin:0;padding:4px 15px 14px;font-size:.875rem}
-.insights-facts dt{color:#667085;font-weight:400;margin-top:8px}
+.insights-toc .toc-section{padding-left:1.75rem;font-size:.875rem;font-weight:400}
+.insights-facts{margin:0;padding:4px 0.75rem 14px;font-size:1rem}
+.insights-facts dt{color:#667085;font-weight:400;font-size:.875rem;margin-top:10px}
 .insights-facts dt:first-child{margin-top:0}
 .insights-facts dd{margin:0;color:#101828;font-weight:500}
 .insights-links{margin:10px 0 0;padding:0;list-style:none}
@@ -473,7 +473,7 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
     </div>
 
     <div class="module module-narrow module-shallow insights-side">
-      <h2 class="module-heading">{{ _('Something look wrong?') }}</h2>
+      <h2 class="module-heading">{{ _("Something isn't working?") }}</h2>
       <div class="insights-note">
         <p>{{ _('A portal listed with the wrong version, one that is missing, or a number that does not look right — tell us and we will look into it.') }}</p>
         <p><a class="insights-report" href="{{ h.url_for('pose_contact.form') }}">
