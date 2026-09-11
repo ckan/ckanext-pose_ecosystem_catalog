@@ -70,7 +70,8 @@ section{margin-bottom:56px}
 .col.bad{opacity:.5}
 .col.bad::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent 0 3px,rgba(22,33,29,.22) 3px 4px)}
 .xaxis{display:flex;gap:3px;padding:8px 14px 12px;background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 var(--r) var(--r)}
-.xaxis span{flex:1;text-align:center;font-family:var(--mono);font-size:.875rem;color:var(--mute);min-width:0;overflow:hidden;white-space:nowrap}
+.xaxis span{flex:1;text-align:center;font-family:var(--mono);font-size:.75rem;color:var(--mute);min-width:0;overflow:visible;white-space:nowrap}
+.xaxis span:last-child{text-align:right}
 .s-current{background:var(--teal-f)} .s-behind{background:var(--sand-f)}
 .s-eol{background:var(--rust-f)} .s-unknown{background:var(--slate-f)}
 .readout{margin-top:12px;font-size:1rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;min-height:52px}
@@ -546,7 +547,7 @@ chart.innerHTML = D.timeline.map((t,i) => {
   return `<button class="col ${t.q==='ok'?'':'bad'}" data-i="${i}" aria-label="${W[i]}" style="height:${h}%">${seg}</button>`;
 }).join('');
 byId('xaxis').innerHTML =
-  W.map((w,i) => `<span>${i%3===0 || i===NW-1 ? short(w) : ''}</span>`).join('');
+  W.map((w,i) => `<span>${i%4===0 || i===NW-1 ? short(w) : ''}</span>`).join('');
 byId('chartLegend').innerHTML = ORDER.map(s =>
   `<b><span class="key s-${s}"></span>${STATUS[s].label}</b>`).join('');
 const weekReadout = byId('weekReadout');
