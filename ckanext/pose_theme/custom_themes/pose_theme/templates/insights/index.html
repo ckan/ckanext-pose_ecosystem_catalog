@@ -129,7 +129,11 @@ section{margin-bottom:56px}
 .controls{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;align-items:center}
 input[type=search]{font:inherit;font-size:1rem;padding:7px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel);color:var(--ink);min-width:190px;flex:1}
 input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
-.seg{display:flex;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;background:var(--panel)}
+/* No overflow:hidden here: it clipped the tooltips on the buttons. Round the
+   end buttons instead, which is what the clipping was for. */
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel)}
+.seg button:first-child{border-radius:var(--r-sm) 0 0 var(--r-sm)}
+.seg button:last-child{border-radius:0 var(--r-sm) var(--r-sm) 0}
 .seg button{all:unset;cursor:pointer;padding:7px 12px;font-size:1rem;color:var(--mute)}
 .seg button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
 .seg button:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
