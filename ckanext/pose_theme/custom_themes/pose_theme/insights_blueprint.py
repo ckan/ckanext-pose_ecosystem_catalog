@@ -23,12 +23,27 @@ insights = Blueprint('insights', __name__)
 # The dashboard is split into three screens so it is not one long scroll.
 # Every screen renders the same template and the same client-side data; the
 # active tab decides which sections are shown.
-TABS = [
-    ('overview', '/insights', 'Overview'),
-    ('trends', '/insights/trends', 'Trends'),
-    ('instances', '/insights/instances', 'Instances'),
-    ('discussion', '/insights/discussion', 'Discussion'),
+# Screen id, url, label, and the sections that screen contains. The sidebar
+# renders the whole tree on every screen so the reader can see everything the
+# dashboard holds and jump straight to any of it.
+NAV = [
+    ('overview', '/insights', 'Overview', [
+        ('weekly', 'Week by week'),
+        ('fleet', 'The fleet'),
+        ('versions', 'Version spread'),
+    ]),
+    ('trends', '/insights/trends', 'Trends', [
+        ('changes', 'What actually changed'),
+        ('adoption', 'Extension adoption'),
+    ]),
+    ('instances', '/insights/instances', 'Instances', [
+        ('instances', 'Instance table'),
+        ('reliability', 'Crawl reliability'),
+    ]),
+    ('discussion', '/insights/discussion', 'Discussion', []),
 ]
+
+TABS = [(tab, url, label) for tab, url, label, _ in NAV]
 
 # The standing forum thread for the dashboard:
 # https://discuss.okfn.org/t/ckan-ecosystem-catalog-insights-discussion/13041
@@ -39,6 +54,7 @@ def _render(tab):
     return toolkit.render('insights/index.html', extra_vars={
         'tab': tab,
         'insights_tabs': TABS,
+        'insights_nav': NAV,
         'discussion_topic_id': DISCUSSION_TOPIC_ID,
     })
 

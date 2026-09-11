@@ -235,8 +235,22 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
 .insights-note p{margin:0 0 8px}
 .insights-note-src{font-size:.875rem}
 @media (min-width:992px){
-  .insights-side:first-child{position:sticky;top:80px}
+  /* the whole column sticks as one unit, and scrolls internally if it is
+     taller than the viewport */
+  .insights-sidebar{position:sticky;top:80px;max-height:calc(100vh - 100px);overflow-y:auto}
 }
+.insights-toc .toc-screen{
+  margin-top:6px;font-weight:500;color:#101828;
+}
+.insights-toc .toc-screen:first-child{margin-top:0}
+.insights-toc .toc-screen.is-current{border-left-color:#d9534f;color:#d9534f}
+.insights-toc .toc-section{padding-left:27px;font-size:.875rem}
+.insights-facts{margin:0;padding:4px 15px 14px;font-size:.875rem}
+.insights-facts dt{color:#667085;font-weight:400;margin-top:8px}
+.insights-facts dt:first-child{margin-top:0}
+.insights-facts dd{margin:0;color:#101828;font-weight:500}
+.insights-links{margin:10px 0 0;padding:0;list-style:none}
+.insights-links li{margin-top:6px}
 </style>{% endraw %}
 {% endblock %}
 
@@ -410,29 +424,40 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
 {% endblock %}
 
 {% block secondary_content %}
-  {% if tab != 'discussion' %}
-  <div class="module module-narrow module-shallow insights-side">
-    <h2 class="module-heading"><i class="fa fa-chart-column"></i> {{ _('On this page') }}</h2>
-    <nav class="insights-toc" aria-label="{{ _('Dashboard sections') }}">
-      {% if tab == 'overview' %}
-        <a href="#weekly">{{ _('Week by week') }}</a>
-        <a href="#fleet">{{ _('The fleet') }}</a>
-        <a href="#versions">{{ _('Version spread') }}</a>
-      {% elif tab == 'trends' %}
-        <a href="#changes">{{ _('What actually changed') }}</a>
-        <a href="#adoption">{{ _('Extension adoption') }}</a>
-      {% else %}
-        <a href="#instances">{{ _('Instances') }}</a>
-        <a href="#reliability">{{ _('Crawl reliability') }}</a>
-      {% endif %}
-    </nav>
-  </div>
-  {% endif %}
-  <div class="module module-narrow module-shallow insights-side">
-    <h2 class="module-heading">{{ _('About this data') }}</h2>
-    <div class="insights-note">
-      <p>{{ _('Rebuilt from the weekly crawl of every public CKAN portal the catalogue tracks. The page reads the published rollup directly, so the numbers change without a redeploy.') }}</p>
-      <p class="insights-note-src">{{ _('Source') }}: <a href="https://github.com/dathere/pose-ckanext-metadata" rel="noopener">pose-ckanext-metadata</a></p>
+  {# One sticky unit. Sticking the modules individually let the second one
+     scroll up over the pinned first one. #}
+  <div class="insights-sidebar">
+    <div class="module module-narrow module-shallow insights-side">
+      <h2 class="module-heading"><i class="fa fa-chart-column"></i> {{ _('Dashboard') }}</h2>
+      <nav class="insights-toc" aria-label="{{ _('Dashboard sections') }}">
+        {% for id, url, label, sections in insights_nav %}
+          <a class="toc-screen{% if tab == id %} is-current{% endif %}" href="{{ url }}">{{ _(label) }}</a>
+          {% for anchor, sub in sections %}
+            <a class="toc-section" href="{{ url }}#{{ anchor }}">{{ _(sub) }}</a>
+          {% endfor %}
+        {% endfor %}
+      </nav>
+    </div>
+
+    <div class="module module-narrow module-shallow insights-side">
+      <h2 class="module-heading">{{ _('This crawl') }}</h2>
+      <dl class="insights-facts">
+        <dt>{{ _('Generated') }}</dt><dd id="side-generated">—</dd>
+        <dt>{{ _('Crawls archived') }}</dt><dd id="side-crawls">—</dd>
+        <dt>{{ _('Portals, latest') }}</dt><dd id="side-portals">—</dd>
+      </dl>
+    </div>
+
+    <div class="module module-narrow module-shallow insights-side">
+      <h2 class="module-heading">{{ _('About this data') }}</h2>
+      <div class="insights-note">
+        <p>{{ _('Rebuilt from the weekly crawl of every public CKAN portal the catalogue tracks. The page reads the published rollup directly, so the numbers change without a redeploy.') }}</p>
+        <ul class="insights-links">
+          <li><a href="https://github.com/dathere/pose-ckanext-metadata" target="_blank" rel="noopener">{{ _('Source repository') }}</a></li>
+          <li><a href="https://raw.githubusercontent.com/dathere/pose-ckanext-metadata/main/dashboard-data/dashboard.json" target="_blank" rel="noopener">{{ _('Raw data (JSON)') }}</a></li>
+          <li><a href="https://discuss.okfn.org/t/{{ discussion_topic_id }}" target="_blank" rel="noopener">{{ _('Discussion thread') }}</a></li>
+        </ul>
+      </div>
     </div>
   </div>
 {% endblock %}
@@ -482,6 +507,10 @@ byId('hed').innerHTML =
   `${fmt(D.latest_total)} portals, <em>${pct(D.statuses.eol||0, D.reachable)}%</em> of them past end of life.`;
 byId('m-weeks').textContent =
   `${NW} crawls · ${NVW} with version data · ${fmt(D.total)} instances seen`;
+byId('side-generated').textContent = D.generated || '\u2014';
+byId('side-crawls').textContent = fmt(D.nweeks);
+byId('side-portals').textContent = fmt(D.latest_total);
+
 byId('stats').innerHTML = [
   [fmt(D.latest_total), `portals in the latest crawl, ${fmt(D.reachable)} of them answering`],
   [pct(D.statuses.eol||0, D.reachable) + '%', 'of responding portals run a branch that no longer gets patches'],
