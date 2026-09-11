@@ -258,6 +258,9 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
 .insights-links li{margin-top:6px}
 .insights-report{display:inline-flex;align-items:center;gap:8px}
 .insights-report i{font-size:.75rem;opacity:.8}
+.flag{display:inline-block;width:1.4em;margin-right:.4em;font-size:1em;line-height:1;
+  font-family:"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif}
+.tldcard{margin-top:18px}
 </style>{% endraw %}
 {% endblock %}
 
@@ -365,7 +368,6 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
     <div><div class="card"><h3>By release branch</h3><p class="hint">Split by patch status within each branch.</p><div id="branchRows"></div></div></div>
     <div>
       <div class="card"><h3>Exact versions in the wild</h3><p class="hint">Top 14 reported version strings.</p><div class="rows" id="verRows"></div></div>
-      <div class="card"><h3>Where they live</h3><p class="hint">Top-level domain of each portal's host.</p><div class="rows" id="tldRows"></div></div>
     </div>
   </div>
 </section>
@@ -392,6 +394,13 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
   </table>
   <div class="empty" id="tblEmpty" hidden>Nothing matches that filter.</div>
   <div class="more"><button id="tblMoreBtn"></button></div>
+
+  <div class="card tldcard">
+    <h3>Where they live</h3>
+    <p class="hint">Top-level domain of each portal's host. Country flags come from
+      the domain, so a portal on a generic domain shows none.</p>
+    <div class="rows" id="tldRows"></div>
+  </div>
 </section>
 
 <section id="reliability" data-tab="instances">
@@ -771,8 +780,21 @@ byId('branchRows').innerHTML = Object.entries(byBranch)
   </div>`).join('');
 byId('verRows').innerHTML = D.versions.slice(0,14).map(([v,n]) =>
   `<div class="row"><b>${v}</b><span class="v">${fmt(n)}</span></div>`).join('');
-byId('tldRows').innerHTML = D.tlds.map(([t,n]) =>
-  `<div class="row"><b>.${t}</b><span class="v">${fmt(n)}</span></div>`).join('');
+// A two-letter TLD is an ISO 3166-1 alpha-2 code, which maps straight onto the
+// regional indicator block. Generic domains (.org, .gov, .com) have no country
+// and get nothing rather than a guess.
+const TLD_CC = {uk: 'gb'};  // .uk predates the ISO code for the same place
+function flag(tld){
+  const cc = TLD_CC[tld] || tld;
+  if(!/^[a-z]{2}$/.test(cc)) return '';
+  return String.fromCodePoint(...[...cc].map(c => 0x1F1E6 + c.charCodeAt(0) - 97));
+}
+byId('tldRows').innerHTML = D.tlds.map(([t,n]) => {
+  const f = flag(t);
+  const mark = f ? `<span class="flag" role="img" aria-label="${t.toUpperCase()}">${f}</span>`
+                 : '<span class="flag flag-none" aria-hidden="true"></span>';
+  return `<div class="row"><b>${mark}.${t}</b><span class="v">${fmt(n)}</span></div>`;
+}).join('');
 
 /* ---------- reliability ---------- */
 byId('relHint').textContent = `Across the ${NVW} crawls that returned version data.`;
