@@ -823,15 +823,22 @@ function renderTable(){
   more.parentElement.hidden = rows.length <= 25;
   more.textContent = tblLimit >= rows.length ? 'show fewer' : `show all ${fmt(rows.length)} →`;
 }
-document.querySelectorAll('thead th').forEach(th => {
+// Scoped to this table: an unqualified 'thead th' also matches any other
+// table on the page -- the Flask debug toolbar alone adds a dozen -- and the
+// caret reset below then threw on the first one that has no .caret, aborting
+// the click before it reached renderTable().
+const SORT_HEADS = document.querySelectorAll('#instances thead th[data-sort]');
+SORT_HEADS.forEach(th => {
   th.tabIndex = 0;
   const go = () => {
     const k = th.dataset.sort;
     if(sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = (k === 'n') ? 1 : -1; }
-    document.querySelectorAll('thead th').forEach(x => {
-      x.removeAttribute('aria-sort'); x.querySelector('.caret').textContent = '↕'; });
+    SORT_HEADS.forEach(x => {
+      x.removeAttribute('aria-sort');
+      const c = x.querySelector('.caret'); if(c) c.textContent = '↕'; });
     th.setAttribute('aria-sort', sortDir===1 ? 'ascending' : 'descending');
-    th.querySelector('.caret').textContent = sortDir===1 ? '↑' : '↓';
+    const caret = th.querySelector('.caret');
+    if(caret) caret.textContent = sortDir===1 ? '↑' : '↓';
     renderTable();
   };
   th.addEventListener('click', go);
