@@ -137,10 +137,12 @@ input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
 
 /* side panels */
 .rows{font-family:var(--mono);font-size:1rem}
-.row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dotted var(--line)}
-.row:last-child{border-bottom:0}
-.row b{font-weight:500}
-.row .v{color:var(--mute)}
+/* Not .row: that is Bootstrap's grid class. Its `.row > * {width:100%}`
+   stacked these, and ours leaked onto the page layout row in return. */
+.kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dotted var(--line)}
+.kv:last-child{border-bottom:0}
+.kv b{font-weight:500}
+.kv .v{color:var(--mute)}
 .vbar{position:relative;padding:5px 0;border-bottom:1px dotted var(--line)}
 .vbar:last-child{border-bottom:0}
 .vbar .lbl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:1rem}
@@ -746,11 +748,11 @@ function renderPairs(){
     + (c && c.length ? ` · cohort went ${c[0]} → ${c[c.length-1]}` : '');
   C.innerHTML = spark(c, 300, 54);
   R.innerHTML = near.length ? near.map(p =>
-    `<div class="row"><b>${p.name}</b><span class="v">${pct(p.n,self.count)}%</span></div>`).join('')
-    : '<div class="row"><span class="v">No common pairing.</span></div>';
+    `<div class="kv"><b>${p.name}</b><span class="v">${pct(p.n,self.count)}%</span></div>`).join('')
+    : '<div class="kv"><span class="v">No common pairing.</span></div>';
 }
 byId('famRows').innerHTML = D.families.map(([f,n]) =>
-  `<div class="row"><b>${f.replace('ckanext-','')}</b><span class="v">${fmt(n)} · ${pct(n,D.with_ext)}%</span></div>`).join('');
+  `<div class="kv"><b>${f.replace('ckanext-','')}</b><span class="v">${fmt(n)} · ${pct(n,D.with_ext)}%</span></div>`).join('');
 
 /* ---------- version spread ---------- */
 const byBranch = {};
@@ -769,7 +771,7 @@ byId('branchRows').innerHTML = Object.entries(byBranch)
     </div>
   </div>`).join('');
 byId('verRows').innerHTML = D.versions.slice(0,14).map(([v,n]) =>
-  `<div class="row"><b>${v}</b><span class="v">${fmt(n)}</span></div>`).join('');
+  `<div class="kv"><b>${v}</b><span class="v">${fmt(n)}</span></div>`).join('');
 
 /* ---------- reliability ---------- */
 byId('relHint').textContent = `Across the ${NVW} crawls that returned version data.`;
@@ -783,7 +785,7 @@ byId('relRows').innerHTML = ['always','flaky','never'].map(k => `
 byId('flakyRows').innerHTML = D.instances
   .filter(i => i.seen > 0 && i.seen < i.of)
   .sort((a,b) => (a.seen/a.of)-(b.seen/b.of)).slice(0,12)
-  .map(i => `<div class="row"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a></b><span class="v">${i.seen}/${i.of}</span></div>`)
+  .map(i => `<div class="kv"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a></b><span class="v">${i.seen}/${i.of}</span></div>`)
   .join('');
 
 /* ---------- table ---------- */
