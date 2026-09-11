@@ -46,6 +46,11 @@ h1,h2,h3{font-family:var(--sans);color:var(--ink);margin:0}
 
 section{margin-bottom:56px}
 .shead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+/* Opens the section's chart as a standalone Plotly page on GitHub Pages,
+   which carries the crawl date and Plotly's image export. */
+.shead-export{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-size:.875rem;color:var(--mute);text-decoration:none;white-space:nowrap}
+.shead-export:hover,.shead-export:focus{color:#d9534f;text-decoration:none}
+.shead-export i{font-size:.75rem;opacity:.8}
 .shead h2{font-size:2rem;font-weight:500;line-height:1.125}
 .shead p{margin:0;font-size:1rem;color:var(--mute);max-width:66ch;line-height:1.5}
 .cols{display:grid;grid-template-columns:1.35fr 1fr;gap:34px;align-items:start}
@@ -272,6 +277,7 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
   <div class="shead">
     <h2>Week by week</h2>
     <p>One column per archived crawl, split by support status. Hatched columns are crawls that reached almost nothing — a crawler failure, not a fleet collapse. Click a column to read its numbers.</p>
+    <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-timeline.html" target="_blank" rel="noopener" title="The fleet, week by week — standalone chart with image export"><i class="fa fa-external-link"></i>Chart</a>
   </div>
   <div class="legend" id="chartLegend"></div>
   <div class="chart" id="chart"></div>
@@ -283,6 +289,7 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
   <div class="shead">
     <h2>The fleet</h2>
     <p>One tile per instance in the latest crawl, grouped newest version first. Click a status to filter the table at the bottom.</p>
+    <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="How much of the fleet runs supported software? — standalone chart with image export"><i class="fa fa-external-link"></i>Chart</a>
   </div>
   <div class="legend" id="legend"></div>
   <div class="fleet" id="fleetStrip"></div>
@@ -311,6 +318,7 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
   <div class="shead">
     <h2>Extension adoption</h2>
     <p id="extHint">Counts are from the latest crawl. Trend and delta come from the stable cohort — the instances that answered in every crawl of the trailing window — so movement is a real install, not a missed crawl.</p>
+    <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-extension-adoption.html" target="_blank" rel="noopener" title="Which plugins the ecosystem runs — standalone chart with image export"><i class="fa fa-external-link"></i>Chart</a>
   </div>
   <div class="cols">
     <div>
@@ -349,6 +357,7 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
   <div class="shead">
     <h2>Version spread</h2>
     <p>Only the newest patch of 2.10 and 2.11 is officially supported. Everything else is on its own.</p>
+    <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-version-spread.html" target="_blank" rel="noopener" title="Which CKAN versions are in the wild? — standalone chart with image export"><i class="fa fa-external-link"></i>Chart</a>
   </div>
   <div class="cols">
     <div><div class="card"><h3>By release branch</h3><p class="hint">Split by patch status within each branch.</p><div id="branchRows"></div></div></div>
@@ -387,6 +396,7 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
   <div class="shead">
     <h2>Crawl reliability</h2>
     <p>How often each portal actually answered, counted only over the crawls that worked. Flaky endpoints are a crawler problem as much as a portal problem.</p>
+    <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-crawl-reliability.html" target="_blank" rel="noopener" title="How reliably portals answer — standalone chart with image export"><i class="fa fa-external-link"></i>Chart</a>
   </div>
   <div class="cols">
     <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
