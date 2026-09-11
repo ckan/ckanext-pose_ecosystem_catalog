@@ -94,7 +94,9 @@ section{margin-bottom:56px}
 .tile.dim{opacity:.14;pointer-events:none}
 
 /* ledger */
-.ledger{border-top:1px solid var(--line);max-height:520px;overflow:auto}
+/* ~74px a row: a 1.25rem line, a .875rem detail line and 20px of padding.
+   740px shows ten of the tall ones, more where an event has no detail. */
+.ledger{border-top:1px solid var(--line);max-height:740px;overflow:auto}
 .ev{display:grid;grid-template-columns:82px 22px 1fr;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:1.25rem}
 .ev.sus{background:var(--faint)}
 .ev time{font-family:var(--mono);font-size:.875rem;color:var(--mute);padding-top:2px}
