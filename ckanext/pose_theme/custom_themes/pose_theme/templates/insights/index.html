@@ -183,6 +183,13 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
 /* anchors clear the sticky masthead */
 .ckan-insights section{scroll-margin-top:90px}
 
+/* The first element on each screen sits 28px below the tab strip, so every
+   screen opens with the same gap regardless of what it leads with. */
+.ckan-insights .stats,
+.tab-trends #changes,
+.tab-instances #instances,
+.tab-discussion #discussion{margin-top:28px}
+
 /* Screens. Every section is in the DOM on every screen so the one data fetch
    populates all of them; the active tab decides what is shown. */
 .ckan-insights [data-tab]{display:none}
@@ -202,7 +209,7 @@ footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;bord
 
 /* Sidebar. Scoped outside .ckan-insights because the secondary column is
    rendered by page.html, not inside the dashboard wrapper. */
-.insights-tabs{margin:0 0 22px}
+.insights-tabs{margin:0 0 36px}
 .insights-tabs .nav-link{
   font-family:"Satoshi",system-ui,sans-serif;font-size:1.25rem;font-weight:500;
   color:#667085;border:0;border-bottom:2px solid transparent;padding:10px 16px;
