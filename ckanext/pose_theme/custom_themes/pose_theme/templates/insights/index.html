@@ -183,7 +183,7 @@ footer p{max-width:88ch}
 footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;border-radius:2px}
 /* Keep the footnote's own muted colour: the accent used elsewhere turns a
    line of provenance into three highlights. Underline carries the link. */
-footer a{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:2px}
+footer a,footer a:visited{color:var(--mute);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:2px}
 footer a:hover,footer a:focus{color:var(--ink);text-decoration-color:currentColor}
 footer a code{color:inherit}
 
@@ -267,6 +267,9 @@ footer a code{color:inherit}
 .insights-facts dt:first-child{margin-top:0}
 .insights-facts dd{margin:0;color:#101828;font-weight:500}
 .insights-links{margin:10px 0 0;padding:0;list-style:none}
+/* a:visited (0,1,1) out-specifies a bare descendant rule, so say it outright */
+.insights-links a,.insights-links a:visited{color:#d9534f}
+.insights-note a,.insights-note a:visited{color:#d9534f}
 .insights-links li{margin-top:6px}
 .insights-report{display:inline-flex;align-items:center;gap:8px}
 .insights-report i{font-size:.75rem;opacity:.8}
