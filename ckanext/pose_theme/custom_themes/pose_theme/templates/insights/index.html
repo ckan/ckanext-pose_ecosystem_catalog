@@ -293,11 +293,18 @@ footer a code{color:inherit}
   .insights-sidebar{position:sticky;top:80px;max-height:calc(100vh - 100px);overflow-y:auto}
 }
 .insights-toc .toc-screen{
-  margin-top:6px;font-weight:500;color:#101828;
+  margin-top:6px;padding-top:12px;font-weight:500;color:#101828;
+  border-top:1px solid var(--line);
 }
-.insights-toc .toc-screen:first-child{margin-top:0}
+/* No rule above the first group: the module heading already closes it off. */
+.insights-toc .toc-screen:first-child{margin-top:0;padding-top:7px;border-top:0}
 .insights-toc .toc-screen.is-current{border-left-color:#d9534f;color:#d9534f}
 .insights-toc .toc-section{padding-left:1.75rem;font-size:.875rem;font-weight:400}
+.insights-toc .toc-section i{
+  width:1.1em;margin-right:.5em;font-size:.8em;text-align:center;
+  color:#98a2b3;vertical-align:baseline;
+}
+.insights-toc .toc-section:hover i,.insights-toc .toc-section:focus i{color:inherit}
 .insights-facts{margin:0;padding:4px 0.75rem 14px;font-size:1rem}
 .insights-facts dt{color:#667085;font-weight:400;font-size:.875rem;margin-top:10px}
 .insights-facts dt:first-child{margin-top:0}
@@ -562,8 +569,8 @@ footer a code{color:inherit}
       <nav class="insights-toc" aria-label="{{ _('Dashboard sections') }}">
         {% for id, url, label, sections in insights_nav %}
           <a class="toc-screen{% if tab == id %} is-current{% endif %}" href="{{ url }}">{{ _(label) }}</a>
-          {% for anchor, sub in sections %}
-            <a class="toc-section" href="{{ url }}#{{ anchor }}">{{ _(sub) }}</a>
+          {% for anchor, sub, icon in sections %}
+            <a class="toc-section" href="{{ url }}#{{ anchor }}"><i class="fa fa-{{ icon }}" aria-hidden="true"></i>{{ _(sub) }}</a>
           {% endfor %}
         {% endfor %}
       </nav>

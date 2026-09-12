@@ -26,22 +26,24 @@ insights = Blueprint('insights', __name__)
 # Screen id, url, label, and the sections that screen contains. The sidebar
 # renders the whole tree on every screen so the reader can see everything the
 # dashboard holds and jump straight to any of it.
+# Sections carry a Font Awesome name; CKAN 2.11 ships Font Awesome 6, and every
+# name here was checked against its all.css rather than assumed.
 NAV = [
     ('overview', '/insights', 'Overview', [
-        ('weekly', 'Week by week'),
-        ('fleet', 'The fleet'),
-        ('versions', 'Version spread'),
+        ('weekly', 'Week by week', 'chart-column'),
+        ('fleet', 'The fleet', 'server'),
+        ('versions', 'Version spread', 'code-branch'),
     ]),
     ('trends', '/insights/trends', 'Trends', [
-        ('changes', 'What actually changed'),
-        ('adoption', 'Extension adoption'),
-        ('ext-attention', 'Gaining attention'),
-        ('ext-downstream', 'Livelier downstream'),
-        ('ext-all', 'Every extension'),
+        ('changes', 'What actually changed', 'clock-rotate-left'),
+        ('adoption', 'Extension adoption', 'puzzle-piece'),
+        ('ext-attention', 'Gaining attention', 'arrow-trend-up'),
+        ('ext-downstream', 'Livelier downstream', 'code-pull-request'),
+        ('ext-all', 'Every extension', 'list-ul'),
     ]),
     ('instances', '/insights/instances', 'Instances', [
-        ('instances', 'Instance table'),
-        ('reliability', 'Crawl reliability'),
+        ('instances', 'Instance table', 'table'),
+        ('reliability', 'Crawl reliability', 'heart-pulse'),
     ]),
     ('discussion', '/insights/discussion', 'Discussion', []),
 ]
