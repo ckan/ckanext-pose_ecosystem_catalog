@@ -152,6 +152,7 @@ input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
 .rank .ct em{font-style:normal;color:var(--mute);font-size:.875rem}
 .spark{display:block}
 .delta{font-family:var(--mono);font-size:.875rem;white-space:nowrap}
+.delta.d-inline{margin-left:.45em;font-size:.8em}
 .delta.up{color:var(--teal)} .delta.dn{color:var(--rust)} .delta.flat{color:var(--mute)}
 .bar{grid-column:2/5;height:5px;background:var(--faint);border-radius:3px;overflow:hidden;margin-top:5px}
 .bar i{display:block;height:100%;background:var(--teal)}
@@ -422,12 +423,9 @@ footer a code{color:inherit}
       <th data-esort="p">Extension <span class="caret">↕</span></th>
       <th data-esort="i" class="num">Portals<span class="tip" tabindex="0" role="note" aria-label="What Portals measures" data-tip="Distinct catalogued portals observed running this extension. An observation, not a total.">i</span> <span class="caret">↕</span></th>
       <th data-esort="pct" class="num hide-s">Share <span class="caret">↕</span></th>
-      <th data-esort="s" class="num">Stars <span class="caret">↕</span></th>
-      <th data-esort="ds" class="num">Δ stars <span class="caret">↕</span></th>
+      <th data-esort="s" class="num">Stars<span class="tip" tabindex="0" role="note" aria-label="About the stars column" data-tip="Stars now, with the change across the archived crawls beside it. Sorts by the total; the table loads sorted by movement.">i</span> <span class="caret">↕</span></th>
       <th data-esort="f" class="num">Forks <span class="caret">↕</span></th>
-      <th data-esort="df" class="num hide-s">Δ forks <span class="caret">↕</span></th>
       <th data-esort="c" class="num hide-s">People <span class="caret">↕</span></th>
-      <th data-esort="dc" class="num hide-s">Δ people <span class="caret">↕</span></th>
       <th data-esort="up">Upkeep<span class="tip" tabindex="0" role="note" aria-label="What Upkeep measures" data-tip="How recently the repository was pushed to. Quiet is not broken: ckanext-envvars runs on 126 portals and has been untouched for two years because it is finished.">i</span> <span class="caret">↕</span></th>
       <th data-esort="push" class="num hide-s">Last push <span class="caret">↕</span></th>
       <th data-esort="br" class="num hide-s">Branches<span class="tip" tabindex="0" role="note" aria-label="What Branches measures" data-tip="Branches on the repository, and how many carry a commit from the last year.">i</span> <span class="caret">↕</span></th>
@@ -998,6 +996,9 @@ byId('tblMoreBtn').addEventListener('click', () => {
                 archived:'archived', unknown:'unknown'};
   const age = d => d == null ? '—' : d >= 365 ? `${(d/365).toFixed(1)}y` : `${d}d`;
   const dl  = v => `<span class="delta ${v>0?'up':v<0?'dn':'flat'}">${v>0?'+':''}${v||'·'}</span>`;
+  // Inline beside a total: a dot for "no change" would be noise next to a
+  // number that is already there, so an unmoved figure gets nothing.
+  const dli = v => v ? `<span class="delta d-inline ${v>0?'up':'dn'}">${v>0?'+':''}${v}</span>` : '';
   const repoCell = r => `<td class="nm"><a href="${r.u}" target="_blank" rel="noopener">${r.p}</a>`
     + `<span class="ex">${r.r || '—'}</span></td>`;
   const branches = r => r.br ? `${r.br}${r.live ? ` <em style="color:var(--teal)">${r.live} live</em>` : ''}` : '—';
@@ -1043,12 +1044,9 @@ byId('tblMoreBtn').addEventListener('click', () => {
       ${repoCell(r)}
       <td class="num">${r.i || '—'}</td>
       <td class="num hide-s">${r.i ? r.pct + '%' : '—'}</td>
-      <td class="num">${fmt(r.s)}${sparkline(r.spark)}</td>
-      <td class="num">${dl(r.ds)}</td>
-      <td class="num">${fmt(r.f)}</td>
-      <td class="num hide-s">${dl(r.df)}</td>
-      <td class="num hide-s">${fmt(r.c)}</td>
-      <td class="num hide-s">${dl(r.dc)}</td>
+      <td class="num">${fmt(r.s)}${dli(r.ds)}${sparkline(r.spark)}</td>
+      <td class="num">${fmt(r.f)}${dli(r.df)}</td>
+      <td class="num hide-s">${fmt(r.c)}${dli(r.dc)}</td>
       <td><span class="pill p-${r.up}">${ULAB[r.up] || r.up}</span></td>
       <td class="num hide-s">${age(r.push)}</td>
       <td class="num hide-s">${branches(r)}</td></tr>`).join('');
