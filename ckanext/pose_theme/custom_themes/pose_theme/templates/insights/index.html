@@ -432,6 +432,7 @@ footer a code{color:inherit}
     </tr></thead>
     <tbody id="attBody"></tbody>
   </table>
+  <div class="more"><button id="attMoreBtn"></button></div>
 </section>
 
 <section id="ext-downstream" data-tab="trends">
@@ -439,7 +440,10 @@ footer a code{color:inherit}
     <h2>Livelier downstream</h2>
     <p>Extensions whose forks are being pushed while upstream is not. This is where maintenance quietly relocates &mdash; a portal operator patches a fork and never upstreams it. A fork being pushed more recently does not prove it is ahead in commits.</p>
   </div>
-  <div class="tblhead"><span class="count" id="dsCount"></span></div>
+  <div class="tblhead">
+    <input type="search" id="dsSearch" placeholder="search upstream or fork…" aria-label="Search downstream forks">
+    <span class="count" id="dsCount"></span>
+  </div>
   <table>
     <thead><tr>
       <th data-dsort="p">Upstream <span class="caret">↕</span></th>
@@ -451,6 +455,8 @@ footer a code{color:inherit}
     </tr></thead>
     <tbody id="dsBody"></tbody>
   </table>
+  <div class="empty" id="dsEmpty" hidden>Nothing matches that filter.</div>
+  <div class="more"><button id="dsMoreBtn"></button></div>
 </section>
 
 
@@ -1038,9 +1044,11 @@ byId('tblMoreBtn').addEventListener('click', () => {
 
   /* Gaining attention */
   const attState = {key:'ds', dir:-1};
+  let attLimit = 10;
   function renderAtt(){
-    byId('attCount').textContent = `${fmt(att.length)} extensions moved`;
-    byId('attBody').innerHTML = [...att].sort(cmp(attState)).map(r => `<tr>
+    byId('attCount').textContent = `${fmt(att.length)} extensions moved`
+      + (attLimit < att.length ? ` · showing top ${attLimit}` : '');
+    byId('attBody').innerHTML = [...att].sort(cmp(attState)).slice(0, attLimit).map(r => `<tr>
       ${repoCell(r)}
       <td class="num">${r.i || '—'}</td>
       <td class="num hide-s">${r.i ? r.pct + '%' : '—'}</td>
@@ -1050,15 +1058,30 @@ byId('tblMoreBtn').addEventListener('click', () => {
       <td><span class="pill p-${r.up}">${ULAB[r.up] || r.up}</span></td>
       <td class="num hide-s">${age(r.push)}</td>
       <td class="num hide-s">${branches(r)}</td></tr>`).join('');
+    byId('attMoreBtn').textContent = attLimit >= att.length
+      ? (att.length > 10 ? 'Show fewer' : '') : `Show all ${fmt(att.length)}`;
+    byId('attMoreBtn').parentElement.hidden = att.length <= 10;
   }
   sortable('esort', 'ext-attention', attState, renderAtt);
+  byId('attMoreBtn').addEventListener('click', () => {
+    attLimit = attLimit >= att.length ? 10 : att.length; renderAtt(); });
   renderAtt();
 
   /* Livelier downstream */
   const dsState = {key:'i', dir:-1};
+  let dsQuery = '', dsLimit = 10, dsMatched = 0;
   function renderDs(){
-    byId('dsCount').textContent = `${fmt(meta.downstream ?? down.length)} extensions`;
-    byId('dsBody').innerHTML = [...down].sort(cmp(dsState)).map(r => `<tr>
+    let list = down;
+    if(dsQuery) list = list.filter(r =>
+      r.p.toLowerCase().includes(dsQuery)
+      || (r.r||'').toLowerCase().includes(dsQuery)
+      || (r.nf||'').toLowerCase().includes(dsQuery));
+    dsMatched = list.length;
+    byId('dsCount').textContent =
+      (dsQuery ? `${fmt(list.length)} of ${fmt(down.length)} extensions`
+               : `${fmt(meta.downstream ?? down.length)} extensions`)
+      + (dsLimit < list.length ? ` · showing top ${dsLimit}` : '');
+    byId('dsBody').innerHTML = [...list].sort(cmp(dsState)).slice(0, dsLimit).map(r => `<tr>
       <td class="nm"><a href="${r.u}" target="_blank" rel="noopener">${r.p}</a>
         <span class="ex">${r.r || '—'}</span>
         <span class="ex-fork">↳ <a href="https://github.com/${r.nf}" target="_blank" rel="noopener">${r.nf}</a>
@@ -1068,8 +1091,16 @@ byId('tblMoreBtn').addEventListener('click', () => {
       <td class="num">${r.ahead}</td>
       <td class="num hide-s">${fmt(r.f)}</td>
       <td class="num hide-s">${fmt(r.s)}</td></tr>`).join('');
+    byId('dsEmpty').hidden = list.length > 0;
+    byId('dsMoreBtn').textContent = dsLimit >= list.length
+      ? (list.length > 10 ? 'Show fewer' : '') : `Show all ${fmt(list.length)}`;
+    byId('dsMoreBtn').parentElement.hidden = list.length <= 10;
   }
   sortable('dsort', 'ext-downstream', dsState, renderDs);
+  byId('dsSearch').addEventListener('input', e => {
+    dsQuery = e.target.value.trim().toLowerCase(); dsLimit = 10; renderDs(); });
+  byId('dsMoreBtn').addEventListener('click', () => {
+    dsLimit = dsLimit >= dsMatched ? 10 : dsMatched; renderDs(); });
   renderDs();
 
   /* Every extension */
