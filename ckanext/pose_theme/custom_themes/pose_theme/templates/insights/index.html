@@ -651,11 +651,13 @@ let active = new Set(ORDER);
 
 /* ---------- header ---------- */
 const latest = D.timeline[NW-1];
-// A push implies commits landed. The crawl is weekly, so a 7-day window reads
-// as "since the last crawl" rather than an arbitrary period.
-const extRows = D.ext_rows || [];
-const pushedWeek = extRows.filter(r => r.push != null && r.push <= 7);
-const pushedWeekInUse = pushedWeek.filter(r => r.i).length;
+// Movement, not totals: distinct portals that actually upgraded recently,
+// counting only upgrades that are not crawler re-baselines.
+const UPGRADE_WEEKS = 8;
+const recentWeeks = new Set(W.slice(-UPGRADE_WEEKS));
+const recentUpgraders = new Set(
+  D.upgrades.filter(u => !u.sus && u.k === 'upgrade' && recentWeeks.has(u.w))
+            .map(u => u.n)).size;
 byId('range').textContent = `CKAN ecosystem crawl · ${W[0]} → ${W[NW-1]}`;
 byId('hed').innerHTML =
   `${fmt(D.latest_total)} portals, <em>${pct(D.statuses.eol||0, D.reachable)}%</em> of them past end of life.`;
@@ -671,8 +673,8 @@ byId('stats').innerHTML = [
    `portals in the latest crawl, ${fmt(D.reachable)} of them answering`],
   [pct(D.statuses.current||0, D.reachable) + '%',
    'of responding portals run the newest patch of a supported branch'],
-  [fmt(pushedWeek.length),
-   `extensions pushed since the last crawl, ${fmt(pushedWeekInUse)} of them running on a portal`]
+  [fmt(recentUpgraders),
+   `portals upgraded CKAN in the last ${UPGRADE_WEEKS} crawls`]
 ].map(([b,s]) => `<div class="stat"><b>${b}</b><small>${s}</small></div>`).join('');
 
 /* ---------- weekly chart ---------- */
