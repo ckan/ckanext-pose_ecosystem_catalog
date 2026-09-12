@@ -35,6 +35,9 @@ NAV = [
     ('trends', '/insights/trends', 'Trends', [
         ('changes', 'What actually changed'),
         ('adoption', 'Extension adoption'),
+        ('ext-attention', 'Gaining attention'),
+        ('ext-downstream', 'Livelier downstream'),
+        ('ext-all', 'Every extension'),
     ]),
     ('instances', '/insights/instances', 'Instances', [
         ('instances', 'Instance table'),
