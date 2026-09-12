@@ -1084,8 +1084,9 @@ byId('tblMoreBtn').addEventListener('click', () => {
     byId('dsBody').innerHTML = [...list].sort(cmp(dsState)).slice(0, dsLimit).map(r => `<tr>
       <td class="nm"><a href="${r.u}" target="_blank" rel="noopener">${r.p}</a>
         <span class="ex">${r.r || '—'}</span>
-        <span class="ex-fork">↳ <a href="https://github.com/${r.nf}" target="_blank" rel="noopener">${r.nf}</a>
-          pushed ${age(r.nfa)} ago</span></td>
+        ${(r.forks || [{r:r.nf, a:r.nfa}]).map(f =>
+          `<span class="ex-fork">↳ <a href="https://github.com/${f.r}" target="_blank" rel="noopener">${f.r}</a>`
+          + ` pushed ${age(f.a)} ago</span>`).join('')}</td>
       <td class="num">${r.i || '—'}</td>
       <td class="num">${age(r.push)}</td>
       <td class="num">${r.ahead}</td>
