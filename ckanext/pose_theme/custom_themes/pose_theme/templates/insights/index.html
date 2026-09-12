@@ -314,7 +314,7 @@ footer a code{color:inherit}
   {# Names the set of screens rather than acting as one of them. aria-hidden
      because it repeats the page heading and would otherwise read as a nav
      item with no destination. #}
-  <li class="nav-item insights-tabs-title" aria-hidden="true">{{ _('Every public CKAN portal, tracked weekly') }}</li>
+  <li class="nav-item insights-tabs-title" aria-hidden="true">{{ _('CKAN Ecosystem') }}</li>
   {% for id, url, label in insights_tabs %}
     <li class="nav-item">
       <a class="nav-link{% if tab == id %} active{% endif %}" href="{{ url }}">{{ _(label) }}</a>
