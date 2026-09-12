@@ -374,43 +374,6 @@ footer a code{color:inherit}
   <div class="ledger" id="ledger"></div>
 </section>
 
-<section id="adoption" data-tab="trends">
-  <div class="shead">
-    <h2>Extension adoption</h2>
-    <p id="extHint">Counts are from the latest crawl. Trend and delta come from the stable cohort — the instances that answered in every crawl of the trailing window — so movement is a real install, not a missed crawl. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-extension-adoption.html" target="_blank" rel="noopener" title="Which plugins the ecosystem runs — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
-  </div>
-  <div class="cols">
-    <div>
-      <div class="controls">
-        <input type="search" id="extSearch" placeholder="filter extensions…" aria-label="Filter extensions">
-        <div class="seg" role="group" aria-label="Sort">
-          <button data-sort="count" aria-pressed="true">By install base</button>
-          <button data-sort="delta" aria-pressed="false">By movement</button>
-        </div>
-        <div class="seg" role="group" aria-label="Type">
-          <button data-kind="all" aria-pressed="true">All</button>
-          <button data-kind="third" aria-pressed="false">Third-party</button>
-          <button data-kind="core" aria-pressed="false">Core</button>
-        </div>
-      </div>
-      <div class="ranks" id="ranks"></div>
-      <div class="more"><button id="moreBtn"></button></div>
-    </div>
-    <div>
-      <div class="card">
-        <h3 id="pairTitle">Ships alongside</h3>
-        <p class="hint" id="pairHint">Pick an extension to see its co-installs and its cohort line.</p>
-        <div id="pairChart"></div>
-        <div class="rows" id="pairRows"></div>
-      </div>
-      <div class="card">
-        <h3>Upstream packages</h3>
-        <p class="hint">Plugins rolled up to the repo that provides them, latest crawl.</p>
-        <div class="rows" id="famRows"></div>
-      </div>
-    </div>
-  </div>
-</section>
 
 <section id="ext-attention" data-tab="trends">
   <div class="shead">
@@ -457,6 +420,43 @@ footer a code{color:inherit}
   </table>
   <div class="empty" id="dsEmpty" hidden>Nothing matches that filter.</div>
   <div class="more"><button id="dsMoreBtn"></button></div>
+</section>
+<section id="adoption" data-tab="trends">
+  <div class="shead">
+    <h2>Extension adoption (entry points)</h2>
+    <p id="extHint">Counts are from the latest crawl. Trend and delta come from the stable cohort — the instances that answered in every crawl of the trailing window — so movement is a real install, not a missed crawl. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-extension-adoption.html" target="_blank" rel="noopener" title="Which plugins the ecosystem runs — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+  </div>
+  <div class="cols">
+    <div>
+      <div class="controls">
+        <input type="search" id="extSearch" placeholder="filter extensions…" aria-label="Filter extensions">
+        <div class="seg" role="group" aria-label="Sort">
+          <button data-sort="count" aria-pressed="true">By install base</button>
+          <button data-sort="delta" aria-pressed="false">By movement</button>
+        </div>
+        <div class="seg" role="group" aria-label="Type">
+          <button data-kind="all" aria-pressed="true">All</button>
+          <button data-kind="third" aria-pressed="false">Third-party</button>
+          <button data-kind="core" aria-pressed="false">Core</button>
+        </div>
+      </div>
+      <div class="ranks" id="ranks"></div>
+      <div class="more"><button id="moreBtn"></button></div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 id="pairTitle">Ships alongside</h3>
+        <p class="hint" id="pairHint">Pick an extension to see its co-installs and its cohort line.</p>
+        <div id="pairChart"></div>
+        <div class="rows" id="pairRows"></div>
+      </div>
+      <div class="card">
+        <h3>Upstream packages</h3>
+        <p class="hint">Plugins rolled up to the repo that provides them, latest crawl.</p>
+        <div class="rows" id="famRows"></div>
+      </div>
+    </div>
+  </div>
 </section>
 
 

@@ -36,9 +36,9 @@ NAV = [
     ]),
     ('trends', '/insights/trends', 'Trends', [
         ('changes', 'What actually changed', 'clock-rotate-left'),
-        ('adoption', 'Extension adoption', 'puzzle-piece'),
         ('ext-attention', 'Gaining attention', 'arrow-trend-up'),
         ('ext-downstream', 'Livelier downstream', 'code-pull-request'),
+        ('adoption', 'Extension adoption (entry points)', 'puzzle-piece'),
     ]),
     ('instances', '/insights/instances', 'Instances', [
         ('instances', 'CKAN instances', 'table'),
