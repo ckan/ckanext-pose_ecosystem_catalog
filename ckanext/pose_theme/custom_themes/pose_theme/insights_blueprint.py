@@ -39,11 +39,11 @@ NAV = [
         ('adoption', 'Extension adoption', 'puzzle-piece'),
         ('ext-attention', 'Gaining attention', 'arrow-trend-up'),
         ('ext-downstream', 'Livelier downstream', 'code-pull-request'),
-        ('ext-all', 'Every extension', 'list-ul'),
     ]),
     ('instances', '/insights/instances', 'Instances', [
-        ('instances', 'Instance table', 'table'),
-        ('reliability', 'Crawl reliability', 'heart-pulse'),
+        ('instances', 'CKAN instances', 'table'),
+        ('reliability', 'Sites crawl reliability', 'heart-pulse'),
+        ('ext-all', 'Extensions', 'list-ul'),
     ]),
     ('discussion', '/insights/discussion', 'Discussion', []),
 ]

@@ -453,33 +453,6 @@ footer a code{color:inherit}
   </table>
 </section>
 
-<section id="ext-all" data-tab="trends">
-  <div class="shead">
-    <h2>Every extension</h2>
-    <p>Every catalogued extension matched to a crawled repository, identified by the plugin names it declares rather than guessed from its name. Search matches package or repository.</p>
-  </div>
-  <div class="tblhead">
-    <input type="search" id="extAllSearch" placeholder="search extensions…" aria-label="Search extensions">
-    <span class="count" id="extAllCount"></span>
-  </div>
-  <table>
-    <thead><tr>
-      <th data-xsort="p">Extension <span class="caret">↕</span></th>
-      <th data-xsort="i" class="num">Portals <span class="caret">↕</span></th>
-      <th data-xsort="pct" class="num hide-s">Share <span class="caret">↕</span></th>
-      <th data-xsort="s" class="num">Stars <span class="caret">↕</span></th>
-      <th data-xsort="f" class="num">Forks <span class="caret">↕</span></th>
-      <th data-xsort="c" class="num hide-s">People <span class="caret">↕</span></th>
-      <th data-xsort="up">Upkeep <span class="caret">↕</span></th>
-      <th data-xsort="push" class="num hide-s">Last push <span class="caret">↕</span></th>
-      <th data-xsort="br" class="num hide-s">Branches <span class="caret">↕</span></th>
-      <th data-xsort="ahead" class="num hide-s">Forks ahead <span class="caret">↕</span></th>
-    </tr></thead>
-    <tbody id="extAllBody"></tbody>
-  </table>
-  <div class="empty" id="extAllEmpty" hidden>Nothing matches that filter.</div>
-  <div class="more"><button id="extAllMoreBtn"></button></div>
-</section>
 
 <section id="versions" data-tab="overview">
   <div class="shead">
@@ -496,7 +469,7 @@ footer a code{color:inherit}
 
 <section id="instances" data-tab="instances">
   <div class="shead">
-    <h2>Instances</h2>
+    <h2>CKAN instances</h2>
     <p>Every instance the archive has seen, at its most recent crawl, with its crawl response strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name, host, version, or plugin.</p>
   </div>
   <div class="tblhead">
@@ -520,13 +493,40 @@ footer a code{color:inherit}
 
 <section id="reliability" data-tab="instances">
   <div class="shead">
-    <h2>Crawl reliability</h2>
+    <h2>Sites crawl reliability</h2>
     <p>How often each portal actually answered, counted only over the crawls that worked. Flaky endpoints are a crawler problem as much as a portal problem. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-crawl-reliability.html" target="_blank" rel="noopener" title="How reliably portals answer — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="cols">
     <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
     <div><div class="card"><h3>Flakiest endpoints</h3><p class="hint">Answered some crawls, not others. Worth a retry policy.</p><div class="rows" id="flakyRows"></div></div></div>
   </div>
+</section>
+<section id="ext-all" data-tab="instances">
+  <div class="shead">
+    <h2>Extensions</h2>
+    <p>Every catalogued extension matched to a crawled repository, identified by the plugin names it declares rather than guessed from its name. Search matches package or repository.</p>
+  </div>
+  <div class="tblhead">
+    <input type="search" id="extAllSearch" placeholder="search extensions…" aria-label="Search extensions">
+    <span class="count" id="extAllCount"></span>
+  </div>
+  <table>
+    <thead><tr>
+      <th data-xsort="p">Extension <span class="caret">↕</span></th>
+      <th data-xsort="i" class="num">Portals <span class="caret">↕</span></th>
+      <th data-xsort="pct" class="num hide-s">Share <span class="caret">↕</span></th>
+      <th data-xsort="s" class="num">Stars <span class="caret">↕</span></th>
+      <th data-xsort="f" class="num">Forks <span class="caret">↕</span></th>
+      <th data-xsort="c" class="num hide-s">People <span class="caret">↕</span></th>
+      <th data-xsort="up">Upkeep <span class="caret">↕</span></th>
+      <th data-xsort="push" class="num hide-s">Last push <span class="caret">↕</span></th>
+      <th data-xsort="br" class="num hide-s">Branches <span class="caret">↕</span></th>
+      <th data-xsort="ahead" class="num hide-s">Forks ahead <span class="caret">↕</span></th>
+    </tr></thead>
+    <tbody id="extAllBody"></tbody>
+  </table>
+  <div class="empty" id="extAllEmpty" hidden>Nothing matches that filter.</div>
+  <div class="more"><button id="extAllMoreBtn"></button></div>
 </section>
 
 {% endraw %}
