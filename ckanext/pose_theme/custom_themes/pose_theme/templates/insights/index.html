@@ -1,0 +1,1167 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('CKAN Ecosystem Insights') }}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li>{{ h.nav_link(_('Insights'), named_route='insights.insights_view') }}</li>
+  {% if tab != 'overview' %}
+    <li class="active"><a href="#">{{ _(tab|capitalize) }}</a></li>
+  {% endif %}
+{% endblock %}
+
+{% block styles %}
+  {{ super() }}
+  {% raw %}<style>
+.ckan-insights{
+  /* Mapped onto the catalogue's Bootstrap tokens so the dashboard reads as
+     part of the site rather than an embedded island. Variable names are kept
+     so the chart/table code that references them is untouched. */
+  /* Type scale and colours taken from the theme stylesheet, so the dashboard
+     matches an ordinary content page (e.g. /dataset/<name>): 1rem body on
+     #101828, headings at weight 500 in rem, #667085 secondary text, #e4e7ec
+     rules on white cards, and the #d9534f accent. */
+  --paper:transparent; --panel:#ffffff; --faint:#f2f4f7; --line:#e4e7ec;
+  --ink:#101828; --body:#101828; --mute:#667085;
+  --teal:#3A833A; --sand:#fd7e14; --rust:#d9534f; --slate:#98a2b3;
+  /* Chart fills at 80% so large areas of colour sit back from the text. */
+  --teal-f:rgba(58,131,58,.8); --sand-f:rgba(253,126,20,.8);
+  --rust-f:rgba(217,83,79,.8); --slate-f:rgba(152,162,179,.8);
+  --sans:"Satoshi",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px; --r-sm:6px;
+}
+.ckan-insights *{box-sizing:border-box}
+
+.ckan-insights{background:var(--paper);color:var(--body);font-family:var(--sans);font-size:1.25rem;font-weight:400;line-height:1.5}
+.wrap{max-width:none;margin:0;padding:0 0 56px}
+h1,h2,h3{font-family:var(--sans);color:var(--ink);margin:0}
+.mono{font-family:var(--mono)}
+.eyebrow{font-size:1rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--mute)}
+
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:0 0 32px}
+.stat{background:var(--panel);padding:18px}
+.stat b{display:block;font-family:var(--sans);font-size:2.5rem;font-weight:500;color:var(--ink);line-height:1.125}
+.stat small{display:block;margin-top:10px;font-size:.875rem;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;line-height:1.4}
+
+section{margin-bottom:56px}
+.shead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+/* Opens the section's chart as a standalone Plotly page on GitHub Pages,
+   which carries the crawl date and Plotly's image export. */
+/* Reads as the last clause of the blurb, not a control beside the heading. */
+.shead-export{display:inline-flex;align-items:baseline;gap:6px;margin-left:6px;font-size:.875rem;color:#d9534f;text-decoration:none;white-space:nowrap}
+.shead-export:hover,.shead-export:focus{text-decoration:underline}
+
+/* Info affordance. Opens below its anchor so a tooltip on a sticky table
+   header is not clipped by the top of the viewport. */
+.tip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+  margin-left:6px;border:1px solid var(--line);border-radius:50%;
+  font-family:var(--sans);font-size:.75rem;font-weight:500;font-style:normal;
+  line-height:1;letter-spacing:0;text-transform:none;color:var(--mute);
+  cursor:help;position:relative;vertical-align:middle}
+.tip:hover,.tip:focus{color:var(--ink);border-color:var(--mute);outline:none}
+.tip::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);width:max-content;max-width:270px;
+  background:var(--ink);color:#fff;padding:8px 10px;border-radius:6px;
+  font-family:var(--sans);font-size:.75rem;font-weight:400;line-height:1.45;
+  text-align:left;text-transform:none;white-space:normal;
+  opacity:0;visibility:hidden;transition:opacity .12s;z-index:30;pointer-events:none}
+.tip:hover::after,.tip:focus::after{opacity:1;visibility:visible}
+.shead-export:hover,.shead-export:focus{color:#d9534f;text-decoration:none}
+.shead-export i{font-size:.75rem;opacity:.8}
+.shead h2{font-size:2rem;font-weight:500;line-height:1.125}
+.shead p{margin:0;font-size:1rem;color:var(--mute);max-width:66ch;line-height:1.5;text-align:right}
+.cols{display:grid;grid-template-columns:1.35fr 1fr;gap:34px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.card+.card{margin-top:16px}
+.card h3{font-size:1.5rem;font-weight:500;line-height:1.125;margin-bottom:6px}
+.card .hint{font-size:1rem;color:var(--mute);margin:0 0 12px}
+
+/* weekly columns chart */
+.chart{display:flex;gap:3px;align-items:flex-end;height:210px;padding:14px 14px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r) var(--r) 0 0;border-bottom:0}
+.col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;position:relative;min-width:0;border:0;background:none;padding:0}
+.col i{display:block;width:100%}
+.col:hover i,.col.sel i{filter:saturate(1.4) brightness(1.06)}
+.col.sel{box-shadow:inset 0 0 0 1px var(--ink)}
+.col.bad{opacity:.5}
+.col.bad::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent 0 3px,rgba(22,33,29,.22) 3px 4px)}
+.xaxis{display:flex;gap:3px;padding:8px 14px 12px;background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 var(--r) var(--r)}
+.xaxis span{flex:1;text-align:center;font-family:var(--mono);font-size:.75rem;color:var(--mute);min-width:0;overflow:visible;white-space:nowrap}
+.xaxis span:last-child{text-align:right}
+.s-current{background:var(--teal-f)} .s-behind{background:var(--sand-f)}
+.s-eol{background:var(--rust-f)} .s-unknown{background:var(--slate-f)}
+.readout{margin-top:12px;font-size:1rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;min-height:52px}
+.readout .ph{color:var(--mute)}
+.readout a{color:var(--teal)}
+.warn{display:inline-block;margin-left:6px;font-size:.875rem;padding:1px 7px;border-radius:4px;background:var(--faint);color:var(--mute)}
+
+/* fleet strip */
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 10px;font-size:1rem;align-items:center}
+.legend b{display:flex;align-items:center;gap:7px;font-weight:400}
+.legend button{all:unset;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:1rem;padding:3px 8px 3px 4px;border-radius:var(--r-sm)}
+.legend button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.legend button[aria-pressed="true"]{background:#fff;box-shadow:inset 0 0 0 1px var(--line)}
+.legend button.off{opacity:.38}
+.key{width:11px;height:11px;border-radius:3px;flex:none}
+.legend .n{font-family:var(--mono);color:var(--mute);font-size:.875rem}
+.fleet{display:flex;flex-wrap:wrap;gap:2px;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.tile{width:11px;height:16px;border-radius:1px;border:0;padding:0;cursor:pointer;transition:transform .08s}
+.tile:hover,.tile:focus-visible{transform:scaleY(1.45);outline:none;box-shadow:0 0 0 1px var(--ink)}
+.tile.dim{opacity:.14;pointer-events:none}
+
+/* ledger */
+/* ~74px a row: a 1.25rem line, a .875rem detail line and 20px of padding.
+   740px shows ten of the tall ones, more where an event has no detail. */
+.ledger{border-top:1px solid var(--line);max-height:740px;overflow:auto}
+.ev{display:grid;grid-template-columns:96px 22px 1fr;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:1.25rem}
+.ev.sus{background:var(--faint)}
+.ev time{font-family:var(--mono);font-size:.875rem;color:var(--mute);padding-top:2px;white-space:nowrap}
+.ev .glyph{font-family:var(--mono);font-size:1rem;text-align:center;padding-top:1px}
+.ev.v .glyph{color:var(--teal)} .ev.x .glyph{color:var(--sand)}
+.ev .body a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
+.ev .body a:hover{color:var(--teal);border-color:var(--teal)}
+.ev .det{display:block;font-family:var(--mono);font-size:.875rem;color:var(--mute);margin-top:2px;word-break:break-word}
+.ev .det ins{background:rgba(58,131,58,.12);color:var(--teal);text-decoration:none;padding:0 4px;border-radius:4px}
+.ev .det del{background:rgba(217,83,79,.12);color:var(--rust);text-decoration:none;padding:0 4px;border-radius:4px}
+.arrow{color:var(--mute);padding:0 4px}
+
+/* controls */
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;align-items:center}
+input[type=search]{font:inherit;font-size:1rem;padding:7px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel);color:var(--ink);min-width:190px;flex:1}
+input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
+/* No overflow:hidden here: it clipped the tooltips on the buttons. Round the
+   end buttons instead, which is what the clipping was for. */
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel)}
+.seg button:first-child{border-radius:var(--r-sm) 0 0 var(--r-sm)}
+.seg button:last-child{border-radius:0 var(--r-sm) var(--r-sm) 0}
+.seg button{all:unset;cursor:pointer;padding:7px 12px;font-size:1rem;color:var(--mute)}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.seg button:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+
+/* ranks */
+.ranks{border-top:1px solid var(--line)}
+.rank{display:grid;grid-template-columns:28px 1fr 74px auto;gap:10px;align-items:center;padding:8px 6px;border:0;border-bottom:1px solid var(--line);width:100%;text-align:left;font:inherit;color:inherit;background:none;cursor:pointer}
+.rank[aria-pressed="true"]{background:#fff}
+.rank:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+.rank .i{font-family:var(--mono);font-size:.875rem;color:var(--mute)}
+.rank .nm{display:flex;align-items:center;gap:8px;min-width:0}
+.rank .nm span:first-child{font-family:var(--mono);font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag{font-size:.875rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:4px;flex:none}
+.tag.core{background:rgba(58,131,58,.12);color:var(--teal)} .tag.third{background:var(--faint);color:var(--mute)}
+.rank .ct{font-family:var(--mono);font-size:1rem;white-space:nowrap;text-align:right}
+.rank .ct em{font-style:normal;color:var(--mute);font-size:.875rem}
+.spark{display:block}
+.delta{font-family:var(--mono);font-size:.875rem;white-space:nowrap}
+.delta.d-inline{margin-left:.45em;font-size:.8em}
+.spark-att{display:block;margin:5px 0 0 auto}
+.delta.up{color:var(--teal)} .delta.dn{color:var(--rust)} .delta.flat{color:var(--mute)}
+.bar{grid-column:2/5;height:5px;background:var(--faint);border-radius:3px;overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;background:var(--teal)}
+.rank.third .bar i{background:var(--sand)}
+.more{padding:12px 0}
+.more button{all:unset;cursor:pointer;font-size:1rem;color:var(--teal);border-bottom:1px solid var(--teal)}
+.more button:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+
+/* side panels */
+.rows{font-family:var(--mono);font-size:1rem}
+/* Not .row: that is Bootstrap's grid class. Its `.row > * {width:100%}`
+   stacked these, and ours leaked onto the page layout row in return. */
+.kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dotted var(--line)}
+.kv:last-child{border-bottom:0}
+.kv b{font-weight:500}
+.kv .v{color:var(--mute)}
+.vbar{position:relative;padding:5px 0;border-bottom:1px dotted var(--line)}
+.vbar:last-child{border-bottom:0}
+.vbar .lbl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:1rem}
+.vbar .track{display:flex;height:6px;margin-top:5px;border-radius:3px;overflow:hidden;background:var(--faint)}
+.vbar .track i{display:block;height:100%}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:1rem}
+thead th{position:sticky;top:0;background:var(--paper);text-align:left;font-weight:700;font-size:.875rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);padding:8px 8px 10px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
+thead th:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+thead th.num{text-align:right}
+th .caret{opacity:.35}
+th[aria-sort] .caret{opacity:1;color:var(--ink)}
+tbody td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:hover{background:var(--panel)}
+td.num{text-align:right;font-family:var(--mono)}
+td.nm a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
+td.nm a:hover{border-color:var(--teal);color:var(--teal)}
+td.nm .ex{display:block;font-size:.875rem;color:var(--mute);margin-top:2px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46ch}
+.uptime{display:flex;gap:1px}
+.uptime i{display:block;width:3px;height:13px;background:var(--teal);border-radius:1px}
+.uptime i.down{background:rgba(217,83,79,.28)}
+.pill{font-family:var(--mono);font-size:.875rem;padding:2px 7px;border-radius:2px;white-space:nowrap;display:inline-block}
+.p-current{background:rgba(58,131,58,.12);color:var(--teal)}
+.p-behind{background:rgba(253,126,20,.14);color:#b54708}
+.p-eol{background:rgba(217,83,79,.12);color:var(--rust)}
+td.nm .ex-fork{display:block;font-size:.875rem;color:var(--mute);margin-top:2px;font-family:var(--mono);white-space:normal;max-width:none;line-height:1.5}
+.p-active{background:#e6f4ea;color:#1e6b2a}
+.p-recent{background:#e8f0e8;color:#3A833A}
+.p-quiet{background:#fff3e4;color:#9a4d06}
+.p-still{background:#f2f4f7;color:#667085}
+.p-archived{background:#ececf0;color:#3f3f52}
+.p-unknown{background:var(--faint);color:var(--mute)}
+.tblhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0 8px}
+.count{font-family:var(--mono);font-size:.875rem;color:var(--mute)}
+.empty{padding:26px;text-align:center;color:var(--mute);font-size:1rem}
+footer{border-top:1px solid var(--line);padding-top:18px;font-size:.875rem;color:var(--mute)}
+footer p{max-width:88ch}
+footer code{font-family:var(--mono);background:var(--panel);padding:1px 4px;border-radius:2px}
+/* Keep the footnote's own muted colour: the accent used elsewhere turns a
+   line of provenance into three highlights. Underline carries the link. */
+footer a,footer a:visited{color:var(--mute);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:2px}
+footer a:hover,footer a:focus{color:var(--ink);text-decoration-color:currentColor}
+footer a code{color:inherit}
+
+@media (max-width:900px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .cols{grid-template-columns:1fr;gap:26px}
+  .wrap{padding:0 16px 60px}
+  td.nm .ex{max-width:28ch}
+  .hide-s{display:none}
+  .xaxis span{font-size:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* anchors clear the sticky masthead */
+.ckan-insights section{scroll-margin-top:90px}
+
+/* The first element on each screen sits 28px below the tab strip, so every
+   screen opens with the same gap regardless of what it leads with. */
+.ckan-insights .stats,
+.tab-trends #ext-attention,
+.tab-trends #ext-downstream,
+.tab-trends #ext-all,
+.tab-trends #changes,
+.tab-instances #instances,
+.tab-discussion #discussion{margin-top:28px}
+
+/* Screens. Every section is in the DOM on every screen so the one data fetch
+   populates all of them; the active tab decides what is shown. */
+.ckan-insights [data-tab]{display:none}
+.ckan-insights.tab-overview [data-tab="overview"],
+.ckan-insights.tab-trends [data-tab="trends"],
+.ckan-insights.tab-instances [data-tab="instances"],
+.ckan-insights.tab-discussion [data-tab="discussion"]{display:block}
+.ckan-insights.tab-overview .stats[data-tab="overview"]{display:grid}
+.ckan-insights section:first-of-type .shead{margin-top:0}
+
+/* Discourse embed: it ships its own "Discussion" h3, which would repeat the
+   section heading, and its own link styling. */
+.insights-discussion #discourse-comments > h3{display:none}
+.insights-discussion .discourse-op{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:18px}
+.insights-discussion .discourse-op-link{display:inline-block;margin-bottom:10px;font-size:.875rem}
+.insights-discussion #discourse-comments-container{min-height:200px}
+
+/* Sidebar. Scoped outside .ckan-insights because the secondary column is
+   rendered by page.html, not inside the dashboard wrapper. */
+.insights-tabs{margin:0 0 36px}
+.insights-tabs .nav-link{
+  font-family:"Satoshi",system-ui,sans-serif;font-size:1.25rem;font-weight:500;
+  color:#667085;border:0;border-bottom:2px solid transparent;padding:10px 16px;
+}
+/* Same type as the tabs, a step back in colour, and inert. */
+.insights-tabs-title{
+  font-family:"Satoshi",system-ui,sans-serif;font-size:1.25rem;font-weight:500;
+  color:#98a2b3;padding:10px 16px 10px 0;margin-right:4px;
+  border-bottom:2px solid transparent;cursor:default;user-select:none;
+}
+@media (max-width:767px){.insights-tabs-title{display:none}}
+.insights-tabs .nav-link:hover,.insights-tabs .nav-link:focus{color:#e53d3c;border-bottom-color:#e53d3c;background:none}
+.insights-tabs .nav-link.active{color:#101828;font-weight:500;background:none;border-bottom-color:#e53d3c}
+
+.insights-side{font-family:"Satoshi",system-ui,sans-serif}
+.insights-side .module-heading{font-size:.875rem}
+.insights-side .module-heading i{margin-right:6px;opacity:.7}
+.insights-toc{display:flex;flex-direction:column;padding:6px 0}
+.insights-toc a{
+  display:block;padding:7px 0.75rem;font-size:1rem;font-weight:500;line-height:1.4;
+  color:#667085;text-decoration:none;
+  border-left:2px solid transparent;
+}
+.insights-toc a:hover,.insights-toc a:focus{
+  background:#e4e7ec;
+  color:#d9534f;
+  border-left-color:#d9534f;
+}
+.insights-note{padding:4px 0.75rem 16px;font-size:1rem;line-height:1.5;color:#667085}
+.insights-note p{margin:0 0 8px}
+.insights-note-src{font-size:.875rem}
+@media (min-width:992px){
+  /* the whole column sticks as one unit, and scrolls internally if it is
+     taller than the viewport */
+  .insights-sidebar{position:sticky;top:80px;max-height:calc(100vh - 100px);overflow-y:auto}
+}
+.insights-toc .toc-screen{
+  margin-top:6px;padding-top:12px;font-weight:500;color:#101828;
+  border-top:1px solid var(--line);
+}
+/* No rule above the first group: the module heading already closes it off. */
+.insights-toc .toc-screen:first-child{margin-top:0;padding-top:7px;border-top:0}
+.insights-toc .toc-screen.is-current{border-left-color:#d9534f;color:#d9534f}
+.insights-toc .toc-section{padding-left:1.75rem;font-size:.875rem;font-weight:400}
+.insights-toc .toc-section i{
+  width:1.1em;margin-right:.5em;font-size:.8em;text-align:center;
+  color:#98a2b3;vertical-align:baseline;
+}
+.insights-toc .toc-section:hover i,.insights-toc .toc-section:focus i{color:inherit}
+.insights-facts{margin:0;padding:4px 0.75rem 14px;font-size:1rem}
+.insights-facts dt{color:#667085;font-weight:400;font-size:.875rem;margin-top:10px}
+.insights-facts dt:first-child{margin-top:0}
+.insights-facts dd{margin:0;color:#101828;font-weight:500}
+.insights-links{margin:10px 0 0;padding:0;list-style:none}
+.insights-links li{margin-top:6px}
+.insights-report{display:inline-flex;align-items:center;gap:8px}
+.insights-report i{font-size:.75rem;opacity:.8}
+</style>{% endraw %}
+{% endblock %}
+
+{% block primary_content %}
+<ul class="nav nav-tabs insights-tabs">
+  {# Names the set of screens rather than acting as one of them. aria-hidden
+     because it repeats the page heading and would otherwise read as a nav
+     item with no destination. #}
+  <li class="nav-item insights-tabs-title" aria-hidden="true">{{ _('CKAN Ecosystem') }}</li>
+  {% for id, url, label in insights_tabs %}
+    <li class="nav-item">
+      <a class="nav-link{% if tab == id %} active{% endif %}" href="{{ url }}">{{ _(label) }}</a>
+    </li>
+  {% endfor %}
+</ul>
+<div class="ckan-insights tab-{{ tab }}">
+{% raw %}
+<div class="wrap">
+
+<div class="stats" id="stats" data-tab="overview"></div>
+
+<section id="weekly" data-tab="overview">
+  <div class="shead">
+    <h2>Week by week</h2>
+    <p>One column per archived crawl, split by support status. Hatched columns are crawls that reached almost nothing — a crawler failure, not a fleet collapse. Click a column to read its numbers. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-timeline.html" target="_blank" rel="noopener" title="The fleet, week by week — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+  </div>
+  <div class="legend" id="chartLegend"></div>
+  <div class="chart" id="chart"></div>
+  <div class="xaxis" id="xaxis"></div>
+  <div class="readout" id="weekReadout"></div>
+</section>
+
+<section id="fleet" data-tab="overview">
+  <div class="shead">
+    <h2>The fleet</h2>
+    <p>One tile per instance in the latest crawl, grouped newest version first. Click a status to filter the table at the bottom. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="How much of the fleet runs supported software? — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="fleet" id="fleetStrip"></div>
+  <div class="readout" id="readout"><span class="ph">Hover or tap a tile for instance details.</span></div>
+</section>
+
+<section id="changes" data-tab="trends">
+  <div class="shead">
+    <h2>Version and plugin changes</h2>
+    <p>Every version bump and every plugin install or removal detected between consecutive crawls. Shaded rows come from crawls where a large share of the fleet changed at once — a re-baselined crawler or a long gap between crawls — and should not be read as real upgrades.</p>
+  </div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Event type">
+      <button data-ev="all" aria-pressed="true">All events</button>
+      <button data-ev="v" aria-pressed="false">Version bumps<span class="tip" tabindex="0" role="note" aria-label="What counts as a version bump" data-tip="The reported CKAN version changed. Minor: 2.10.8 to 2.11.0. Patch: 2.11.5 to 2.11.6.">i</span></button>
+      <button data-ev="x" aria-pressed="false">Plugin changes<span class="tip" tabindex="0" role="note" aria-label="What counts as a plugin change" data-tip="A plugin appeared in, or vanished from, the portal's reported plugin list between two crawls.">i</span></button>
+      <button data-ev="real" aria-pressed="false">Excluding re-baselines<span class="tip" tabindex="0" role="note" aria-label="What a re-baseline is" data-tip="Hides crawls where more than 15% of the fleet changed at once: a crawler re-baseline or a catch-up after a gap, not real movement.">i</span></button>
+    </div>
+    <input type="search" id="evSearch" placeholder="filter by instance or plugin…" aria-label="Filter events">
+    <span class="count" id="evCount"></span>
+  </div>
+  <div class="ledger" id="ledger"></div>
+</section>
+
+
+<section id="ext-attention" data-tab="trends">
+  <div class="shead">
+    <h2>Gaining attention</h2>
+    <p>Movement in stars, forks and contributors across the archived crawls, with the star line for the last 26 weeks. Sorted by combined movement, forks weighted above stars because forking means someone used the code. Plugins that ship inside CKAN are excluded throughout.</p>
+  </div>
+  <div class="tblhead"><span class="count" id="attCount"></span></div>
+  <table>
+    <thead><tr>
+      <th data-esort="p">Extension <span class="caret">↕</span></th>
+      <th data-esort="i" class="num">Portals<span class="tip" tabindex="0" role="note" aria-label="What Portals measures" data-tip="Distinct catalogued portals observed running this extension. An observation, not a total.">i</span> <span class="caret">↕</span></th>
+      <th data-esort="pct" class="num hide-s">Share <span class="caret">↕</span></th>
+      <th data-esort="s" class="num">Stars<span class="tip" tabindex="0" role="note" aria-label="About the stars column" data-tip="Stars now, with the change across the archived crawls beside it. Sorts by the total; the table loads sorted by movement.">i</span> <span class="caret">↕</span></th>
+      <th data-esort="f" class="num">Forks <span class="caret">↕</span></th>
+      <th data-esort="c" class="num hide-s">People <span class="caret">↕</span></th>
+      <th data-esort="up">Upkeep<span class="tip" tabindex="0" role="note" aria-label="What Upkeep measures" data-tip="How recently the repository was pushed to. Quiet is not broken: ckanext-envvars runs on 126 portals and has been untouched for two years because it is finished.">i</span> <span class="caret">↕</span></th>
+      <th data-esort="push" class="num hide-s">Last push <span class="caret">↕</span></th>
+      <th data-esort="br" class="num hide-s">Branches<span class="tip" tabindex="0" role="note" aria-label="What Branches measures" data-tip="Branches on the repository, and how many carry a commit from the last year.">i</span> <span class="caret">↕</span></th>
+    </tr></thead>
+    <tbody id="attBody"></tbody>
+  </table>
+  <div class="more"><button id="attMoreBtn"></button></div>
+</section>
+
+<section id="ext-downstream" data-tab="trends">
+  <div class="shead">
+    <h2>Livelier downstream</h2>
+    <p>Extensions whose forks are being pushed while upstream is not. This is where maintenance quietly relocates &mdash; a portal operator patches a fork and never upstreams it. A fork being pushed more recently does not prove it is ahead in commits.</p>
+  </div>
+  <div class="tblhead">
+    <input type="search" id="dsSearch" placeholder="search upstream or fork…" aria-label="Search downstream forks">
+    <span class="count" id="dsCount"></span>
+  </div>
+  <table>
+    <thead><tr>
+      <th data-dsort="p">Upstream <span class="caret">↕</span></th>
+      <th data-dsort="i" class="num">Portals <span class="caret">↕</span></th>
+      <th data-dsort="push" class="num">Upstream last push <span class="caret">↕</span></th>
+      <th data-dsort="ahead" class="num">Forks ahead<span class="tip" tabindex="0" role="note" aria-label="What Forks ahead measures" data-tip="Forks pushed at least a fortnight more recently than upstream, out of the five most recently pushed.">i</span> <span class="caret">↕</span></th>
+      <th data-dsort="f" class="num hide-s">Forks <span class="caret">↕</span></th>
+      <th data-dsort="s" class="num hide-s">Stars <span class="caret">↕</span></th>
+    </tr></thead>
+    <tbody id="dsBody"></tbody>
+  </table>
+  <div class="empty" id="dsEmpty" hidden>Nothing matches that filter.</div>
+  <div class="more"><button id="dsMoreBtn"></button></div>
+</section>
+<section id="adoption" data-tab="trends">
+  <div class="shead">
+    <h2>Extension adoption (entry points)</h2>
+    <p id="extHint">Counts are from the latest crawl. Trend and delta come from the stable cohort — the instances that answered in every crawl of the trailing window — so movement is a real install, not a missed crawl. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-extension-adoption.html" target="_blank" rel="noopener" title="Which plugins the ecosystem runs — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+  </div>
+  <div class="cols">
+    <div>
+      <div class="controls">
+        <input type="search" id="extSearch" placeholder="filter extensions…" aria-label="Filter extensions">
+        <div class="seg" role="group" aria-label="Sort">
+          <button data-sort="count" aria-pressed="true">By install base</button>
+          <button data-sort="delta" aria-pressed="false">By movement</button>
+        </div>
+        <div class="seg" role="group" aria-label="Type">
+          <button data-kind="all" aria-pressed="true">All</button>
+          <button data-kind="third" aria-pressed="false">Third-party</button>
+          <button data-kind="core" aria-pressed="false">Core</button>
+        </div>
+      </div>
+      <div class="ranks" id="ranks"></div>
+      <div class="more"><button id="moreBtn"></button></div>
+    </div>
+    <div>
+      <div class="card">
+        <h3 id="pairTitle">Ships alongside</h3>
+        <p class="hint" id="pairHint">Pick an extension to see its co-installs and its cohort line.</p>
+        <div id="pairChart"></div>
+        <div class="rows" id="pairRows"></div>
+      </div>
+      <div class="card">
+        <h3>Upstream packages</h3>
+        <p class="hint">Plugins rolled up to the repo that provides them, latest crawl.</p>
+        <div class="rows" id="famRows"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section id="versions" data-tab="overview">
+  <div class="shead">
+    <h2>Version spread</h2>
+    <p>Only the newest patch of 2.10 and 2.11 is officially supported. Everything else is on its own. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-version-spread.html" target="_blank" rel="noopener" title="Which CKAN versions are in the wild? — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+  </div>
+  <div class="cols">
+    <div><div class="card"><h3>By release branch</h3><p class="hint">Split by patch status within each branch.</p><div id="branchRows"></div></div></div>
+    <div>
+      <div class="card"><h3>Most common versions</h3><p class="hint">The 14 most frequently reported version strings.</p><div class="rows" id="verRows"></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="instances" data-tab="instances">
+  <div class="shead">
+    <h2>CKAN instances</h2>
+    <p>Every instance the archive has seen, at its most recent crawl, with its crawl response strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name, host, version, or plugin.</p>
+  </div>
+  <div class="tblhead">
+    <input type="search" id="tblSearch" placeholder="search instances…" aria-label="Search instances">
+    <span class="count" id="tblCount"></span>
+  </div>
+  <table>
+    <thead><tr>
+      <th data-sort="n">Instance <span class="caret">↕</span></th>
+      <th data-sort="v">Version <span class="caret">↕</span></th>
+      <th data-sort="up" class="hide-s">Answered<span class="tip" tabindex="0" role="note" aria-label="What Answered measures" data-tip="Crawls this portal responded to, out of those that ran. A site can be up and still not answer the API.">i</span> <span class="caret">↕</span></th>
+      <th data-sort="d" class="num">Datasets <span class="caret">↕</span></th>
+      <th data-sort="growth" class="num hide-s">Cohort Δ<span class="tip" tabindex="0" role="note" aria-label="What Cohort delta measures" data-tip="Change in reported dataset count between this portal's first and most recent answered crawl.">i</span> <span class="caret">↕</span></th>
+      <th data-sort="x" class="num">Exts <span class="caret">↕</span></th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="empty" id="tblEmpty" hidden>Nothing matches that filter.</div>
+  <div class="more"><button id="tblMoreBtn"></button></div>
+</section>
+
+<section id="reliability" data-tab="instances">
+  <div class="shead">
+    <h2>Sites crawl reliability</h2>
+    <p>How often each portal actually answered, counted only over the crawls that worked. Flaky endpoints are a crawler problem as much as a portal problem. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-crawl-reliability.html" target="_blank" rel="noopener" title="How reliably portals answer — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+  </div>
+  <div class="cols">
+    <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
+    <div><div class="card"><h3>Flakiest endpoints</h3><p class="hint">Answered some crawls, not others. Worth a retry policy.</p><div class="rows" id="flakyRows"></div></div></div>
+  </div>
+</section>
+<section id="ext-all" data-tab="instances">
+  <div class="shead">
+    <h2>Extensions</h2>
+    <p>Every catalogued extension matched to a crawled repository, identified by the plugin names it declares rather than guessed from its name. Search matches package or repository.</p>
+  </div>
+  <div class="tblhead">
+    <input type="search" id="extAllSearch" placeholder="search extensions…" aria-label="Search extensions">
+    <span class="count" id="extAllCount"></span>
+  </div>
+  <table>
+    <thead><tr>
+      <th data-xsort="p">Extension <span class="caret">↕</span></th>
+      <th data-xsort="i" class="num">Portals <span class="caret">↕</span></th>
+      <th data-xsort="pct" class="num hide-s">Share <span class="caret">↕</span></th>
+      <th data-xsort="s" class="num">Stars <span class="caret">↕</span></th>
+      <th data-xsort="f" class="num">Forks <span class="caret">↕</span></th>
+      <th data-xsort="c" class="num hide-s">People <span class="caret">↕</span></th>
+      <th data-xsort="up">Upkeep <span class="caret">↕</span></th>
+      <th data-xsort="push" class="num hide-s">Last push <span class="caret">↕</span></th>
+      <th data-xsort="br" class="num hide-s">Branches <span class="caret">↕</span></th>
+      <th data-xsort="ahead" class="num hide-s">Forks ahead <span class="caret">↕</span></th>
+    </tr></thead>
+    <tbody id="extAllBody"></tbody>
+  </table>
+  <div class="empty" id="extAllEmpty" hidden>Nothing matches that filter.</div>
+  <div class="more"><button id="extAllMoreBtn"></button></div>
+</section>
+
+{% endraw %}
+
+{# Discussion screen. One standing Discourse topic, rendered through the same
+   helper the extension and site pages use, so it inherits the site's Discourse
+   settings rather than embedding anything of its own. #}
+<section id="discussion" data-tab="discussion" class="insights-discussion">
+  <div class="shead">
+    <h2>{{ _('Discussion') }}</h2>
+    <p>{{ _('A general thread for the Insights Dashboard. Posts and replies live on the CKAN forum.') }}</p>
+  </div>
+  {% if 'discourse_comments' in h %}
+    {{ h.discourse_comments({'topic_id': discussion_topic_id}) }}
+  {% else %}
+    <div class="card">
+      <p class="hint">{{ _('The Discourse extension is not enabled on this site, so the thread cannot be shown here.') }}</p>
+      <p><a href="https://discuss.okfn.org/t/{{ discussion_topic_id }}" target="_blank" rel="noopener">{{ _('Open the thread on the CKAN forum') }}</a></p>
+    </div>
+  {% endif %}
+</section>
+
+{% raw %}
+<footer>
+  <p id="foot"></p>
+</footer>
+</div>
+{% endraw %}
+</div>
+{% endblock %}
+
+{% block secondary_content %}
+  {# One sticky unit. Sticking the modules individually let the second one
+     scroll up over the pinned first one. #}
+  <div class="insights-sidebar">
+    <div class="module module-narrow module-shallow insights-side">
+      <h2 class="module-heading"><i class="fa fa-chart-column"></i> {{ _('Dashboard') }}</h2>
+      <nav class="insights-toc" aria-label="{{ _('Dashboard sections') }}">
+        {% for id, url, label, sections in insights_nav %}
+          <a class="toc-screen{% if tab == id %} is-current{% endif %}" href="{{ url }}">{{ _(label) }}</a>
+          {% for anchor, sub, icon in sections %}
+            <a class="toc-section" href="{{ url }}#{{ anchor }}"><i class="fa fa-{{ icon }}" aria-hidden="true"></i>{{ _(sub) }}</a>
+          {% endfor %}
+        {% endfor %}
+      </nav>
+    </div>
+
+    <div class="module module-narrow module-shallow insights-side">
+      <h2 class="module-heading">{{ _('This crawl') }}</h2>
+      <dl class="insights-facts">
+        <dt>{{ _('Generated') }}</dt><dd id="side-generated">—</dd>
+        <dt>{{ _('Crawls archived') }}</dt><dd id="side-crawls">—</dd>
+        <dt>{{ _('Portals, latest') }}</dt><dd id="side-portals">—</dd>
+      </dl>
+    </div>
+
+    <div class="module module-narrow module-shallow insights-side">
+      <h2 class="module-heading">{{ _('About this data') }}</h2>
+      <div class="insights-note">
+        <p>{{ _('Rebuilt from the weekly crawl of every public CKAN portal the catalogue tracks. The page reads the published rollup directly, so the numbers change without a redeploy.') }}</p>
+        <ul class="insights-links">
+          <li><a href="https://github.com/dathere/pose-ckanext-metadata" target="_blank" rel="noopener">{{ _('Source repository') }}</a></li>
+          <li><a href="https://ecosystem.ckan.org/dataset/ckan-sites-metadata" target="_blank" rel="noopener">{{ _('Dataset Link') }}</a></li>
+          <li><a href="https://discuss.okfn.org/t/{{ discussion_topic_id }}" target="_blank" rel="noopener">{{ _('Discussion thread') }}</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="module module-narrow module-shallow insights-side">
+      <h2 class="module-heading">{{ _("Something isn't working?") }}</h2>
+      <div class="insights-note">
+        <p>{{ _('A portal listed with the wrong version, one that is missing, or a number that does not look right — tell us and we will look into it.') }}</p>
+        <p><a class="insights-report" href="{{ h.url_for('pose_contact.form') }}">
+          <i class="fa fa-envelope"></i>{{ _('Report an issue') }}</a></p>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  {% raw %}<script>
+// Elements can legitimately be absent: the hero was removed and each tab only
+// renders its own sections. Return a detached stand-in instead of null so a
+// missing node cannot abort the rest of the script.
+const _sink = document.createElement('div');
+const byId = id => document.getElementById(id) || _sink;
+(async function () {
+  const SRC = 'https://raw.githubusercontent.com/dathere/pose-ckanext-metadata/main/dashboard-data/dashboard.json';
+  const fail = msg => {
+    byId('hed').textContent = 'The crawl data could not be loaded.';
+    byId('range').textContent = msg;
+  };
+  let D;
+  try {
+    const resp = await fetch(SRC, {cache: 'no-cache'});
+    if (!resp.ok) return fail('HTTP ' + resp.status + ' fetching the weekly crawl payload.');
+    D = await resp.json();
+  } catch (err) {
+    return fail('Network error fetching the weekly crawl payload.');
+  }
+const NAMES = D.ext_names, W = D.weeks, NW = W.length, VW = D.vweeks, NVW = VW.length;
+const fmt = n => n.toLocaleString('en-US');
+const pct = (a,b) => b ? Math.round(100*a/b) : 0;
+const short = w => w.slice(5).replace('-','/');
+const ORDER = ['current','behind','eol','unknown'];
+const STATUS = {
+  current:{label:'On latest patch', desc:'newest patch of a supported branch'},
+  behind:{label:'Behind on patches', desc:'supported branch, older patch'},
+  eol:{label:'End of life', desc:'2.9 or older'},
+  unknown:{label:'No response', desc:'no version reported'}
+};
+let selectedExt = null;
+let active = new Set(ORDER);
+
+/* ---------- header ---------- */
+const latest = D.timeline[NW-1];
+// Movement, not totals: distinct portals that actually upgraded recently,
+// counting only upgrades that are not crawler re-baselines.
+const UPGRADE_WEEKS = 8;
+const recentWeeks = new Set(W.slice(-UPGRADE_WEEKS));
+const recentUpgraders = new Set(
+  D.upgrades.filter(u => !u.sus && u.k === 'upgrade' && recentWeeks.has(u.w))
+            .map(u => u.n)).size;
+byId('range').textContent = `CKAN ecosystem crawl · ${W[0]} → ${W[NW-1]}`;
+byId('hed').innerHTML =
+  `${fmt(D.latest_total)} portals, <em>${pct(D.statuses.eol||0, D.reachable)}%</em> of them past end of life.`;
+byId('m-weeks').textContent =
+  `${NW} crawls · ${NVW} with version data · ${fmt(D.total)} instances seen`;
+byId('side-generated').textContent = D.generated || '\u2014';
+byId('side-crawls').textContent = fmt(D.nweeks);
+byId('side-portals').textContent = fmt(D.latest_total);
+
+// Scale, posture, activity.
+byId('stats').innerHTML = [
+  [fmt(D.latest_total),
+   `portals in the latest crawl, ${fmt(D.reachable)} of them answering`],
+  [pct(D.statuses.current||0, D.reachable) + '%',
+   'of responding portals run the newest patch of a supported branch'],
+  [fmt(recentUpgraders),
+   `portals upgraded CKAN in the last ${UPGRADE_WEEKS} crawls`]
+].map(([b,s]) => `<div class="stat"><b>${b}</b><small>${s}</small></div>`).join('');
+
+/* ---------- weekly chart ---------- */
+const chart = byId('chart');
+const maxRows = Math.max(...D.timeline.map(t => t.rows));
+chart.innerHTML = D.timeline.map((t,i) => {
+  const h = 100*t.rows/maxRows;
+  const seg = ORDER.map(s => t[s] ? `<i class="s-${s}" style="height:${100*t[s]/t.rows}%"></i>` : '').join('');
+  return `<button class="col ${t.q==='ok'?'':'bad'}" data-i="${i}" aria-label="${W[i]}" style="height:${h}%">${seg}</button>`;
+}).join('');
+byId('xaxis').innerHTML =
+  W.map((w,i) => `<span>${i%4===0 || i===NW-1 ? short(w) : ''}</span>`).join('');
+byId('chartLegend').innerHTML = ORDER.map(s =>
+  `<b><span class="key s-${s}"></span>${STATUS[s].label}</b>`).join('');
+const weekReadout = byId('weekReadout');
+function showWeek(i){
+  const t = D.timeline[i];
+  chart.querySelectorAll('.col').forEach((c,j) => c.classList.toggle('sel', j===i));
+  const flags = [
+    t.q === 'none' ? '<span class="warn">no version data in this crawl</span>' : '',
+    t.q === 'partial' ? `<span class="warn">crawl reached only ${pct(t.up,t.rows)}% of listed portals</span>` : '',
+    t.sus ? '<span class="warn">bulk step: too much changed at once to read as real upgrades</span>' : ''
+  ].join('');
+  weekReadout.innerHTML = `<b class="mono">${t.w}</b> &nbsp;·&nbsp; ${fmt(t.up)} of ${fmt(t.rows)} answered${flags}<br>
+    <span class="pill p-current">${t.current} current</span>
+    <span class="pill p-behind">${t.behind} behind</span>
+    <span class="pill p-eol">${t.eol} EOL</span>
+    <span class="pill p-unknown">${t.unknown} silent</span>
+    <span class="mono" style="font-size:.875rem;color:var(--mute)"> &nbsp;·&nbsp; ${fmt(t.ds)} datasets reported${
+      t.coh_ds != null ? ` · cohort held ${fmt(t.coh_ds)}` : ''} · ${t.ev} change event${t.ev===1?'':'s'}</span>`;
+}
+chart.addEventListener('click', e => { const c = e.target.closest('.col'); if(c) showWeek(+c.dataset.i); });
+chart.addEventListener('mouseover', e => { const c = e.target.closest('.col'); if(c) showWeek(+c.dataset.i); });
+showWeek(NW-1);
+
+/* ---------- fleet strip ---------- */
+function verKey(i){
+  if(!i.v) return [-1,-1,-1];
+  const p = i.v.split('.').map(x => parseInt(x,10)||0);
+  return [p[0]||0, p[1]||0, p[2]||0];
+}
+const LATEST_SET = D.instances.filter(i => i.seen > 0 || i.v || i.e.length);
+const fleetOrder = LATEST_SET.slice().sort((a,b) => {
+  const A = verKey(a), B = verKey(b);
+  for(let k=0;k<3;k++) if(A[k]!==B[k]) return B[k]-A[k];
+  return b.d-a.d;
+});
+const strip = byId('fleetStrip');
+strip.innerHTML = fleetOrder.map((i,ix) =>
+  `<button class="tile s-${i.s}" data-ix="${ix}" title="${i.n}" aria-label="${i.n}, ${i.v||'no version'}"></button>`
+).join('');
+const readout = byId('readout');
+function showInstance(i){
+  readout.innerHTML = `<b class="mono">${i.n}</b> &nbsp;<span class="pill p-${i.s}">${i.v||'no version'}</span><br>
+    <a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.h||i.u}</a>
+    &nbsp;·&nbsp; ${fmt(i.d)} datasets &nbsp;·&nbsp; ${fmt(i.o)} orgs &nbsp;·&nbsp; ${i.e.length} extensions
+    &nbsp;·&nbsp; answered ${i.seen}/${i.of} crawls`;
+}
+['mouseover','focusin','click'].forEach(ev => strip.addEventListener(ev, e => {
+  const t = e.target.closest('.tile'); if(t) showInstance(fleetOrder[+t.dataset.ix]);
+}));
+
+/* ---------- status filter ---------- */
+const legend = byId('legend');
+legend.innerHTML = ORDER.map(s =>
+  `<button data-s="${s}" aria-pressed="true"><span class="key s-${s}"></span>${STATUS[s].label}
+   <span class="n">${fmt(D.statuses[s]||0)}</span></button>`).join('');
+legend.addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const s = b.dataset.s;
+  if(active.has(s) && active.size===ORDER.length) active = new Set([s]);
+  else if(active.has(s)){ active.delete(s); if(!active.size) active = new Set(ORDER); }
+  else active.add(s);
+  legend.querySelectorAll('button').forEach(x => {
+    const on = active.has(x.dataset.s);
+    x.setAttribute('aria-pressed', on); x.classList.toggle('off', !on);
+  });
+  const all = active.size===ORDER.length;
+  strip.querySelectorAll('.tile').forEach(t =>
+    t.classList.toggle('dim', !all && !active.has(fleetOrder[+t.dataset.ix].s)));
+  renderTable();
+});
+
+/* ---------- ledger ---------- */
+let evKind = 'all', evQuery = '';
+const EVENTS = [
+  ...D.upgrades.map(u => ({t:'v', w:u.w, n:u.n, sus:u.sus, u})),
+  ...D.ext_events.map(x => ({t:'x', w:x.w, n:x.n, sus:x.sus, x}))
+].sort((a,b) => a.w < b.w ? 1 : a.w > b.w ? -1 : a.n.localeCompare(b.n));
+// Link to the catalogue entry, not the portal. Absolute on purpose: a local
+// or staging copy of this page has no crawl data of its own, so the links
+// should reach the live listings. CKAN redirects /dataset/<name> to the
+// type-specific route, so this works for site, tool and extension alike.
+const CATALOG = 'https://ecosystem.ckan.org';
+const catalogUrl = n => `${CATALOG}/dataset/${encodeURIComponent(n)}`;
+function renderLedger(){
+  const rows = EVENTS.filter(e => {
+    if(evKind === 'real' && e.sus) return false;
+    if(evKind !== 'all' && evKind !== 'real' && e.t !== evKind) return false;
+    if(!evQuery) return true;
+    if(e.n.includes(evQuery)) return true;
+    if(e.t === 'v') return (e.u.from + ' ' + e.u.to).includes(evQuery);
+    return [...e.x.add, ...e.x.rem].some(p => p.includes(evQuery));
+  });
+  byId('evCount').textContent =
+    `${fmt(rows.length)} event${rows.length===1?'':'s'}` + (rows.length > 400 ? ' · showing first 400' : '');
+  byId('ledger').innerHTML = rows.slice(0,400).map(e => {
+    const link = `<a href="${catalogUrl(e.n)}" target="_blank" rel="noopener">${e.n}</a>`;
+    const sus = e.sus ? ' sus' : '';
+    if(e.t === 'v'){
+      const glyph = e.u.k === 'downgrade' ? '↓' : '↑';
+      return `<div class="ev v${sus}"><time>${e.w}</time><span class="glyph">${glyph}</span>
+        <span class="body">${link}${e.u.major?' <span class="pill p-current">minor release</span>':''}
+        <span class="det">${e.u.from}<span class="arrow">→</span>${e.u.to}</span></span></div>`;
+    }
+    const add = e.x.add.map(p => `<ins>+${p}</ins>`).join(' ');
+    const rem = e.x.rem.map(p => `<del>−${p}</del>`).join(' ');
+    return `<div class="ev x${sus}"><time>${e.w}</time><span class="glyph">◇</span>
+      <span class="body">${link}<span class="det">${[add,rem].filter(Boolean).join(' ')}</span></span></div>`;
+  }).join('') || '<div class="empty">No events match that.</div>';
+}
+document.querySelectorAll('[data-ev]').forEach(b => b.addEventListener('click', () => {
+  evKind = b.dataset.ev;
+  document.querySelectorAll('[data-ev]').forEach(x => x.setAttribute('aria-pressed', x===b));
+  renderLedger();
+}));
+byId('evSearch').addEventListener('input', e => {
+  evQuery = e.target.value.trim().toLowerCase(); renderLedger();
+});
+renderLedger();
+
+/* ---------- sparkline ---------- */
+function spark(series, w=68, h=18){
+  if(!series || series.length < 2) return '';
+  const mn = Math.min(...series), mx = Math.max(...series), rng = (mx-mn)||1;
+  const pts = series.map((v,i) =>
+    `${(i/(series.length-1)*(w-2)+1).toFixed(1)},${(h-1-((v-mn)/rng)*(h-2)).toFixed(1)}`).join(' ');
+  const rising = series[series.length-1] >= series[0];
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">
+    <polyline points="${pts}" fill="none" stroke="${rising?'var(--teal)':'var(--rust)'}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+}
+
+/* ---------- extension ranks ---------- */
+let extKind = 'all', extQuery = '', extSort = 'count', extLimit = 25;
+const ranks = byId('ranks'), moreBtn = byId('moreBtn');
+byId('extHint').textContent =
+  `Counts are from the latest crawl (${fmt(D.with_ext)} portals reported a plugin list). Trend and delta come from the `
+  + `${fmt(D.cohort_n)} instances that answered in every crawl from ${D.cohort_weeks[0]} on, so movement is a real install, not a missed crawl.`;
+function extList(){
+  let l = D.exts.filter(e =>
+    (extKind === 'all' || (extKind === 'core') === !!e.core) &&
+    (!extQuery || e.name.includes(extQuery) || (e.family||'').includes(extQuery)));
+  if(extSort === 'delta') l = l.filter(e => e.delta).sort((a,b) => Math.abs(b.delta)-Math.abs(a.delta));
+  return l;
+}
+function renderExts(){
+  const list = extList(), top = list.slice(0, extLimit);
+  const max = D.exts.length ? D.exts[0].count : 1;
+  ranks.innerHTML = top.map((e,ix) => {
+    const d = e.delta, cls = d>0?'up':d<0?'dn':'flat';
+    return `<button class="rank ${e.core?'':'third'}" data-e="${e.name}" aria-pressed="${selectedExt===e.name}">
+      <span class="i">${ix+1}</span>
+      <span class="nm"><span>${e.name}</span><span class="tag ${e.core?'core':'third'}">${e.core?'core':'ext'}</span></span>
+      <span>${spark(e.cohort)}</span>
+      <span class="ct">${fmt(e.count)} <em>${e.pct}%</em><br><span class="delta ${cls}">${d>0?'+':''}${d||'·'}</span></span>
+      <span class="bar"><i style="width:${Math.max(1.5,100*e.count/max)}%"></i></span>
+    </button>`;
+  }).join('') || '<div class="empty">Nothing matches that.</div>';
+  moreBtn.parentElement.hidden = list.length <= 25;
+  moreBtn.textContent = extLimit >= list.length ? 'show fewer' : `show all ${fmt(list.length)} →`;
+}
+ranks.addEventListener('click', e => {
+  const b = e.target.closest('.rank'); if(!b) return;
+  selectedExt = selectedExt === b.dataset.e ? null : b.dataset.e;
+  renderExts(); renderPairs(); renderTable();
+});
+moreBtn.addEventListener('click', () => {
+  const n = extList().length; extLimit = extLimit >= n ? 25 : n; renderExts();
+});
+byId('extSearch').addEventListener('input', e => {
+  extQuery = e.target.value.trim().toLowerCase(); extLimit = 25; renderExts();
+});
+document.querySelectorAll('[data-kind]').forEach(b => b.addEventListener('click', () => {
+  extKind = b.dataset.kind; extLimit = 25;
+  document.querySelectorAll('[data-kind]').forEach(x => x.setAttribute('aria-pressed', x===b));
+  renderExts();
+}));
+document.querySelectorAll('.seg [data-sort]').forEach(b => b.addEventListener('click', () => {
+  extSort = b.dataset.sort; extLimit = 25;
+  b.closest('.seg').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x===b));
+  renderExts();
+}));
+function renderPairs(){
+  const T = byId('pairTitle'), H = byId('pairHint'),
+        C = byId('pairChart'), R = byId('pairRows');
+  if(!selectedExt){
+    T.textContent = 'Ships alongside';
+    H.textContent = 'Pick an extension to see its co-installs and its cohort line.';
+    C.innerHTML = ''; R.innerHTML = ''; return;
+  }
+  const self = D.exts.find(e => e.name === selectedExt);
+  const near = D.pairs.filter(p => p.a === selectedExt || p.b === selectedExt)
+    .map(p => ({name: p.a === selectedExt ? p.b : p.a, n: p.n}))
+    .sort((a,b) => b.n-a.n).slice(0,10);
+  const c = self.cohort;
+  T.innerHTML = `<span class="mono">${selectedExt}</span>`;
+  H.textContent = `${fmt(self.count)} instances load it${self.family?` · from ${self.family}`:''}`
+    + (c && c.length ? ` · cohort went ${c[0]} → ${c[c.length-1]}` : '');
+  C.innerHTML = spark(c, 300, 54);
+  R.innerHTML = near.length ? near.map(p =>
+    `<div class="kv"><b>${p.name}</b><span class="v">${pct(p.n,self.count)}%</span></div>`).join('')
+    : '<div class="kv"><span class="v">No common pairing.</span></div>';
+}
+byId('famRows').innerHTML = D.families.map(([f,n]) =>
+  `<div class="kv"><b>${f.replace('ckanext-','')}</b><span class="v">${fmt(n)} · ${pct(n,D.with_ext)}%</span></div>`).join('');
+
+/* ---------- version spread ---------- */
+const byBranch = {};
+LATEST_SET.forEach(i => {
+  if(!i.b) return;
+  (byBranch[i.b] ||= {current:0, behind:0, eol:0, unknown:0, total:0});
+  byBranch[i.b][i.s]++; byBranch[i.b].total++;
+});
+const branchMax = Math.max(1, ...Object.values(byBranch).map(b => b.total));
+byId('branchRows').innerHTML = Object.entries(byBranch)
+  .sort((a,b) => b[1].total-a[1].total).map(([b,v]) => `
+  <div class="vbar">
+    <div class="lbl"><span>CKAN ${b}</span><span>${fmt(v.total)}</span></div>
+    <div class="track" style="width:${Math.max(8,100*v.total/branchMax)}%">
+      ${ORDER.map(s => v[s] ? `<i class="s-${s}" style="width:${100*v[s]/v.total}%"></i>` : '').join('')}
+    </div>
+  </div>`).join('');
+byId('verRows').innerHTML = D.versions.slice(0,14).map(([v,n]) =>
+  `<div class="kv"><b>${v}</b><span class="v">${fmt(n)}</span></div>`).join('');
+
+/* ---------- reliability ---------- */
+byId('relHint').textContent = `Across the ${NVW} crawls that returned version data.`;
+const relMax = Math.max(1, ...Object.values(D.reliability));
+const RELL = {always:[`Answered all ${NVW}`, 'var(--teal-f)'], flaky:['Answered some crawls','var(--sand-f)'], never:['Never answered','var(--rust-f)']};
+byId('relRows').innerHTML = ['always','flaky','never'].map(k => `
+  <div style="padding:6px 0;border-bottom:1px dotted var(--line)">
+    <div style="display:flex;justify-content:space-between" class="mono"><span>${RELL[k][0]}</span><span>${fmt(D.reliability[k])} · ${pct(D.reliability[k],D.total)}%</span></div>
+    <div style="height:6px;margin-top:5px;background:#f2f4f7;border-radius:3px"><i style="display:block;height:100%;border-radius:2px;background:${RELL[k][1]};width:${100*D.reliability[k]/relMax}%"></i></div>
+  </div>`).join('');
+byId('flakyRows').innerHTML = D.instances
+  .filter(i => i.seen > 0 && i.seen < i.of)
+  .sort((a,b) => (a.seen/a.of)-(b.seen/b.of)).slice(0,12)
+  .map(i => `<div class="kv"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a></b><span class="v">${i.seen}/${i.of}</span></div>`)
+  .join('');
+
+/* ---------- table ---------- */
+const tbody = byId('tbody'), tblCount = byId('tblCount');
+let sortKey = 'd', sortDir = -1, tblQuery = '', tblLimit = 25, tblRows = 0;
+const SV = {n:i=>i.n, v:i=>verKey(i).reduce((a,x)=>a*1000+x+1,0), up:i=>i.of?i.seen/i.of:-1,
+            d:i=>i.d, growth:i=>i.growth, x:i=>i.e.length};
+function renderTable(){
+  let rows = D.instances.filter(i => active.has(i.s));
+  if(selectedExt){ const id = NAMES.indexOf(selectedExt); rows = rows.filter(i => i.e.includes(id)); }
+  if(tblQuery) rows = rows.filter(i =>
+    i.n.includes(tblQuery) || (i.h||'').includes(tblQuery) || (i.v||'').includes(tblQuery) ||
+    i.e.some(id => NAMES[id].includes(tblQuery)));
+  const get = SV[sortKey];
+  rows.sort((a,b) => { const A = get(a), B = get(b);
+    return typeof A === 'string' ? sortDir*A.localeCompare(B) : sortDir*(A-B); });
+  tbody.innerHTML = rows.slice(0, tblLimit).map(i => `
+    <tr>
+      <td class="nm"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a>${i.gone?' <span class="pill p-unknown">dropped</span>':''}
+        ${i.e.length?`<span class="ex">${i.e.slice(0,5).map(id=>NAMES[id]).join(' · ')}${i.e.length>5?' …':''}</span>`:''}</td>
+      <td><span class="pill p-${i.s}">${i.v||'—'}</span></td>
+      <td class="hide-s"><span class="uptime" title="${i.seen}/${i.of} crawls">${i.up.map(u=>`<i class="${u?'':'down'}"></i>`).join('')}</span></td>
+      <td class="num">${fmt(i.d)}</td>
+      <td class="num hide-s"><span class="delta ${i.growth>0?'up':i.growth<0?'dn':'flat'}">${i.growth?(i.growth>0?'+':'')+fmt(i.growth):'·'}</span></td>
+      <td class="num">${i.e.length||'—'}</td>
+    </tr>`).join('');
+  byId('tblEmpty').hidden = rows.length > 0;
+  tblRows = rows.length;
+  const shown = Math.min(rows.length, tblLimit);
+  tblCount.textContent = `${fmt(rows.length)} instance${rows.length===1?'':'s'}`
+    + (rows.length > shown ? ` · showing first ${fmt(shown)}` : '')
+    + (selectedExt ? ` · running ${selectedExt}` : '');
+  const more = byId('tblMoreBtn');
+  more.parentElement.hidden = rows.length <= 25;
+  more.textContent = tblLimit >= rows.length ? 'show fewer' : `show all ${fmt(rows.length)} →`;
+}
+// Scoped to this table: an unqualified 'thead th' also matches any other
+// table on the page -- the Flask debug toolbar alone adds a dozen -- and the
+// caret reset below then threw on the first one that has no .caret, aborting
+// the click before it reached renderTable().
+// The icons sit inside a sort header and inside a filter button, so swallow
+// their clicks rather than letting them trigger either.
+document.querySelectorAll('.tip').forEach(t =>
+  t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); }));
+
+const SORT_HEADS = document.querySelectorAll('#instances thead th[data-sort]');
+SORT_HEADS.forEach(th => {
+  th.tabIndex = 0;
+  const go = () => {
+    const k = th.dataset.sort;
+    if(sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = (k === 'n') ? 1 : -1; }
+    SORT_HEADS.forEach(x => {
+      x.removeAttribute('aria-sort');
+      const c = x.querySelector('.caret'); if(c) c.textContent = '↕'; });
+    th.setAttribute('aria-sort', sortDir===1 ? 'ascending' : 'descending');
+    const caret = th.querySelector('.caret');
+    if(caret) caret.textContent = sortDir===1 ? '↑' : '↓';
+    renderTable();
+  };
+  th.addEventListener('click', go);
+  th.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
+});
+byId('tblSearch').addEventListener('input', e => {
+  tblQuery = e.target.value.trim().toLowerCase(); tblLimit = 25; renderTable();
+});
+byId('tblMoreBtn').addEventListener('click', () => {
+  // toggle against what the last render actually matched, so the search box
+  // and the extension filter are both accounted for
+  tblLimit = tblLimit >= tblRows ? 25 : Number.MAX_SAFE_INTEGER;
+  renderTable();
+});
+
+/* ---------- extension tables ---------- */
+/* These three read ext_rows / ext_attention / ext_downstream, which the rollup
+   workflow adds to the payload from the extensions crawl. They are optional:
+   an older payload simply leaves the sections empty rather than erroring. */
+(function(){
+  const rows = D.ext_rows || [], att = D.ext_attention || [], down = D.ext_downstream || [];
+  if(!rows.length && !att.length && !down.length){
+    ['ext-attention','ext-downstream','ext-all'].forEach(id => {
+      const el = byId(id); if(el) el.hidden = true; });
+    return;
+  }
+  const meta = D.ext_meta || {};
+  const ULAB = {active:'pushed &lt;6mo', recent:'&lt;1yr', quiet:'&lt;2yr', still:'2yr+',
+                archived:'archived', unknown:'unknown'};
+  const age = d => d == null ? '—' : d >= 365 ? `${(d/365).toFixed(1)}y` : `${d}d`;
+  const dl  = v => `<span class="delta ${v>0?'up':v<0?'dn':'flat'}">${v>0?'+':''}${v||'·'}</span>`;
+  // Inline beside a total: a dot for "no change" would be noise next to a
+  // number that is already there, so an unmoved figure gets nothing.
+  const dli = v => v ? `<span class="delta d-inline ${v>0?'up':'dn'}">${v>0?'+':''}${v}</span>` : '';
+  const repoCell = r => `<td class="nm"><a href="${r.u}" target="_blank" rel="noopener">${r.p}</a>`
+    + `<span class="ex">${r.r || '—'}</span></td>`;
+  const branches = r => r.br ? `${r.br}${r.live ? ` <em style="color:var(--teal)">${r.live} live</em>` : ''}` : '—';
+
+  // Sits on its own line under the figure, so the line has the cell's width
+  // instead of competing with the number beside it.
+  function sparkline(series){
+    if(!series || series.length < 2) return '';
+    const W = 76, H = 20;
+    const mn = Math.min(...series), mx = Math.max(...series), rng = (mx - mn) || 1;
+    const pts = series.map((v,i) =>
+      `${(1 + i/(series.length-1)*(W-2)).toFixed(1)},${((H-2) - ((v-mn)/rng)*(H-5)).toFixed(1)}`).join(' ');
+    return `<svg class="spark-att" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">`
+      + `<polyline points="${pts}" fill="none" stroke="${series[series.length-1] >= series[0] ? 'var(--teal)' : 'var(--rust)'}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+  }
+
+  /* One sort helper for all three, wired off a per-table data attribute so the
+     existing instance-table handler is untouched. */
+  function sortable(attr, section, state, render){
+    const heads = document.querySelectorAll(`#${section} thead th[data-${attr}]`);
+    heads.forEach(th => {
+      th.tabIndex = 0;
+      const go = () => {
+        const k = th.dataset[attr];
+        if(state.key === k) state.dir *= -1; else { state.key = k; state.dir = (k === 'p') ? 1 : -1; }
+        heads.forEach(x => { x.removeAttribute('aria-sort');
+          const c = x.querySelector('.caret'); if(c) c.textContent = '↕'; });
+        th.setAttribute('aria-sort', state.dir === 1 ? 'ascending' : 'descending');
+        const c = th.querySelector('.caret'); if(c) c.textContent = state.dir === 1 ? '↑' : '↓';
+        render();
+      };
+      th.addEventListener('click', go);
+      th.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
+    });
+  }
+  const cmp = st => (a,b) => {
+    const A = a[st.key], B = b[st.key];
+    return typeof A === 'string' ? st.dir * A.localeCompare(B) : st.dir * ((A ?? 0) - (B ?? 0));
+  };
+
+  /* Gaining attention */
+  const attState = {key:'ds', dir:-1};
+  let attLimit = 10;
+  function renderAtt(){
+    byId('attCount').textContent = `${fmt(att.length)} extensions moved`
+      + (attLimit < att.length ? ` · showing top ${attLimit}` : '');
+    byId('attBody').innerHTML = [...att].sort(cmp(attState)).slice(0, attLimit).map(r => `<tr>
+      ${repoCell(r)}
+      <td class="num">${r.i || '—'}</td>
+      <td class="num hide-s">${r.i ? r.pct + '%' : '—'}</td>
+      <td class="num">${fmt(r.s)}${dli(r.ds)}${sparkline(r.spark)}</td>
+      <td class="num">${fmt(r.f)}${dli(r.df)}</td>
+      <td class="num hide-s">${fmt(r.c)}${dli(r.dc)}</td>
+      <td><span class="pill p-${r.up}">${ULAB[r.up] || r.up}</span></td>
+      <td class="num hide-s">${age(r.push)}</td>
+      <td class="num hide-s">${branches(r)}</td></tr>`).join('');
+    byId('attMoreBtn').textContent = attLimit >= att.length
+      ? (att.length > 10 ? 'Show fewer' : '') : `Show all ${fmt(att.length)}`;
+    byId('attMoreBtn').parentElement.hidden = att.length <= 10;
+  }
+  sortable('esort', 'ext-attention', attState, renderAtt);
+  byId('attMoreBtn').addEventListener('click', () => {
+    attLimit = attLimit >= att.length ? 10 : att.length; renderAtt(); });
+  renderAtt();
+
+  /* Livelier downstream */
+  const dsState = {key:'i', dir:-1};
+  let dsQuery = '', dsLimit = 10, dsMatched = 0;
+  function renderDs(){
+    let list = down;
+    if(dsQuery) list = list.filter(r =>
+      r.p.toLowerCase().includes(dsQuery)
+      || (r.r||'').toLowerCase().includes(dsQuery)
+      || (r.nf||'').toLowerCase().includes(dsQuery));
+    dsMatched = list.length;
+    byId('dsCount').textContent =
+      (dsQuery ? `${fmt(list.length)} of ${fmt(down.length)} extensions`
+               : `${fmt(meta.downstream ?? down.length)} extensions`)
+      + (dsLimit < list.length ? ` · showing top ${dsLimit}` : '');
+    byId('dsBody').innerHTML = [...list].sort(cmp(dsState)).slice(0, dsLimit).map(r => `<tr>
+      <td class="nm"><a href="${r.u}" target="_blank" rel="noopener">${r.p}</a>
+        <span class="ex">${r.r || '—'}</span>
+        ${(r.forks || [{r:r.nf, a:r.nfa}]).map(f =>
+          `<span class="ex-fork">↳ <a href="https://github.com/${f.r}" target="_blank" rel="noopener">${f.r}</a>`
+          + ` pushed ${age(f.a)} ago</span>`).join('')}</td>
+      <td class="num">${r.i || '—'}</td>
+      <td class="num">${age(r.push)}</td>
+      <td class="num">${r.ahead}</td>
+      <td class="num hide-s">${fmt(r.f)}</td>
+      <td class="num hide-s">${fmt(r.s)}</td></tr>`).join('');
+    byId('dsEmpty').hidden = list.length > 0;
+    byId('dsMoreBtn').textContent = dsLimit >= list.length
+      ? (list.length > 10 ? 'Show fewer' : '') : `Show all ${fmt(list.length)}`;
+    byId('dsMoreBtn').parentElement.hidden = list.length <= 10;
+  }
+  sortable('dsort', 'ext-downstream', dsState, renderDs);
+  byId('dsSearch').addEventListener('input', e => {
+    dsQuery = e.target.value.trim().toLowerCase(); dsLimit = 10; renderDs(); });
+  byId('dsMoreBtn').addEventListener('click', () => {
+    dsLimit = dsLimit >= dsMatched ? 10 : dsMatched; renderDs(); });
+  renderDs();
+
+  /* Every extension */
+  const xState = {key:'i', dir:-1};
+  let xQuery = '', xLimit = 25, xMatched = 0;
+  function renderAll(){
+    let list = rows;
+    if(xQuery) list = list.filter(r =>
+      r.p.toLowerCase().includes(xQuery) || (r.r||'').toLowerCase().includes(xQuery));
+    xMatched = list.length;
+    byId('extAllCount').textContent = `${fmt(list.length)} extensions`
+      + (meta.observed ? ` · ${fmt(meta.observed)} observed running` : '');
+    byId('extAllBody').innerHTML = [...list].sort(cmp(xState)).slice(0, xLimit).map(r => `<tr>
+      ${repoCell(r)}
+      <td class="num">${r.i || '—'}</td>
+      <td class="num hide-s">${r.i ? r.pct + '%' : '—'}</td>
+      <td class="num">${fmt(r.s)}</td>
+      <td class="num">${fmt(r.f)}</td>
+      <td class="num hide-s">${fmt(r.c)}</td>
+      <td><span class="pill p-${r.up}">${ULAB[r.up] || r.up}</span></td>
+      <td class="num hide-s">${age(r.push)}</td>
+      <td class="num hide-s">${branches(r)}</td>
+      <td class="num hide-s">${r.ahead || '·'}</td></tr>`).join('');
+    byId('extAllEmpty').hidden = list.length > 0;
+    byId('extAllMoreBtn').textContent = xLimit >= list.length
+      ? (list.length > 25 ? 'Show fewer' : '') : `Show all ${fmt(list.length)}`;
+    byId('extAllMoreBtn').parentElement.hidden = list.length <= 25;
+  }
+  sortable('xsort', 'ext-all', xState, renderAll);
+  byId('extAllSearch').addEventListener('input', e => {
+    xQuery = e.target.value.trim().toLowerCase(); xLimit = 25; renderAll(); });
+  byId('extAllMoreBtn').addEventListener('click', () => {
+    xLimit = xLimit >= xMatched ? 25 : xMatched; renderAll(); });
+  renderAll();
+})();
+
+/* ---------- footnote ---------- */
+byId('foot').innerHTML =
+  `A portal counts as answering in a crawl if it returned either a version or a plugin list. `
+  + `<code>${fmt(D.total)}</code> distinct instances appear across ${NW} archived crawls; the latest covers ${fmt(D.latest_total)}. `
+  + `${NW-NVW} crawls are excluded from every version, response and cohort figure: `
+  + `the earliest ones recorded dataset counts only, and a few reached almost no portals at all. `
+  + `Dataset totals are self-reported per portal and are not deduplicated across harvesting relationships, so aggregators double-count their sources. `
+  + (D.suspect_weeks.length ? `Crawls that changed more than 15% of the reporting fleet in a single step (<code>${D.suspect_weeks.join('</code>, <code>')}</code>) are treated as crawler re-baselines or post-gap catch-ups rather than real fleet movement, and are excluded from the headline counts. ` : '')
+  + `Generated by <a href="https://github.com/dathere/pose-ckanext-metadata/blob/main/ecosystem/build_dashboard_json.py" target="_blank" rel="noopener"><code>build_dashboard_json.py</code></a> from the CSVs <a href="https://github.com/dathere/pose-ckanext-metadata/blob/main/sites-workflow/derive_csvs.sh" target="_blank" rel="noopener"><code>derive_csvs.sh</code></a> builds with <a href="https://github.com/dathere/qsv" target="_blank" rel="noopener">qsv</a>.`;
+
+renderExts(); renderPairs(); renderTable();
+
+})();
+</script>{% endraw %}
+{% endblock %}
