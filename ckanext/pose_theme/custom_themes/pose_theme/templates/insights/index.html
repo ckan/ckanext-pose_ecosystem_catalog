@@ -39,7 +39,7 @@ h1,h2,h3{font-family:var(--sans);color:var(--ink);margin:0}
 .eyebrow{font-size:1rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--mute)}
 
 
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:0 0 32px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:0 0 32px}
 .stat{background:var(--panel);padding:18px}
 .stat b{display:block;font-family:var(--sans);font-size:2.5rem;font-weight:500;color:var(--ink);line-height:1.125}
 .stat small{display:block;margin-top:10px;font-size:.875rem;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;line-height:1.4}
@@ -651,14 +651,6 @@ let active = new Set(ORDER);
 
 /* ---------- header ---------- */
 const latest = D.timeline[NW-1];
-// Movement, not totals: how many distinct portals actually upgraded recently,
-// counting only the upgrades that are not crawler re-baselines.
-const UPGRADE_WEEKS = 8;
-const recentWeeks = new Set(W.slice(-UPGRADE_WEEKS));
-const recentUpgraders = new Set(
-  D.upgrades.filter(u => !u.sus && u.k === 'upgrade' && recentWeeks.has(u.w))
-            .map(u => u.n)).size;
-
 // A push implies commits landed. The crawl is weekly, so a 7-day window reads
 // as "since the last crawl" rather than an arbitrary period.
 const extRows = D.ext_rows || [];
@@ -673,14 +665,12 @@ byId('side-generated').textContent = D.generated || '\u2014';
 byId('side-crawls').textContent = fmt(D.nweeks);
 byId('side-portals').textContent = fmt(D.latest_total);
 
+// Scale, posture, activity.
 byId('stats').innerHTML = [
   [fmt(D.latest_total),
    `portals in the latest crawl, ${fmt(D.reachable)} of them answering`],
   [pct(D.statuses.current||0, D.reachable) + '%',
-   `of responding portals run the newest patch of a supported branch; `
-   + `${pct(D.statuses.eol||0, D.reachable)}% run one that no longer gets patches`],
-  [fmt(recentUpgraders),
-   `portals upgraded CKAN in the last ${UPGRADE_WEEKS} crawls`],
+   'of responding portals run the newest patch of a supported branch'],
   [fmt(pushedWeek.length),
    `extensions pushed since the last crawl, ${fmt(pushedWeekInUse)} of them running on a portal`]
 ].map(([b,s]) => `<div class="stat"><b>${b}</b><small>${s}</small></div>`).join('');
