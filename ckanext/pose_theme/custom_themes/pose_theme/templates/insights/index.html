@@ -260,6 +260,13 @@ footer a code{color:inherit}
   font-family:"Satoshi",system-ui,sans-serif;font-size:1.25rem;font-weight:500;
   color:#667085;border:0;border-bottom:2px solid transparent;padding:10px 16px;
 }
+/* Same type as the tabs, a step back in colour, and inert. */
+.insights-tabs-title{
+  font-family:"Satoshi",system-ui,sans-serif;font-size:1.25rem;font-weight:500;
+  color:#98a2b3;padding:10px 16px 10px 0;margin-right:4px;
+  border-bottom:2px solid transparent;cursor:default;user-select:none;
+}
+@media (max-width:767px){.insights-tabs-title{display:none}}
 .insights-tabs .nav-link:hover{color:#101828;border-bottom-color:#e4e7ec;background:none}
 .insights-tabs .nav-link.active{color:#101828;font-weight:500;background:none;border-bottom-color:#d9534f}
 
@@ -304,6 +311,10 @@ footer a code{color:inherit}
 
 {% block primary_content %}
 <ul class="nav nav-tabs insights-tabs">
+  {# Names the set of screens rather than acting as one of them. aria-hidden
+     because it repeats the page heading and would otherwise read as a nav
+     item with no destination. #}
+  <li class="nav-item insights-tabs-title" aria-hidden="true">{{ _('Every public CKAN portal, tracked weekly') }}</li>
   {% for id, url, label in insights_tabs %}
     <li class="nav-item">
       <a class="nav-link{% if tab == id %} active{% endif %}" href="{{ url }}">{{ _(label) }}</a>
