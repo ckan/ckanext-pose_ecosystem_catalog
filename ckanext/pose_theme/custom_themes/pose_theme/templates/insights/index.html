@@ -153,6 +153,7 @@ input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
 .spark{display:block}
 .delta{font-family:var(--mono);font-size:.875rem;white-space:nowrap}
 .delta.d-inline{margin-left:.45em;font-size:.8em}
+.spark-att{display:block;margin:5px 0 0 auto}
 .delta.up{color:var(--teal)} .delta.dn{color:var(--rust)} .delta.flat{color:var(--mute)}
 .bar{grid-column:2/5;height:5px;background:var(--faint);border-radius:3px;overflow:hidden;margin-top:5px}
 .bar i{display:block;height:100%;background:var(--teal)}
@@ -1009,13 +1010,16 @@ byId('tblMoreBtn').addEventListener('click', () => {
     + `<span class="ex">${r.r || '—'}</span></td>`;
   const branches = r => r.br ? `${r.br}${r.live ? ` <em style="color:var(--teal)">${r.live} live</em>` : ''}` : '—';
 
+  // Sits on its own line under the figure, so the line has the cell's width
+  // instead of competing with the number beside it.
   function sparkline(series){
     if(!series || series.length < 2) return '';
+    const W = 76, H = 20;
     const mn = Math.min(...series), mx = Math.max(...series), rng = (mx - mn) || 1;
     const pts = series.map((v,i) =>
-      `${(i/(series.length-1)*54).toFixed(1)},${(16 - ((v-mn)/rng)*13 - 1.5).toFixed(1)}`).join(' ');
-    return `<svg width="54" height="16" viewBox="0 0 54 16" aria-hidden="true" style="vertical-align:middle;margin-left:6px">`
-      + `<polyline points="${pts}" fill="none" stroke="${series[series.length-1] >= series[0] ? 'var(--teal)' : 'var(--rust)'}" stroke-width="1.5"/></svg>`;
+      `${(1 + i/(series.length-1)*(W-2)).toFixed(1)},${((H-2) - ((v-mn)/rng)*(H-5)).toFixed(1)}`).join(' ');
+    return `<svg class="spark-att" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">`
+      + `<polyline points="${pts}" fill="none" stroke="${series[series.length-1] >= series[0] ? 'var(--teal)' : 'var(--rust)'}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
   }
 
   /* One sort helper for all three, wired off a per-table data attribute so the
