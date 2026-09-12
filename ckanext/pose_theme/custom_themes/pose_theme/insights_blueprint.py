@@ -35,7 +35,7 @@ NAV = [
         ('versions', 'Version spread', 'code-branch'),
     ]),
     ('trends', '/insights/trends', 'Trends', [
-        ('changes', 'What actually changed', 'clock-rotate-left'),
+        ('changes', 'Version and plugin changes', 'clock-rotate-left'),
         ('ext-attention', 'Gaining attention', 'arrow-trend-up'),
         ('ext-downstream', 'Livelier downstream', 'code-pull-request'),
         ('adoption', 'Extension adoption (entry points)', 'puzzle-piece'),
