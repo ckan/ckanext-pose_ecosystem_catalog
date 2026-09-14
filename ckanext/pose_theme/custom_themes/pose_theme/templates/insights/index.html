@@ -524,6 +524,16 @@ footer a code{color:inherit}
   </div>
 </section>
 
+<section id="reliability" data-tab="overview">
+  <div class="shead">
+    <h2>Sites crawl reliability</h2>
+    <p>How often each portal actually answered, counted only over the crawls that worked. Flaky endpoints are a crawler problem as much as a portal problem. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-crawl-reliability.html" target="_blank" rel="noopener" title="How reliably portals answer. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+  </div>
+  <div class="cols">
+    <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
+    <div><div class="card"><h3>Flakiest endpoints</h3><p class="hint">Answered some crawls, not others. Worth a retry policy.</p><div class="rows" id="flakyRows"></div></div></div>
+  </div>
+</section>
 <section id="instances" data-tab="instances">
   <div class="shead">
     <h2>CKAN instances</h2>
@@ -548,16 +558,6 @@ footer a code{color:inherit}
   <div class="more"><button id="tblMoreBtn"></button></div>
 </section>
 
-<section id="reliability" data-tab="instances">
-  <div class="shead">
-    <h2>Sites crawl reliability</h2>
-    <p>How often each portal actually answered, counted only over the crawls that worked. Flaky endpoints are a crawler problem as much as a portal problem. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-crawl-reliability.html" target="_blank" rel="noopener" title="How reliably portals answer. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
-  </div>
-  <div class="cols">
-    <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
-    <div><div class="card"><h3>Flakiest endpoints</h3><p class="hint">Answered some crawls, not others. Worth a retry policy.</p><div class="rows" id="flakyRows"></div></div></div>
-  </div>
-</section>
 <section id="ext-all" data-tab="instances">
   <div class="shead">
     <h2>Extensions</h2>
