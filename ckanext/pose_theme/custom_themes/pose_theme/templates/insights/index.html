@@ -395,7 +395,7 @@ footer a code{color:inherit}
 <section id="weekly" data-tab="overview">
   <div class="shead">
     <h2>Week by week</h2>
-    <p>One column per archived crawl, split by support status as it stood that week — a portal counts as current if it ran the newest patch CKAN had shipped by then. Hatched columns are crawls that reached almost nothing — a crawler failure, not a fleet collapse. Click a column to read its numbers, and scroll sideways for the earlier crawls. A dashed marker is the first crawl after CKAN shipped a release. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-timeline.html" target="_blank" rel="noopener" title="The fleet, week by week — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p>One column per archived crawl, split by support status as it stood that week: a portal counts as current if it ran the newest patch CKAN had shipped by then. Hatched columns are crawls that reached almost nothing, a crawler failure rather than a fleet collapse. Click a column to read its numbers, and scroll sideways for the earlier crawls. A dashed marker is the first crawl after CKAN shipped a release. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-timeline.html" target="_blank" rel="noopener" title="The fleet, week by week. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="legend" id="chartLegend"></div>
   <div class="chart-wrap">
@@ -409,7 +409,7 @@ footer a code{color:inherit}
 <section id="fleet" data-tab="overview">
   <div class="shead">
     <h2>The fleet</h2>
-    <p>One tile per instance in the latest crawl, grouped newest version first. Click a status to filter the table at the bottom. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="How much of the fleet runs supported software? — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p>One tile per instance in the latest crawl, grouped newest version first. Click a status to filter the table at the bottom. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="How much of the fleet runs supported software? Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="legend" id="legend"></div>
   <div class="fleet" id="fleetStrip"></div>
@@ -419,7 +419,7 @@ footer a code{color:inherit}
 <section id="changes" data-tab="trends">
   <div class="shead">
     <h2>Version and plugin changes</h2>
-    <p>Every version bump and every plugin install or removal detected between consecutive crawls. Shaded rows come from crawls where a large share of the fleet changed at once — a re-baselined crawler or a long gap between crawls — and should not be read as real upgrades.</p>
+    <p>Every version bump and every plugin install or removal detected between consecutive crawls. Shaded rows come from crawls where a large share of the fleet changed at once, such as a re-baselined crawler or a long gap between crawls, and should not be read as real upgrades.</p>
   </div>
   <div class="controls">
     <div class="seg" role="group" aria-label="Event type">
@@ -463,7 +463,7 @@ footer a code{color:inherit}
 <section id="ext-downstream" data-tab="trends">
   <div class="shead">
     <h2>Livelier downstream</h2>
-    <p>Extensions whose forks are being pushed while upstream is not. This is where maintenance quietly relocates &mdash; a portal operator patches a fork and never upstreams it. A fork being pushed more recently does not prove it is ahead in commits.</p>
+    <p>Extensions whose forks are being pushed while upstream is not. This is where maintenance quietly relocates: a portal operator patches a fork and never upstreams it. A fork being pushed more recently does not prove it is ahead in commits.</p>
   </div>
   <div class="tblhead">
     <input type="search" id="dsSearch" placeholder="search upstream or fork…" aria-label="Search downstream forks">
@@ -488,7 +488,7 @@ footer a code{color:inherit}
 <section id="adoption" data-tab="trends">
   <div class="shead">
     <h2>Extension adoption (entry points)</h2>
-    <p id="extHint">Counts are from the latest crawl. Trend and delta come from the stable cohort — the instances that answered in every crawl of the trailing window — so movement is a real install, not a missed crawl. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-extension-adoption.html" target="_blank" rel="noopener" title="Which plugins the ecosystem runs — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p id="extHint">Counts are from the latest crawl. Trend and delta come from the stable cohort, the instances that answered in every crawl of the trailing window, so movement is a real install, not a missed crawl. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-extension-adoption.html" target="_blank" rel="noopener" title="Which plugins the ecosystem runs. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="cols">
     <div>
@@ -527,7 +527,7 @@ footer a code{color:inherit}
 <section id="versions" data-tab="overview">
   <div class="shead">
     <h2>Version spread</h2>
-    <p>Only the newest patch of 2.10 and 2.11 is officially supported. Everything else is on its own. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-version-spread.html" target="_blank" rel="noopener" title="Which CKAN versions are in the wild? — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p>Only the newest patch of 2.10 and 2.11 is officially supported. Everything else is on its own. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-version-spread.html" target="_blank" rel="noopener" title="Which CKAN versions are in the wild? Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="cols">
     <div><div class="card"><h3>By release branch</h3><p class="hint">Split by patch status within each branch.</p><div id="branchRows"></div></div></div>
@@ -566,7 +566,7 @@ footer a code{color:inherit}
 <section id="reliability" data-tab="instances">
   <div class="shead">
     <h2>Sites crawl reliability</h2>
-    <p>How often each portal actually answered, counted only over the crawls that worked. Flaky endpoints are a crawler problem as much as a portal problem. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-crawl-reliability.html" target="_blank" rel="noopener" title="How reliably portals answer — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p>How often each portal actually answered, counted only over the crawls that worked. Flaky endpoints are a crawler problem as much as a portal problem. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-crawl-reliability.html" target="_blank" rel="noopener" title="How reliably portals answer. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="cols">
     <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
@@ -672,7 +672,7 @@ footer a code{color:inherit}
     <div class="module module-narrow module-shallow insights-side">
       <h2 class="module-heading">{{ _("Something isn't working?") }}</h2>
       <div class="insights-note">
-        <p>{{ _('A portal listed with the wrong version, one that is missing, or a number that does not look right — tell us and we will look into it.') }}</p>
+        <p>{{ _('A portal listed with the wrong version, one that is missing, or a number that does not look right: tell us and we will look into it.') }}</p>
         <p><a class="insights-report" href="{{ h.url_for('pose_contact.form') }}">
           <i class="fa fa-envelope"></i>{{ _('Report an issue') }}</a></p>
       </div>
