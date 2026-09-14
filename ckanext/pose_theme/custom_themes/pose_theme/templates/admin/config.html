@@ -10,9 +10,35 @@
     {{ form.input('ckan.site_description', id='field-ckan-site-description', label=_('Site Tag Line'), value=data['ckan.site_description'], error=error, classes=['control-medium']) }}
 
     {% set field_url = 'ckan.site_logo' %}
-    {% set is_upload = data[field_url] and not data[field_url].startswith('http') %}
-    {% set is_url = data[field_url] and data[field_url].startswith('http') %}
-    {{ form.image_upload(data, errors, is_upload_enabled=h.uploads_enabled(), is_url=is_url, is_upload=is_upload, upload_label = _('Site logo'), url_label=_('Site logo'),  field_url=field_url, field_upload='logo_upload', field_clear='clear_logo_upload' )}}
+    {# Uploaded logos are stored under uploads/admin/ by config_option_update;
+       anything else is a URL, whether absolute or a site-relative path served
+       by this theme's public directory. #}
+    {% set is_upload = data[field_url] and 'uploads/' in data[field_url] %}
+    {% set is_url = data[field_url] and not is_upload %}
+    {# Core's image_upload macro renders the URL field as type="url", which the
+       browser rejects for a site-relative path like /img/ckan-ec-logo.png. Same
+       markup and same image-upload JS module, text input instead. #}
+    {% if h.uploads_enabled() %}
+    <div class="image-upload"
+        data-module="image-upload"
+        data-module-is_url="{{ 'true' if is_url else 'false' }}"
+        data-module-is_upload="{{ 'true' if is_upload else 'false' }}"
+        data-module-field_url="{{ field_url }}"
+        data-module-field_upload="logo_upload"
+        data-module-field_clear="clear_logo_upload"
+        data-module-upload_label="{{ _('Site logo') }}"
+        data-module-field_name="image_url">
+    {% endif %}
+
+    {{ form.input(field_url, label=_('Site logo'), id='field-image-url', type='text', placeholder=_('/img/my-logo.png or https://example.com/my-logo.png'), value=data.get(field_url), error=errors.get(field_url), classes=['control-full']) }}
+
+    {% if h.uploads_enabled() %}
+        {{ form.input('logo_upload', label=_('Site logo'), id='field-image-upload', type='file', placeholder='', value='', error='', classes=['control-full']) }}
+        {% if is_upload %}
+            {{ form.checkbox('clear_logo_upload', label=_('Clear Upload'), id='field-clear-upload', value='true', error='', classes=['control-full']) }}
+        {% endif %}
+    </div>
+    {% endif %}
 
     {{ form.markdown('ckan.site_about', id='field-ckan-site-about', label=_('About'), value=data['ckan.site_about'], error=error, placeholder=_('About page text')) }}
 
