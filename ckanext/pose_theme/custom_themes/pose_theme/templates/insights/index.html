@@ -118,6 +118,12 @@ section{margin-bottom:56px}
 .relmark.near-end b{left:auto;right:0;transform:none}
 .xlabel{grid-row:3;padding-top:8px;text-align:center;font-family:var(--mono);font-size:.75rem;
   color:var(--mute);white-space:nowrap}
+/* chart legend. The button variants went with the fleet strip, which was the
+   only thing that used the legend as a filter; this is a key, not a control. */
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 10px;font-size:1rem;align-items:center}
+.legend b{display:flex;align-items:center;gap:7px;font-weight:400}
+.key{width:11px;height:11px;border-radius:3px;flex:none}
+
 .s-current{background:var(--teal-f)} .s-behind{background:var(--sand-f)}
 .s-eol{background:var(--rust-f)} .s-unknown{background:var(--slate-f)}
 .readout{margin-top:12px;font-size:1rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;min-height:52px}
@@ -125,22 +131,6 @@ section{margin-bottom:56px}
 .readout a{color:var(--teal)}
 .warn{display:inline-block;margin-left:6px;font-size:.875rem;padding:1px 7px;border-radius:4px;background:var(--faint);color:var(--mute)}
 
-/* fleet strip */
-.legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 10px;font-size:1rem;align-items:center}
-.legend b{display:flex;align-items:center;gap:7px;font-weight:400}
-.legend button{all:unset;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:1rem;padding:3px 8px 3px 4px;border-radius:var(--r-sm)}
-.legend button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
-.legend button[aria-pressed="true"]{background:#fff;box-shadow:inset 0 0 0 1px var(--line)}
-.legend button.off{opacity:.38}
-.key{width:11px;height:11px;border-radius:3px;flex:none}
-.legend .n{font-family:var(--mono);color:var(--mute);font-size:.875rem}
-.fleet{display:flex;flex-wrap:wrap;gap:2px;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
-/* Proportional cells, not portals: nothing to hover, nothing to identify. */
-.tile{flex:1 1 9px;min-width:6px;height:16px;border-radius:1px}
-
-/* ledger */
-/* ~74px a row: a 1.25rem line, a .875rem detail line and 20px of padding.
-   740px shows ten of the tall ones, more where an event has no detail. */
 .ledger{border-top:1px solid var(--line);max-height:740px;overflow:auto}
 .ev{display:grid;grid-template-columns:96px 22px 1fr;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:1.25rem}
 .ev.sus{background:var(--faint)}
@@ -411,16 +401,6 @@ footer a code{color:inherit}
     </div>
   </div>
   <div class="readout" id="weekReadout"></div>
-</section>
-
-<section id="fleet" data-tab="overview">
-  <div class="shead">
-    <h2>The fleet</h2>
-    <p>The latest crawl by support status, one cell per hundredth of the fleet. Deliberately not a roster: which portal runs which version is the kind of thing that reads as a list of targets, so this says how much and not who. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="How much of the fleet runs supported software? Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
-  </div>
-  <div class="legend" id="legend"></div>
-  <div class="fleet" id="fleetStrip" role="img" aria-labelledby="fleetReadout"></div>
-  <div class="readout" id="fleetReadout"></div>
 </section>
 
 <section id="changes" data-tab="trends">
@@ -823,38 +803,6 @@ chart.addEventListener('mouseover', e => { const c = e.target.closest('.col'); i
 showWeek(NW-1);
 // the track is wider than the panel and the newest crawl is the interesting end
 byId('chartScroll').scrollLeft = byId('chartScroll').scrollWidth;
-
-/* ---------- fleet strip ---------- */
-/* A shape rather than a roster. This was one tile per instance, each carrying
-   its name and exact version in a title attribute and filterable by status,
-   which is a catalogue of vulnerable portals with the search built in. The
-   payload no longer carries per-portal versions at all, so the band is drawn
-   from the aggregate: 100 cells, each one hundredth of the fleet, in status
-   order. Same headline, no names. */
-const FLEET_CELLS = 100;
-const fleetTotal = ORDER.reduce((n,s) => n + (D.statuses[s]||0), 0);
-const band = [];
-let placed = 0;
-ORDER.forEach((s,ix) => {
-  const share = D.statuses[s]||0;
-  // the last status takes the rounding remainder so the band is always full
-  const cells = ix === ORDER.length-1
-    ? FLEET_CELLS - placed
-    : Math.round(FLEET_CELLS * share / (fleetTotal||1));
-  placed += cells;
-  for(let k=0;k<cells;k++) band.push(s);
-});
-byId('fleetStrip').innerHTML = band.map(s => `<i class="tile s-${s}"></i>`).join('');
-byId('fleetReadout').innerHTML = ORDER.map(s =>
-  `<span class="pill p-${s}">${fmt(D.statuses[s]||0)} ${STATUS[s].label.toLowerCase()}</span>`
-).join(' ') + `<br><span class="ph">${fmt(fleetTotal)} portals in the latest crawl, ${pct(D.statuses.eol||0, fleetTotal)}% of them past end of life. Cells are proportions, not portals.</span>`;
-
-/* ---------- status legend ---------- */
-/* Counts only. It used to filter the strip and the instance table by status,
-   which is the filtering this change exists to remove. */
-byId('legend').innerHTML = ORDER.map(s =>
-  `<b><span class="key s-${s}"></span>${STATUS[s].label}
-   <span class="n">${fmt(D.statuses[s]||0)}</span></b>`).join('');
 
 /* ---------- ledger ---------- */
 let evKind = 'all', evQuery = '';
