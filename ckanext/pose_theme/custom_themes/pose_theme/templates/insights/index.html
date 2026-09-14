@@ -77,36 +77,40 @@ section{margin-bottom:56px}
 .card h3{font-size:1.5rem;font-weight:500;line-height:1.125;margin-bottom:6px}
 .card .hint{font-size:1rem;color:var(--mute);margin:0 0 12px}
 
-/* weekly columns chart. Columns are a fixed width and the whole track scrolls:
-   43 crawls sharing the panel width left 6px slivers, and every new crawl made
-   them thinner. The border lives on the wrapper so it stays put while the
-   columns move. */
+/* weekly columns chart. Bars, release markers and date labels share ONE grid
+   rather than sitting in three flex rows: a flex item's min-width defaults to
+   auto, a min-content floor, so a nowrap date label kept widening its own cell
+   and walking the axis out of line by an amount that changed with font size
+   and zoom. A fixed grid track cannot be widened by what sits in it, so the
+   three rows cannot disagree about where column i is.
+
+   The columns are a fixed width and the whole track scrolls: 46 crawls sharing
+   the panel width left 6px slivers, and every new crawl made them thinner. */
 .chart-wrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.chart-scroll{overflow-x:auto;overflow-y:hidden;--colw:22px}
-.chart,.xrel,.xaxis{display:flex;gap:3px;width:max-content;min-width:100%;padding-inline:14px}
-.chart{align-items:flex-end;height:210px;padding-top:14px}
-/* min-width:0 on every cell is what keeps the three rows in step. A flex item
-   defaults to min-width:auto, a min-content floor, so a nowrap label like 09/12
-   would force its own cell wider than the 22px the bars use while empty cells
-   stayed 22px — the axis drifting further out of line the more labels it
-   carries, and differently at every font size and zoom level. */
-.col,.xrel span,.xaxis span{flex:0 0 var(--colw);min-width:0}
-.col{display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;position:relative;border:0;background:none;padding:0}
+.chart-scroll{overflow-x:auto;overflow-y:hidden;--colw:30px;--colgap:4px;--plot:210px}
+.chart-grid{display:grid;grid-template-columns:repeat(var(--n),var(--colw));
+  grid-template-rows:var(--plot) 20px auto;column-gap:var(--colgap);
+  width:max-content;min-width:100%;padding:14px 14px 12px}
+/* nothing in a cell may widen it, and a label is free to overflow instead */
+.chart-grid>*{min-width:0}
+.col{grid-row:1;align-self:end;display:flex;flex-direction:column;justify-content:flex-end;
+  cursor:pointer;position:relative;border:0;background:none;padding:0}
 .col i{display:block;width:100%}
 .col:hover i,.col.sel i{filter:saturate(1.4) brightness(1.06)}
 .col.sel{box-shadow:inset 0 0 0 1px var(--ink)}
 .col.bad{opacity:.5}
 .col.bad::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent 0 3px,rgba(22,33,29,.22) 3px 4px)}
 /* the crawl that first reflects a CKAN release, so the drop in the green band
-   reads against the release that caused it */
-.col.rel::before{content:"";position:absolute;left:-3px;top:-14px;bottom:0;border-left:1px dashed var(--mute);opacity:.55}
-.xrel{padding-top:7px;height:20px}
-.xrel span{position:relative}
-.xrel b{position:absolute;top:0;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:3px;
+   reads against the release that caused it. Anchored to the bottom of the plot
+   row so the line is full height whatever the bar's height is. */
+.col.rel::before{content:"";position:absolute;left:calc(var(--colgap)/-2 - 1px);bottom:0;height:var(--plot);
+  border-left:1px dashed var(--mute);opacity:.55}
+.relmark{grid-row:2;position:relative}
+.relmark b{position:absolute;top:0;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:3px;
   font-family:var(--mono);font-size:.6875rem;font-weight:400;color:var(--teal);white-space:nowrap;cursor:help}
-.xrel span.near-end b{left:auto;right:0;transform:none}
-.xaxis{padding-top:8px;padding-bottom:12px}
-.xaxis span{text-align:center;font-family:var(--mono);font-size:.75rem;color:var(--mute);overflow:visible;white-space:nowrap}
+.relmark.near-end b{left:auto;right:0;transform:none}
+.xlabel{grid-row:3;padding-top:8px;text-align:center;font-family:var(--mono);font-size:.75rem;
+  color:var(--mute);white-space:nowrap}
 .s-current{background:var(--teal-f)} .s-behind{background:var(--sand-f)}
 .s-eol{background:var(--rust-f)} .s-unknown{background:var(--slate-f)}
 .readout{margin-top:12px;font-size:1rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;min-height:52px}
@@ -240,7 +244,6 @@ footer a code{color:inherit}
   .wrap{padding:0 16px 60px}
   td.nm .ex{max-width:28ch}
   .hide-s{display:none}
-  .xaxis span{font-size:0}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
@@ -363,9 +366,7 @@ footer a code{color:inherit}
   <div class="legend" id="chartLegend"></div>
   <div class="chart-wrap">
     <div class="chart-scroll" id="chartScroll">
-      <div class="chart" id="chart"></div>
-      <div class="xrel" id="xrel"></div>
-      <div class="xaxis" id="xaxis"></div>
+      <div class="chart-grid" id="chartGrid"></div>
     </div>
   </div>
   <div class="readout" id="weekReadout"></div>
@@ -702,46 +703,55 @@ byId('stats').innerHTML = [
 ].map(([b,s]) => `<div class="stat"><b>${b}</b><small>${s}</small></div>`).join('');
 
 /* ---------- weekly chart ---------- */
-const chart = byId('chart');
+const grid = byId('chartGrid');
+grid.style.setProperty('--n', NW);
+
 /* Releases that landed inside the charted span, pinned to the first crawl that
    could see them. Grouped by date: CKAN ships a patch for every supported
    branch on the same day. */
-const RELS = (D.releases || []).reduce((acc,r) => ((acc[r.d] = acc[r.d] || []).push(r.v), acc), {});
-const relAt = {};
-for (const [day, vs] of Object.entries(RELS)) {
-  const i = W.findIndex(w => w >= day);
-  if (i < 0) continue;
-  const sorted = vs.slice().sort((a,b) => verNum(b) - verNum(a));
-  (relAt[i] = relAt[i] || {days:[], vs:[]}).days.push(day);
-  relAt[i].vs.push(...sorted);
-}
 function verNum(v){
   const p = (v.match(/\d+/g) || []).slice(0,3).map(Number);
   while (p.length < 3) p.push(0);
   return p[0]*1e6 + p[1]*1e3 + p[2];
 }
+const RELS = (D.releases || []).reduce((acc,r) => ((acc[r.d] = acc[r.d] || []).push(r.v), acc), {});
+const relAt = {};
+for (const [day, vs] of Object.entries(RELS)) {
+  const i = W.findIndex(w => w >= day);
+  if (i < 0) continue;
+  const at = relAt[i] = relAt[i] || {days:[], vs:[]};
+  at.days.push(day);
+  at.vs.push(...vs);
+}
+for (const at of Object.values(relAt)) at.vs.sort((a,b) => verNum(b) - verNum(a));
 
+/* One grid, three bands: the bars, then the release markers, then the date
+   labels. Each band emits exactly NW cells, so column i of every band lands in
+   the same track. */
 const maxRows = Math.max(...D.timeline.map(t => t.rows));
-chart.innerHTML = D.timeline.map((t,i) => {
+const bars = D.timeline.map((t,i) => {
   const h = 100*t.rows/maxRows;
   const seg = ORDER.map(s => t[s] ? `<i class="s-${s}" style="height:${100*t[s]/t.rows}%"></i>` : '').join('');
   return `<button class="col ${t.q==='ok'?'':'bad'}${relAt[i]?' rel':''}" data-i="${i}" aria-label="${W[i]}" style="height:${h}%">${seg}</button>`;
 }).join('');
-byId('xrel').innerHTML = W.map((w,i) => {
+
+const marks = W.map((w,i) => {
   const r = relAt[i];
-  if (!r) return '<span></span>';
-  const vs = r.vs.slice().sort((a,b) => verNum(b) - verNum(a));
-  const label = vs.length > 1 ? `${vs[0]} +${vs.length-1}` : vs[0];
-  const title = `CKAN ${vs.join(', ')} released ${r.days.join(', ')}`;
+  if (!r) return '<span class="relmark"></span>';
+  const label = r.vs.length > 1 ? `${r.vs[0]} +${r.vs.length-1}` : r.vs[0];
+  const title = `CKAN ${r.vs.join(', ')} released ${r.days.join(', ')}`;
   // a centred label would be clipped by the wrapper at the end of the track
-  const cls = i > NW - 5 ? ' class="near-end"' : '';
-  return `<span${cls}><b title="${title}">&#9650;${label}</b></span>`;
+  const cls = i > NW - 5 ? ' near-end' : '';
+  return `<span class="relmark${cls}"><b title="${title}">&#9650;${label}</b></span>`;
 }).join('');
 
 /* Labelled every fourth crawl counting back from the newest, so the latest
    crawl always carries a date and never collides with the one before it. */
-byId('xaxis').innerHTML =
-  W.map((w,i) => `<span>${(NW-1-i)%4===0 ? short(w) : ''}</span>`).join('');
+const labels = W.map((w,i) =>
+  `<span class="xlabel">${(NW-1-i)%4===0 ? short(w) : ''}</span>`).join('');
+
+grid.innerHTML = bars + marks + labels;
+const chart = grid;
 byId('chartLegend').innerHTML = ORDER.map(s =>
   `<b><span class="key s-${s}"></span>${STATUS[s].label}</b>`).join('');
 const weekReadout = byId('weekReadout');
