@@ -230,6 +230,14 @@ th[aria-sort] .caret{opacity:1;color:var(--ink)}
 tbody td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 tbody tr:hover{background:var(--panel)}
 td.num{text-align:right;font-family:var(--mono)}
+/* Every column but the first holds a value, and those read better centred
+   under their heading; the first column is the name and stays left-aligned.
+   Selectors carry the column class's specificity so they win over .num, and
+   the block-level children inside a cell need centring of their own because
+   text-align does not move a block. */
+thead th:not(:first-child),tbody td:not(:first-child){text-align:center}
+tbody td:not(:first-child) .spark,tbody td:not(:first-child) .spark-att{margin-inline:auto}
+tbody td:not(:first-child) .uptime{justify-content:center}
 td.nm a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
 td.nm a:hover{border-color:var(--teal);color:var(--teal)}
 td.nm .ex{display:block;font-size:.875rem;color:var(--mute);margin-top:2px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:min(46ch,100%)}
