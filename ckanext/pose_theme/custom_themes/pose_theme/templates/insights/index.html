@@ -339,7 +339,7 @@ footer a code{color:inherit}
 <section id="weekly" data-tab="overview">
   <div class="shead">
     <h2>Week by week</h2>
-    <p>One column per archived crawl, split by support status. Hatched columns are crawls that reached almost nothing — a crawler failure, not a fleet collapse. Click a column to read its numbers. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-timeline.html" target="_blank" rel="noopener" title="The fleet, week by week — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p>One column per archived crawl, split by support status as it stood that week — a portal counts as current if it ran the newest patch CKAN had shipped by then. Hatched columns are crawls that reached almost nothing — a crawler failure, not a fleet collapse. Click a column to read its numbers. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-timeline.html" target="_blank" rel="noopener" title="The fleet, week by week — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="legend" id="chartLegend"></div>
   <div class="chart" id="chart"></div>
@@ -641,8 +641,8 @@ const pct = (a,b) => b ? Math.round(100*a/b) : 0;
 const short = w => w.slice(5).replace('-','/');
 const ORDER = ['current','behind','eol','unknown'];
 const STATUS = {
-  current:{label:'On latest patch', desc:'newest patch of a supported branch'},
-  behind:{label:'Behind on patches', desc:'supported branch, older patch'},
+  current:{label:'On latest patch', desc:'newest patch that existed at that crawl'},
+  behind:{label:'Behind on patches', desc:'supported branch, older patch than shipped by then'},
   eol:{label:'End of life', desc:'2.9 or older'},
   unknown:{label:'No response', desc:'no version reported'}
 };
