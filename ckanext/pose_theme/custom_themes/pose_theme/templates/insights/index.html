@@ -70,8 +70,15 @@ section{margin-bottom:56px}
 .shead-export:hover,.shead-export:focus{color:#d9534f;text-decoration:none}
 .shead-export i{font-size:.75rem;opacity:.8}
 .shead h2{font-size:2rem;font-weight:500;line-height:1.125}
-.shead p{margin:0;font-size:1rem;color:var(--mute);max-width:66ch;line-height:1.5;text-align:right}
+/* Right-aligned only while it sits beside the heading. .shead wraps, and a
+   wrapped paragraph that keeps text-align:right ends up ragged-left in the
+   middle of the page, which reads as a layout bug. */
+.shead p{margin:0;font-size:1rem;color:var(--mute);flex:1 1 40ch;min-width:0;max-width:66ch;line-height:1.5;text-align:left}
+@media (min-width:1200px){.shead p{text-align:right}}
 .cols{display:grid;grid-template-columns:1.35fr 1fr;gap:34px;align-items:start}
+/* grid and flex items default to min-width:auto, so one long string in a card
+   pushes the whole column wider than its track */
+.cols>*,.card,section{min-width:0}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
 .card+.card{margin-top:16px}
 .card h3{font-size:1.5rem;font-weight:500;line-height:1.125;margin-bottom:6px}
@@ -86,7 +93,7 @@ section{margin-bottom:56px}
 
    The columns are a fixed width and the whole track scrolls: 46 crawls sharing
    the panel width left 6px slivers, and every new crawl made them thinner. */
-.chart-wrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.chart-wrap{max-width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .chart-scroll{overflow-x:auto;overflow-y:hidden;--colw:30px;--colgap:4px;--plot:210px}
 .chart-grid{display:grid;grid-template-columns:repeat(var(--n),var(--colw));
   grid-template-rows:var(--plot) 20px auto;column-gap:var(--colgap);
@@ -150,7 +157,7 @@ section{margin-bottom:56px}
 
 /* controls */
 .controls{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;align-items:center}
-input[type=search]{font:inherit;font-size:1rem;padding:7px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel);color:var(--ink);min-width:190px;flex:1}
+input[type=search]{font:inherit;font-size:1rem;padding:7px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel);color:var(--ink);min-width:min(190px,100%);flex:1}
 input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
 /* No overflow:hidden here: it clipped the tooltips on the buttons. Round the
    end buttons instead, which is what the clipping was for. */
@@ -190,6 +197,8 @@ input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
 /* Not .row: that is Bootstrap's grid class. Its `.row > * {width:100%}`
    stacked these, and ours leaked onto the page layout row in return. */
 .kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dotted var(--line)}
+/* the name truncates with an ellipsis, which only works once it may shrink */
+.kv>*{min-width:0}
 .kv:last-child{border-bottom:0}
 .kv b{font-weight:500}
 .kv .v{color:var(--mute)}
@@ -199,9 +208,21 @@ input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
 .vbar .track{display:flex;height:6px;margin-top:5px;border-radius:3px;overflow:hidden;background:var(--faint)}
 .vbar .track i{display:block;height:100%}
 
-/* table */
-table{width:100%;border-collapse:collapse;font-size:1rem}
-thead th{position:sticky;top:0;background:var(--paper);text-align:left;font-weight:700;font-size:.875rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);padding:8px 8px 10px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
+/* table. Every table lives in .tbl-scroll: nine columns of nowrap headers have
+   a min-content width of roughly 900px, and with nothing to contain them the
+   table widened the page itself at narrow widths or high zoom — which pushed
+   the chart off screen and made every right-aligned blurb align to a canvas
+   wider than the viewport. The cap keeps the sticky header working by giving
+   it a scrollport of its own, the same way .ledger does. */
+.tbl-scroll{overflow:auto;max-height:78vh;overscroll-behavior-x:contain}
+table{width:100%;min-width:0;border-collapse:collapse;font-size:1rem}
+/* a long plugin or host name breaks rather than setting the column's width */
+td,th{overflow-wrap:anywhere}
+/* An opaque background and a stacking order are what make the sticky header
+   actually cover the rows: --paper is transparent, so rows scrolled under the
+   header and read straight through it. border-collapse drops the border on a
+   sticky cell, hence the inset shadow standing in for the rule. */
+thead th{position:sticky;top:0;z-index:2;background:var(--panel);text-align:left;font-weight:700;font-size:.875rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);padding:8px 8px 10px;box-shadow:inset 0 -1px 0 var(--line);cursor:pointer;white-space:nowrap}
 thead th:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
 thead th.num{text-align:right}
 th .caret{opacity:.35}
@@ -211,7 +232,7 @@ tbody tr:hover{background:var(--panel)}
 td.num{text-align:right;font-family:var(--mono)}
 td.nm a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
 td.nm a:hover{border-color:var(--teal);color:var(--teal)}
-td.nm .ex{display:block;font-size:.875rem;color:var(--mute);margin-top:2px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46ch}
+td.nm .ex{display:block;font-size:.875rem;color:var(--mute);margin-top:2px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:min(46ch,100%)}
 .uptime{display:flex;gap:1px}
 .uptime i{display:block;width:3px;height:13px;background:var(--teal);border-radius:1px}
 .uptime i.down{background:rgba(217,83,79,.28)}
@@ -238,12 +259,25 @@ footer a,footer a:visited{color:var(--mute);text-decoration:underline;text-decor
 footer a:hover,footer a:focus{color:var(--ink);text-decoration-color:currentColor}
 footer a code{color:inherit}
 
+/* The sidebar takes its share from 992px up, so the content column is narrow
+   well before the viewport is: the two-column body goes first, then the stat
+   band, then the wide table columns. Zoom scales the CSS pixel, so each of
+   these steps answers zooming in as well as a smaller screen. */
+@media (max-width:1200px){
+  .cols{grid-template-columns:1fr;gap:26px}
+}
 @media (max-width:900px){
   .stats{grid-template-columns:repeat(2,1fr)}
-  .cols{grid-template-columns:1fr;gap:26px}
   .wrap{padding:0 16px 60px}
-  td.nm .ex{max-width:28ch}
+  td.nm .ex{max-width:min(28ch,100%)}
   .hide-s{display:none}
+}
+@media (max-width:640px){
+  .stats{grid-template-columns:1fr}
+  .shead h2{font-size:1.75rem}
+  /* a cap plus page scrolling is two scrollbars on a short screen */
+  .tbl-scroll{max-height:none}
+  .ev{grid-template-columns:auto 22px 1fr;gap:8px;font-size:1rem}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
@@ -279,7 +313,7 @@ footer a code{color:inherit}
 
 /* Sidebar. Scoped outside .ckan-insights because the secondary column is
    rendered by page.html, not inside the dashboard wrapper. */
-.insights-tabs{margin:0 0 36px}
+.insights-tabs{margin:0 0 36px;flex-wrap:wrap}
 .insights-tabs .nav-link{
   font-family:"Satoshi",system-ui,sans-serif;font-size:1.25rem;font-weight:500;
   color:#667085;border:0;border-bottom:2px solid transparent;padding:10px 16px;
@@ -407,20 +441,22 @@ footer a code{color:inherit}
     <p>Movement in stars, forks and contributors across the archived crawls, with the star line for the last 26 weeks. Sorted by combined movement, forks weighted above stars because forking means someone used the code. Plugins that ship inside CKAN are excluded throughout.</p>
   </div>
   <div class="tblhead"><span class="count" id="attCount"></span></div>
-  <table>
-    <thead><tr>
-      <th data-esort="p">Extension <span class="caret">↕</span></th>
-      <th data-esort="i" class="num">Portals<span class="tip" tabindex="0" role="note" aria-label="What Portals measures" data-tip="Distinct catalogued portals observed running this extension. An observation, not a total.">i</span> <span class="caret">↕</span></th>
-      <th data-esort="pct" class="num hide-s">Share <span class="caret">↕</span></th>
-      <th data-esort="s" class="num">Stars<span class="tip" tabindex="0" role="note" aria-label="About the stars column" data-tip="Stars now, with the change across the archived crawls beside it. Sorts by the total; the table loads sorted by movement.">i</span> <span class="caret">↕</span></th>
-      <th data-esort="f" class="num">Forks <span class="caret">↕</span></th>
-      <th data-esort="c" class="num hide-s">People <span class="caret">↕</span></th>
-      <th data-esort="up">Upkeep<span class="tip" tabindex="0" role="note" aria-label="What Upkeep measures" data-tip="How recently the repository was pushed to. Quiet is not broken: ckanext-envvars runs on 126 portals and has been untouched for two years because it is finished.">i</span> <span class="caret">↕</span></th>
-      <th data-esort="push" class="num hide-s">Last push <span class="caret">↕</span></th>
-      <th data-esort="br" class="num hide-s">Branches<span class="tip" tabindex="0" role="note" aria-label="What Branches measures" data-tip="Branches on the repository, and how many carry a commit from the last year.">i</span> <span class="caret">↕</span></th>
-    </tr></thead>
-    <tbody id="attBody"></tbody>
-  </table>
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr>
+        <th data-esort="p">Extension <span class="caret">↕</span></th>
+        <th data-esort="i" class="num">Portals<span class="tip" tabindex="0" role="note" aria-label="What Portals measures" data-tip="Distinct catalogued portals observed running this extension. An observation, not a total.">i</span> <span class="caret">↕</span></th>
+        <th data-esort="pct" class="num hide-s">Share <span class="caret">↕</span></th>
+        <th data-esort="s" class="num">Stars<span class="tip" tabindex="0" role="note" aria-label="About the stars column" data-tip="Stars now, with the change across the archived crawls beside it. Sorts by the total; the table loads sorted by movement.">i</span> <span class="caret">↕</span></th>
+        <th data-esort="f" class="num">Forks <span class="caret">↕</span></th>
+        <th data-esort="c" class="num hide-s">People <span class="caret">↕</span></th>
+        <th data-esort="up">Upkeep<span class="tip" tabindex="0" role="note" aria-label="What Upkeep measures" data-tip="How recently the repository was pushed to. Quiet is not broken: ckanext-envvars runs on 126 portals and has been untouched for two years because it is finished.">i</span> <span class="caret">↕</span></th>
+        <th data-esort="push" class="num hide-s">Last push <span class="caret">↕</span></th>
+        <th data-esort="br" class="num hide-s">Branches<span class="tip" tabindex="0" role="note" aria-label="What Branches measures" data-tip="Branches on the repository, and how many carry a commit from the last year.">i</span> <span class="caret">↕</span></th>
+      </tr></thead>
+      <tbody id="attBody"></tbody>
+    </table>
+  </div>
   <div class="more"><button id="attMoreBtn"></button></div>
 </section>
 
@@ -433,17 +469,19 @@ footer a code{color:inherit}
     <input type="search" id="dsSearch" placeholder="search upstream or fork…" aria-label="Search downstream forks">
     <span class="count" id="dsCount"></span>
   </div>
-  <table>
-    <thead><tr>
-      <th data-dsort="p">Upstream <span class="caret">↕</span></th>
-      <th data-dsort="i" class="num">Portals <span class="caret">↕</span></th>
-      <th data-dsort="push" class="num">Upstream last push <span class="caret">↕</span></th>
-      <th data-dsort="ahead" class="num">Forks ahead<span class="tip" tabindex="0" role="note" aria-label="What Forks ahead measures" data-tip="Forks pushed at least a fortnight more recently than upstream, out of the five most recently pushed.">i</span> <span class="caret">↕</span></th>
-      <th data-dsort="f" class="num hide-s">Forks <span class="caret">↕</span></th>
-      <th data-dsort="s" class="num hide-s">Stars <span class="caret">↕</span></th>
-    </tr></thead>
-    <tbody id="dsBody"></tbody>
-  </table>
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr>
+        <th data-dsort="p">Upstream <span class="caret">↕</span></th>
+        <th data-dsort="i" class="num">Portals <span class="caret">↕</span></th>
+        <th data-dsort="push" class="num">Upstream last push <span class="caret">↕</span></th>
+        <th data-dsort="ahead" class="num">Forks ahead<span class="tip" tabindex="0" role="note" aria-label="What Forks ahead measures" data-tip="Forks pushed at least a fortnight more recently than upstream, out of the five most recently pushed.">i</span> <span class="caret">↕</span></th>
+        <th data-dsort="f" class="num hide-s">Forks <span class="caret">↕</span></th>
+        <th data-dsort="s" class="num hide-s">Stars <span class="caret">↕</span></th>
+      </tr></thead>
+      <tbody id="dsBody"></tbody>
+    </table>
+  </div>
   <div class="empty" id="dsEmpty" hidden>Nothing matches that filter.</div>
   <div class="more"><button id="dsMoreBtn"></button></div>
 </section>
@@ -508,17 +546,19 @@ footer a code{color:inherit}
     <input type="search" id="tblSearch" placeholder="search instances…" aria-label="Search instances">
     <span class="count" id="tblCount"></span>
   </div>
-  <table>
-    <thead><tr>
-      <th data-sort="n">Instance <span class="caret">↕</span></th>
-      <th data-sort="v">Version <span class="caret">↕</span></th>
-      <th data-sort="up" class="hide-s">Answered<span class="tip" tabindex="0" role="note" aria-label="What Answered measures" data-tip="Crawls this portal responded to, out of those that ran. A site can be up and still not answer the API.">i</span> <span class="caret">↕</span></th>
-      <th data-sort="d" class="num">Datasets <span class="caret">↕</span></th>
-      <th data-sort="growth" class="num hide-s">Cohort Δ<span class="tip" tabindex="0" role="note" aria-label="What Cohort delta measures" data-tip="Change in reported dataset count between this portal's first and most recent answered crawl.">i</span> <span class="caret">↕</span></th>
-      <th data-sort="x" class="num">Exts <span class="caret">↕</span></th>
-    </tr></thead>
-    <tbody id="tbody"></tbody>
-  </table>
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr>
+        <th data-sort="n">Instance <span class="caret">↕</span></th>
+        <th data-sort="v">Version <span class="caret">↕</span></th>
+        <th data-sort="up" class="hide-s">Answered<span class="tip" tabindex="0" role="note" aria-label="What Answered measures" data-tip="Crawls this portal responded to, out of those that ran. A site can be up and still not answer the API.">i</span> <span class="caret">↕</span></th>
+        <th data-sort="d" class="num">Datasets <span class="caret">↕</span></th>
+        <th data-sort="growth" class="num hide-s">Cohort Δ<span class="tip" tabindex="0" role="note" aria-label="What Cohort delta measures" data-tip="Change in reported dataset count between this portal's first and most recent answered crawl.">i</span> <span class="caret">↕</span></th>
+        <th data-sort="x" class="num">Exts <span class="caret">↕</span></th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
   <div class="empty" id="tblEmpty" hidden>Nothing matches that filter.</div>
   <div class="more"><button id="tblMoreBtn"></button></div>
 </section>
@@ -542,21 +582,23 @@ footer a code{color:inherit}
     <input type="search" id="extAllSearch" placeholder="search extensions…" aria-label="Search extensions">
     <span class="count" id="extAllCount"></span>
   </div>
-  <table>
-    <thead><tr>
-      <th data-xsort="p">Extension <span class="caret">↕</span></th>
-      <th data-xsort="i" class="num">Portals <span class="caret">↕</span></th>
-      <th data-xsort="pct" class="num hide-s">Share <span class="caret">↕</span></th>
-      <th data-xsort="s" class="num">Stars <span class="caret">↕</span></th>
-      <th data-xsort="f" class="num">Forks <span class="caret">↕</span></th>
-      <th data-xsort="c" class="num hide-s">People <span class="caret">↕</span></th>
-      <th data-xsort="up">Upkeep <span class="caret">↕</span></th>
-      <th data-xsort="push" class="num hide-s">Last push <span class="caret">↕</span></th>
-      <th data-xsort="br" class="num hide-s">Branches <span class="caret">↕</span></th>
-      <th data-xsort="ahead" class="num hide-s">Forks ahead <span class="caret">↕</span></th>
-    </tr></thead>
-    <tbody id="extAllBody"></tbody>
-  </table>
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr>
+        <th data-xsort="p">Extension <span class="caret">↕</span></th>
+        <th data-xsort="i" class="num">Portals <span class="caret">↕</span></th>
+        <th data-xsort="pct" class="num hide-s">Share <span class="caret">↕</span></th>
+        <th data-xsort="s" class="num">Stars <span class="caret">↕</span></th>
+        <th data-xsort="f" class="num">Forks <span class="caret">↕</span></th>
+        <th data-xsort="c" class="num hide-s">People <span class="caret">↕</span></th>
+        <th data-xsort="up">Upkeep <span class="caret">↕</span></th>
+        <th data-xsort="push" class="num hide-s">Last push <span class="caret">↕</span></th>
+        <th data-xsort="br" class="num hide-s">Branches <span class="caret">↕</span></th>
+        <th data-xsort="ahead" class="num hide-s">Forks ahead <span class="caret">↕</span></th>
+      </tr></thead>
+      <tbody id="extAllBody"></tbody>
+    </table>
+  </div>
   <div class="empty" id="extAllEmpty" hidden>Nothing matches that filter.</div>
   <div class="more"><button id="extAllMoreBtn"></button></div>
 </section>
