@@ -135,9 +135,8 @@ section{margin-bottom:56px}
 .key{width:11px;height:11px;border-radius:3px;flex:none}
 .legend .n{font-family:var(--mono);color:var(--mute);font-size:.875rem}
 .fleet{display:flex;flex-wrap:wrap;gap:2px;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
-.tile{width:11px;height:16px;border-radius:1px;border:0;padding:0;cursor:pointer;transition:transform .08s}
-.tile:hover,.tile:focus-visible{transform:scaleY(1.45);outline:none;box-shadow:0 0 0 1px var(--ink)}
-.tile.dim{opacity:.14;pointer-events:none}
+/* Proportional cells, not portals: nothing to hover, nothing to identify. */
+.tile{flex:1 1 9px;min-width:6px;height:16px;border-radius:1px}
 
 /* ledger */
 /* ~74px a row: a 1.25rem line, a .875rem detail line and 20px of padding.
@@ -417,11 +416,11 @@ footer a code{color:inherit}
 <section id="fleet" data-tab="overview">
   <div class="shead">
     <h2>The fleet</h2>
-    <p>One tile per instance in the latest crawl, grouped newest version first. Click a status to filter the table at the bottom. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="How much of the fleet runs supported software? Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p>The latest crawl by support status, one cell per hundredth of the fleet. Deliberately not a roster: which portal runs which version is the kind of thing that reads as a list of targets, so this says how much and not who. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="How much of the fleet runs supported software? Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="legend" id="legend"></div>
-  <div class="fleet" id="fleetStrip"></div>
-  <div class="readout" id="readout"><span class="ph">Hover or tap a tile for instance details.</span></div>
+  <div class="fleet" id="fleetStrip" role="img" aria-labelledby="fleetReadout"></div>
+  <div class="readout" id="fleetReadout"></div>
 </section>
 
 <section id="changes" data-tab="trends">
@@ -548,21 +547,19 @@ footer a code{color:inherit}
 <section id="instances" data-tab="instances">
   <div class="shead">
     <h2>CKAN instances</h2>
-    <p>Every instance the archive has seen, at its most recent crawl, with its crawl response strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name, host, version, or plugin.</p>
+    <p>Every instance the archive has seen, at its most recent crawl, with its crawl response strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name or host. Versions and plugin lists are reported in aggregate only, never per portal.</p>
   </div>
   <div class="tblhead">
-    <input type="search" id="tblSearch" placeholder="search instances…" aria-label="Search instances">
+    <input type="search" id="tblSearch" placeholder="search by name or host…" aria-label="Search instances by name or host">
     <span class="count" id="tblCount"></span>
   </div>
   <div class="tbl-scroll">
     <table>
       <thead><tr>
         <th data-sort="n">Instance <span class="caret">↕</span></th>
-        <th data-sort="v">Version <span class="caret">↕</span></th>
         <th data-sort="up" class="hide-s">Answered<span class="tip" tabindex="0" role="note" aria-label="What Answered measures" data-tip="Crawls this portal responded to, out of those that ran. A site can be up and still not answer the API.">i</span> <span class="caret">↕</span></th>
         <th data-sort="d" class="num">Datasets <span class="caret">↕</span></th>
         <th data-sort="growth" class="num hide-s">Cohort Δ<span class="tip" tabindex="0" role="note" aria-label="What Cohort delta measures" data-tip="Change in reported dataset count between this portal's first and most recent answered crawl.">i</span> <span class="caret">↕</span></th>
-        <th data-sort="x" class="num">Exts <span class="caret">↕</span></th>
       </tr></thead>
       <tbody id="tbody"></tbody>
     </table>
@@ -710,7 +707,7 @@ const byId = id => document.getElementById(id) || _sink;
   } catch (err) {
     return fail('Network error fetching the weekly crawl payload.');
   }
-const NAMES = D.ext_names, W = D.weeks, NW = W.length, VW = D.vweeks, NVW = VW.length;
+const W = D.weeks, NW = W.length, VW = D.vweeks, NVW = VW.length;
 const fmt = n => n.toLocaleString('en-US');
 const pct = (a,b) => b ? Math.round(100*a/b) : 0;
 const short = w => w.slice(5).replace('-','/');
@@ -722,7 +719,6 @@ const STATUS = {
   unknown:{label:'No response', desc:'no version reported'}
 };
 let selectedExt = null;
-let active = new Set(ORDER);
 
 /* ---------- header ---------- */
 const latest = D.timeline[NW-1];
@@ -829,52 +825,36 @@ showWeek(NW-1);
 byId('chartScroll').scrollLeft = byId('chartScroll').scrollWidth;
 
 /* ---------- fleet strip ---------- */
-function verKey(i){
-  if(!i.v) return [-1,-1,-1];
-  const p = i.v.split('.').map(x => parseInt(x,10)||0);
-  return [p[0]||0, p[1]||0, p[2]||0];
-}
-const LATEST_SET = D.instances.filter(i => i.seen > 0 || i.v || i.e.length);
-const fleetOrder = LATEST_SET.slice().sort((a,b) => {
-  const A = verKey(a), B = verKey(b);
-  for(let k=0;k<3;k++) if(A[k]!==B[k]) return B[k]-A[k];
-  return b.d-a.d;
+/* A shape rather than a roster. This was one tile per instance, each carrying
+   its name and exact version in a title attribute and filterable by status,
+   which is a catalogue of vulnerable portals with the search built in. The
+   payload no longer carries per-portal versions at all, so the band is drawn
+   from the aggregate: 100 cells, each one hundredth of the fleet, in status
+   order. Same headline, no names. */
+const FLEET_CELLS = 100;
+const fleetTotal = ORDER.reduce((n,s) => n + (D.statuses[s]||0), 0);
+const band = [];
+let placed = 0;
+ORDER.forEach((s,ix) => {
+  const share = D.statuses[s]||0;
+  // the last status takes the rounding remainder so the band is always full
+  const cells = ix === ORDER.length-1
+    ? FLEET_CELLS - placed
+    : Math.round(FLEET_CELLS * share / (fleetTotal||1));
+  placed += cells;
+  for(let k=0;k<cells;k++) band.push(s);
 });
-const strip = byId('fleetStrip');
-strip.innerHTML = fleetOrder.map((i,ix) =>
-  `<button class="tile s-${i.s}" data-ix="${ix}" title="${i.n}" aria-label="${i.n}, ${i.v||'no version'}"></button>`
-).join('');
-const readout = byId('readout');
-function showInstance(i){
-  readout.innerHTML = `<b class="mono">${i.n}</b> &nbsp;<span class="pill p-${i.s}">${i.v||'no version'}</span><br>
-    <a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.h||i.u}</a>
-    &nbsp;·&nbsp; ${fmt(i.d)} datasets &nbsp;·&nbsp; ${fmt(i.o)} orgs &nbsp;·&nbsp; ${i.e.length} extensions
-    &nbsp;·&nbsp; answered ${i.seen}/${i.of} crawls`;
-}
-['mouseover','focusin','click'].forEach(ev => strip.addEventListener(ev, e => {
-  const t = e.target.closest('.tile'); if(t) showInstance(fleetOrder[+t.dataset.ix]);
-}));
+byId('fleetStrip').innerHTML = band.map(s => `<i class="tile s-${s}"></i>`).join('');
+byId('fleetReadout').innerHTML = ORDER.map(s =>
+  `<span class="pill p-${s}">${fmt(D.statuses[s]||0)} ${STATUS[s].label.toLowerCase()}</span>`
+).join(' ') + `<br><span class="ph">${fmt(fleetTotal)} portals in the latest crawl, ${pct(D.statuses.eol||0, fleetTotal)}% of them past end of life. Cells are proportions, not portals.</span>`;
 
-/* ---------- status filter ---------- */
-const legend = byId('legend');
-legend.innerHTML = ORDER.map(s =>
-  `<button data-s="${s}" aria-pressed="true"><span class="key s-${s}"></span>${STATUS[s].label}
-   <span class="n">${fmt(D.statuses[s]||0)}</span></button>`).join('');
-legend.addEventListener('click', e => {
-  const b = e.target.closest('button'); if(!b) return;
-  const s = b.dataset.s;
-  if(active.has(s) && active.size===ORDER.length) active = new Set([s]);
-  else if(active.has(s)){ active.delete(s); if(!active.size) active = new Set(ORDER); }
-  else active.add(s);
-  legend.querySelectorAll('button').forEach(x => {
-    const on = active.has(x.dataset.s);
-    x.setAttribute('aria-pressed', on); x.classList.toggle('off', !on);
-  });
-  const all = active.size===ORDER.length;
-  strip.querySelectorAll('.tile').forEach(t =>
-    t.classList.toggle('dim', !all && !active.has(fleetOrder[+t.dataset.ix].s)));
-  renderTable();
-});
+/* ---------- status legend ---------- */
+/* Counts only. It used to filter the strip and the instance table by status,
+   which is the filtering this change exists to remove. */
+byId('legend').innerHTML = ORDER.map(s =>
+  `<b><span class="key s-${s}"></span>${STATUS[s].label}
+   <span class="n">${fmt(D.statuses[s]||0)}</span></b>`).join('');
 
 /* ---------- ledger ---------- */
 let evKind = 'all', evQuery = '';
@@ -967,7 +947,7 @@ function renderExts(){
 ranks.addEventListener('click', e => {
   const b = e.target.closest('.rank'); if(!b) return;
   selectedExt = selectedExt === b.dataset.e ? null : b.dataset.e;
-  renderExts(); renderPairs(); renderTable();
+  renderExts(); renderPairs();
 });
 moreBtn.addEventListener('click', () => {
   const n = extList().length; extLimit = extLimit >= n ? 25 : n; renderExts();
@@ -1010,12 +990,10 @@ byId('famRows').innerHTML = D.families.map(([f,n]) =>
   `<div class="kv"><b>${f.replace('ckanext-','')}</b><span class="v">${fmt(n)} · ${pct(n,D.with_ext)}%</span></div>`).join('');
 
 /* ---------- version spread ---------- */
-const byBranch = {};
-LATEST_SET.forEach(i => {
-  if(!i.b) return;
-  (byBranch[i.b] ||= {current:0, behind:0, eol:0, unknown:0, total:0});
-  byBranch[i.b][i.s]++; byBranch[i.b].total++;
-});
+/* Published per branch by the pipeline. The page used to walk the instance
+   list to build this, which meant every portal had to carry its own branch
+   and status. */
+const byBranch = D.branch_status || {};
 const branchMax = Math.max(1, ...Object.values(byBranch).map(b => b.total));
 byId('branchRows').innerHTML = Object.entries(byBranch)
   .sort((a,b) => b[1].total-a[1].total).map(([b,v]) => `
@@ -1046,33 +1024,29 @@ byId('flakyRows').innerHTML = D.instances
 /* ---------- table ---------- */
 const tbody = byId('tbody'), tblCount = byId('tblCount');
 let sortKey = 'd', sortDir = -1, tblQuery = '', tblLimit = 25, tblRows = 0;
-const SV = {n:i=>i.n, v:i=>verKey(i).reduce((a,x)=>a*1000+x+1,0), up:i=>i.of?i.seen/i.of:-1,
-            d:i=>i.d, growth:i=>i.growth, x:i=>i.e.length};
+const SV = {n:i=>i.n, up:i=>i.of?i.seen/i.of:-1, d:i=>i.d, growth:i=>i.growth};
 function renderTable(){
-  let rows = D.instances.filter(i => active.has(i.s));
-  if(selectedExt){ const id = NAMES.indexOf(selectedExt); rows = rows.filter(i => i.e.includes(id)); }
+  /* No status or extension filter, and no version or plugin search: a portal
+     directory is the catalogue's own business, but pairing a name with the
+     software it runs and letting the reader filter by "end of life" is not. */
+  let rows = D.instances;
   if(tblQuery) rows = rows.filter(i =>
-    i.n.includes(tblQuery) || (i.h||'').includes(tblQuery) || (i.v||'').includes(tblQuery) ||
-    i.e.some(id => NAMES[id].includes(tblQuery)));
+    i.n.includes(tblQuery) || (i.h||'').includes(tblQuery));
   const get = SV[sortKey];
   rows.sort((a,b) => { const A = get(a), B = get(b);
     return typeof A === 'string' ? sortDir*A.localeCompare(B) : sortDir*(A-B); });
   tbody.innerHTML = rows.slice(0, tblLimit).map(i => `
     <tr>
-      <td class="nm"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a>${i.gone?' <span class="pill p-unknown">dropped</span>':''}
-        ${i.e.length?`<span class="ex">${i.e.slice(0,5).map(id=>NAMES[id]).join(' · ')}${i.e.length>5?' …':''}</span>`:''}</td>
-      <td><span class="pill p-${i.s}">${i.v||'—'}</span></td>
+      <td class="nm"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a>${i.gone?' <span class="pill p-unknown">dropped</span>':''}</td>
       <td class="hide-s"><span class="uptime" title="${i.seen}/${i.of} crawls">${i.up.map(u=>`<i class="${u?'':'down'}"></i>`).join('')}</span></td>
       <td class="num">${fmt(i.d)}</td>
       <td class="num hide-s"><span class="delta ${i.growth>0?'up':i.growth<0?'dn':'flat'}">${i.growth?(i.growth>0?'+':'')+fmt(i.growth):'·'}</span></td>
-      <td class="num">${i.e.length||'—'}</td>
     </tr>`).join('');
   byId('tblEmpty').hidden = rows.length > 0;
   tblRows = rows.length;
   const shown = Math.min(rows.length, tblLimit);
   tblCount.textContent = `${fmt(rows.length)} instance${rows.length===1?'':'s'}`
-    + (rows.length > shown ? ` · showing first ${fmt(shown)}` : '')
-    + (selectedExt ? ` · running ${selectedExt}` : '');
+    + (rows.length > shown ? ` · showing first ${fmt(shown)}` : '');
   const more = byId('tblMoreBtn');
   more.parentElement.hidden = rows.length <= 25;
   more.textContent = tblLimit >= rows.length ? 'show fewer' : `show all ${fmt(rows.length)} →`;
