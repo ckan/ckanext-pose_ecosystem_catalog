@@ -85,7 +85,13 @@ section{margin-bottom:56px}
 .chart-scroll{overflow-x:auto;overflow-y:hidden;--colw:22px}
 .chart,.xrel,.xaxis{display:flex;gap:3px;width:max-content;min-width:100%;padding-inline:14px}
 .chart{align-items:flex-end;height:210px;padding-top:14px}
-.col{flex:0 0 var(--colw);display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;position:relative;border:0;background:none;padding:0}
+/* min-width:0 on every cell is what keeps the three rows in step. A flex item
+   defaults to min-width:auto, a min-content floor, so a nowrap label like 09/12
+   would force its own cell wider than the 22px the bars use while empty cells
+   stayed 22px — the axis drifting further out of line the more labels it
+   carries, and differently at every font size and zoom level. */
+.col,.xrel span,.xaxis span{flex:0 0 var(--colw);min-width:0}
+.col{display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;position:relative;border:0;background:none;padding:0}
 .col i{display:block;width:100%}
 .col:hover i,.col.sel i{filter:saturate(1.4) brightness(1.06)}
 .col.sel{box-shadow:inset 0 0 0 1px var(--ink)}
@@ -95,12 +101,12 @@ section{margin-bottom:56px}
    reads against the release that caused it */
 .col.rel::before{content:"";position:absolute;left:-3px;top:-14px;bottom:0;border-left:1px dashed var(--mute);opacity:.55}
 .xrel{padding-top:7px;height:20px}
-.xrel span{flex:0 0 var(--colw);position:relative}
+.xrel span{position:relative}
 .xrel b{position:absolute;top:0;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:3px;
   font-family:var(--mono);font-size:.6875rem;font-weight:400;color:var(--teal);white-space:nowrap;cursor:help}
 .xrel span.near-end b{left:auto;right:0;transform:none}
 .xaxis{padding-top:8px;padding-bottom:12px}
-.xaxis span{flex:0 0 var(--colw);text-align:center;font-family:var(--mono);font-size:.75rem;color:var(--mute);overflow:visible;white-space:nowrap}
+.xaxis span{text-align:center;font-family:var(--mono);font-size:.75rem;color:var(--mute);overflow:visible;white-space:nowrap}
 .s-current{background:var(--teal-f)} .s-behind{background:var(--sand-f)}
 .s-eol{background:var(--rust-f)} .s-unknown{background:var(--slate-f)}
 .readout{margin-top:12px;font-size:1rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;min-height:52px}
