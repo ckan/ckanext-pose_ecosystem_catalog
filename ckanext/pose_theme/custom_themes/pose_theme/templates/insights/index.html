@@ -77,17 +77,36 @@ section{margin-bottom:56px}
 .card h3{font-size:1.5rem;font-weight:500;line-height:1.125;margin-bottom:6px}
 .card .hint{font-size:1rem;color:var(--mute);margin:0 0 12px}
 
-/* weekly columns chart */
-.chart{display:flex;gap:3px;align-items:flex-end;height:210px;padding:14px 14px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r) var(--r) 0 0;border-bottom:0}
-.col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;position:relative;min-width:0;border:0;background:none;padding:0}
+/* weekly columns chart. Columns are a fixed width and the whole track scrolls:
+   43 crawls sharing the panel width left 6px slivers, and every new crawl made
+   them thinner. The border lives on the wrapper so it stays put while the
+   columns move. */
+.chart-wrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.chart-scroll{overflow-x:auto;overflow-y:hidden;--colw:22px}
+.chart,.xrel,.xaxis{display:flex;gap:3px;width:max-content;min-width:100%;padding-inline:14px}
+.chart{align-items:flex-end;height:210px;padding-top:14px}
+/* min-width:0 on every cell is what keeps the three rows in step. A flex item
+   defaults to min-width:auto, a min-content floor, so a nowrap label like 09/12
+   would force its own cell wider than the 22px the bars use while empty cells
+   stayed 22px — the axis drifting further out of line the more labels it
+   carries, and differently at every font size and zoom level. */
+.col,.xrel span,.xaxis span{flex:0 0 var(--colw);min-width:0}
+.col{display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;position:relative;border:0;background:none;padding:0}
 .col i{display:block;width:100%}
 .col:hover i,.col.sel i{filter:saturate(1.4) brightness(1.06)}
 .col.sel{box-shadow:inset 0 0 0 1px var(--ink)}
 .col.bad{opacity:.5}
 .col.bad::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent 0 3px,rgba(22,33,29,.22) 3px 4px)}
-.xaxis{display:flex;gap:3px;padding:8px 14px 12px;background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 var(--r) var(--r)}
-.xaxis span{flex:1;text-align:center;font-family:var(--mono);font-size:.75rem;color:var(--mute);min-width:0;overflow:visible;white-space:nowrap}
-.xaxis span:last-child{text-align:right}
+/* the crawl that first reflects a CKAN release, so the drop in the green band
+   reads against the release that caused it */
+.col.rel::before{content:"";position:absolute;left:-3px;top:-14px;bottom:0;border-left:1px dashed var(--mute);opacity:.55}
+.xrel{padding-top:7px;height:20px}
+.xrel span{position:relative}
+.xrel b{position:absolute;top:0;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:3px;
+  font-family:var(--mono);font-size:.6875rem;font-weight:400;color:var(--teal);white-space:nowrap;cursor:help}
+.xrel span.near-end b{left:auto;right:0;transform:none}
+.xaxis{padding-top:8px;padding-bottom:12px}
+.xaxis span{text-align:center;font-family:var(--mono);font-size:.75rem;color:var(--mute);overflow:visible;white-space:nowrap}
 .s-current{background:var(--teal-f)} .s-behind{background:var(--sand-f)}
 .s-eol{background:var(--rust-f)} .s-unknown{background:var(--slate-f)}
 .readout{margin-top:12px;font-size:1rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;min-height:52px}
@@ -339,11 +358,16 @@ footer a code{color:inherit}
 <section id="weekly" data-tab="overview">
   <div class="shead">
     <h2>Week by week</h2>
-    <p>One column per archived crawl, split by support status. Hatched columns are crawls that reached almost nothing — a crawler failure, not a fleet collapse. Click a column to read its numbers. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-timeline.html" target="_blank" rel="noopener" title="The fleet, week by week — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p>One column per archived crawl, split by support status as it stood that week — a portal counts as current if it ran the newest patch CKAN had shipped by then. Hatched columns are crawls that reached almost nothing — a crawler failure, not a fleet collapse. Click a column to read its numbers, and scroll sideways for the earlier crawls. A dashed marker is the first crawl after CKAN shipped a release. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-timeline.html" target="_blank" rel="noopener" title="The fleet, week by week — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="legend" id="chartLegend"></div>
-  <div class="chart" id="chart"></div>
-  <div class="xaxis" id="xaxis"></div>
+  <div class="chart-wrap">
+    <div class="chart-scroll" id="chartScroll">
+      <div class="chart" id="chart"></div>
+      <div class="xrel" id="xrel"></div>
+      <div class="xaxis" id="xaxis"></div>
+    </div>
+  </div>
   <div class="readout" id="weekReadout"></div>
 </section>
 
@@ -641,8 +665,8 @@ const pct = (a,b) => b ? Math.round(100*a/b) : 0;
 const short = w => w.slice(5).replace('-','/');
 const ORDER = ['current','behind','eol','unknown'];
 const STATUS = {
-  current:{label:'On latest patch', desc:'newest patch of a supported branch'},
-  behind:{label:'Behind on patches', desc:'supported branch, older patch'},
+  current:{label:'On latest patch', desc:'newest patch that existed at that crawl'},
+  behind:{label:'Behind on patches', desc:'supported branch, older patch than shipped by then'},
   eol:{label:'End of life', desc:'2.9 or older'},
   unknown:{label:'No response', desc:'no version reported'}
 };
@@ -679,14 +703,45 @@ byId('stats').innerHTML = [
 
 /* ---------- weekly chart ---------- */
 const chart = byId('chart');
+/* Releases that landed inside the charted span, pinned to the first crawl that
+   could see them. Grouped by date: CKAN ships a patch for every supported
+   branch on the same day. */
+const RELS = (D.releases || []).reduce((acc,r) => ((acc[r.d] = acc[r.d] || []).push(r.v), acc), {});
+const relAt = {};
+for (const [day, vs] of Object.entries(RELS)) {
+  const i = W.findIndex(w => w >= day);
+  if (i < 0) continue;
+  const sorted = vs.slice().sort((a,b) => verNum(b) - verNum(a));
+  (relAt[i] = relAt[i] || {days:[], vs:[]}).days.push(day);
+  relAt[i].vs.push(...sorted);
+}
+function verNum(v){
+  const p = (v.match(/\d+/g) || []).slice(0,3).map(Number);
+  while (p.length < 3) p.push(0);
+  return p[0]*1e6 + p[1]*1e3 + p[2];
+}
+
 const maxRows = Math.max(...D.timeline.map(t => t.rows));
 chart.innerHTML = D.timeline.map((t,i) => {
   const h = 100*t.rows/maxRows;
   const seg = ORDER.map(s => t[s] ? `<i class="s-${s}" style="height:${100*t[s]/t.rows}%"></i>` : '').join('');
-  return `<button class="col ${t.q==='ok'?'':'bad'}" data-i="${i}" aria-label="${W[i]}" style="height:${h}%">${seg}</button>`;
+  return `<button class="col ${t.q==='ok'?'':'bad'}${relAt[i]?' rel':''}" data-i="${i}" aria-label="${W[i]}" style="height:${h}%">${seg}</button>`;
 }).join('');
+byId('xrel').innerHTML = W.map((w,i) => {
+  const r = relAt[i];
+  if (!r) return '<span></span>';
+  const vs = r.vs.slice().sort((a,b) => verNum(b) - verNum(a));
+  const label = vs.length > 1 ? `${vs[0]} +${vs.length-1}` : vs[0];
+  const title = `CKAN ${vs.join(', ')} released ${r.days.join(', ')}`;
+  // a centred label would be clipped by the wrapper at the end of the track
+  const cls = i > NW - 5 ? ' class="near-end"' : '';
+  return `<span${cls}><b title="${title}">&#9650;${label}</b></span>`;
+}).join('');
+
+/* Labelled every fourth crawl counting back from the newest, so the latest
+   crawl always carries a date and never collides with the one before it. */
 byId('xaxis').innerHTML =
-  W.map((w,i) => `<span>${i%4===0 || i===NW-1 ? short(w) : ''}</span>`).join('');
+  W.map((w,i) => `<span>${(NW-1-i)%4===0 ? short(w) : ''}</span>`).join('');
 byId('chartLegend').innerHTML = ORDER.map(s =>
   `<b><span class="key s-${s}"></span>${STATUS[s].label}</b>`).join('');
 const weekReadout = byId('weekReadout');
@@ -696,7 +751,8 @@ function showWeek(i){
   const flags = [
     t.q === 'none' ? '<span class="warn">no version data in this crawl</span>' : '',
     t.q === 'partial' ? `<span class="warn">crawl reached only ${pct(t.up,t.rows)}% of listed portals</span>` : '',
-    t.sus ? '<span class="warn">bulk step: too much changed at once to read as real upgrades</span>' : ''
+    t.sus ? '<span class="warn">bulk step: too much changed at once to read as real upgrades</span>' : '',
+    relAt[i] ? `<span class="warn">CKAN ${relAt[i].vs.join(', ')} shipped ${relAt[i].days.join(', ')}</span>` : ''
   ].join('');
   weekReadout.innerHTML = `<b class="mono">${t.w}</b> &nbsp;·&nbsp; ${fmt(t.up)} of ${fmt(t.rows)} answered${flags}<br>
     <span class="pill p-current">${t.current} current</span>
@@ -709,6 +765,8 @@ function showWeek(i){
 chart.addEventListener('click', e => { const c = e.target.closest('.col'); if(c) showWeek(+c.dataset.i); });
 chart.addEventListener('mouseover', e => { const c = e.target.closest('.col'); if(c) showWeek(+c.dataset.i); });
 showWeek(NW-1);
+// the track is wider than the panel and the newest crawl is the interesting end
+byId('chartScroll').scrollLeft = byId('chartScroll').scrollWidth;
 
 /* ---------- fleet strip ---------- */
 function verKey(i){
