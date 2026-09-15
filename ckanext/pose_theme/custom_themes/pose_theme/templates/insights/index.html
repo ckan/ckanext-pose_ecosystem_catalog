@@ -553,7 +553,7 @@ footer a code{color:inherit}
 <section id="instances" data-tab="instances">
   <div class="shead">
     <h2>CKAN instances</h2>
-    <p>Every instance the archive has seen, at its most recent crawl, with its crawl response strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name or host. Which CKAN version and which plugins a given portal runs are not shown here: the version numbers appear under Version spread as fleet-wide counts, and plugin installs under Trends as how many portals run each one.</p>
+    <p>Every instance the archive has seen, at its most recent crawl, with its crawl response strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name or host. Exts is how many plugins a portal reported, not which ones. Which CKAN version and which plugins a given portal runs are not shown here: the version numbers appear under Version spread as fleet-wide counts, and plugin installs under Trends as how many portals run each one.</p>
   </div>
   <div class="tblhead">
     <input type="search" id="tblSearch" placeholder="search by name or host…" aria-label="Search instances by name or host">
@@ -566,6 +566,7 @@ footer a code{color:inherit}
         <th data-sort="up" class="hide-s">Answered<span class="tip" tabindex="0" role="note" aria-label="What Answered measures" data-tip="Crawls this portal responded to, out of those that ran. A site can be up and still not answer the API.">i</span> <span class="caret">↕</span></th>
         <th data-sort="d" class="num">Datasets <span class="caret">↕</span></th>
         <th data-sort="growth" class="num hide-s">Cohort Δ<span class="tip" tabindex="0" role="note" aria-label="What Cohort delta measures" data-tip="Change in reported dataset count between this portal's first and most recent answered crawl.">i</span> <span class="caret">↕</span></th>
+        <th data-sort="x" class="num">Exts<span class="tip" tabindex="0" role="note" aria-label="What Exts counts" data-tip="How many plugins this portal reported, not which ones.">i</span> <span class="caret">↕</span></th>
       </tr></thead>
       <tbody id="tbody"></tbody>
     </table>
@@ -1019,7 +1020,7 @@ byId('flakyRows').innerHTML = D.instances
 /* ---------- table ---------- */
 const tbody = byId('tbody'), tblCount = byId('tblCount');
 let sortKey = 'd', sortDir = -1, tblQuery = '', tblLimit = 25, tblRows = 0;
-const SV = {n:i=>i.n, up:i=>i.of?i.seen/i.of:-1, d:i=>i.d, growth:i=>i.growth};
+const SV = {n:i=>i.n, up:i=>i.of?i.seen/i.of:-1, d:i=>i.d, growth:i=>i.growth, x:i=>i.x||0};
 function renderTable(){
   /* No status or extension filter, and no version or plugin search: a portal
      directory is the catalogue's own business, but pairing a name with the
@@ -1036,6 +1037,7 @@ function renderTable(){
       <td class="hide-s"><span class="uptime" title="${i.seen}/${i.of} crawls">${i.up.map(u=>`<i class="${u?'':'down'}"></i>`).join('')}</span></td>
       <td class="num">${fmt(i.d)}</td>
       <td class="num hide-s"><span class="delta ${i.growth>0?'up':i.growth<0?'dn':'flat'}">${i.growth?(i.growth>0?'+':'')+fmt(i.growth):'·'}</span></td>
+      <td class="num">${i.x||'—'}</td>
     </tr>`).join('');
   byId('tblEmpty').hidden = rows.length > 0;
   tblRows = rows.length;
