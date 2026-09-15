@@ -70,43 +70,79 @@ section{margin-bottom:56px}
 .shead-export:hover,.shead-export:focus{color:#d9534f;text-decoration:none}
 .shead-export i{font-size:.75rem;opacity:.8}
 .shead h2{font-size:2rem;font-weight:500;line-height:1.125}
-.shead p{margin:0;font-size:1rem;color:var(--mute);max-width:66ch;line-height:1.5;text-align:right}
+/* Right-aligned only while it sits beside the heading. .shead wraps, and a
+   wrapped paragraph that keeps text-align:right ends up ragged-left in the
+   middle of the page, which reads as a layout bug. */
+/* Always pinned to the right edge. Beside the heading it grows into the free
+   space and right-aligns; when it wraps onto its own line at narrow widths or
+   high zoom, it grows to 66ch and margin-left:auto takes what is left, so it
+   stays against the right edge instead of falling back to the left. */
+.shead p{margin:0 0 0 auto;font-size:1rem;color:var(--mute);flex:1 1 40ch;min-width:0;max-width:66ch;line-height:1.5;text-align:right}
 .cols{display:grid;grid-template-columns:1.35fr 1fr;gap:34px;align-items:start}
+/* grid and flex items default to min-width:auto, so one long string in a card
+   pushes the whole column wider than its track */
+.cols>*,.card,section{min-width:0}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
 .card+.card{margin-top:16px}
 .card h3{font-size:1.5rem;font-weight:500;line-height:1.125;margin-bottom:6px}
 .card .hint{font-size:1rem;color:var(--mute);margin:0 0 12px}
 
-/* weekly columns chart. Columns are a fixed width and the whole track scrolls:
-   43 crawls sharing the panel width left 6px slivers, and every new crawl made
-   them thinner. The border lives on the wrapper so it stays put while the
-   columns move. */
-.chart-wrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.chart-scroll{overflow-x:auto;overflow-y:hidden;--colw:22px}
-.chart,.xrel,.xaxis{display:flex;gap:3px;width:max-content;min-width:100%;padding-inline:14px}
-.chart{align-items:flex-end;height:210px;padding-top:14px}
-/* min-width:0 on every cell is what keeps the three rows in step. A flex item
-   defaults to min-width:auto, a min-content floor, so a nowrap label like 09/12
-   would force its own cell wider than the 22px the bars use while empty cells
-   stayed 22px — the axis drifting further out of line the more labels it
-   carries, and differently at every font size and zoom level. */
-.col,.xrel span,.xaxis span{flex:0 0 var(--colw);min-width:0}
-.col{display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;position:relative;border:0;background:none;padding:0}
+/* weekly columns chart. Bars, release markers and date labels share ONE grid
+   rather than sitting in three flex rows: a flex item's min-width defaults to
+   auto, a min-content floor, so a nowrap date label kept widening its own cell
+   and walking the axis out of line by an amount that changed with font size
+   and zoom. A fixed grid track cannot be widened by what sits in it, so the
+   three rows cannot disagree about where column i is.
+
+   The columns are a fixed width and the whole track scrolls: 46 crawls sharing
+   the panel width left 6px slivers, and every new crawl made them thinner. */
+.chart-wrap{max-width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.chart-scroll{overflow-x:auto;overflow-y:hidden;--colw:30px;--colgap:4px;--plot:210px}
+.chart-grid{display:grid;grid-template-columns:repeat(var(--n),var(--colw));
+  grid-template-rows:var(--plot) 20px auto;column-gap:var(--colgap);
+  width:max-content;min-width:100%;padding:14px 14px 12px}
+/* nothing in a cell may widen it, and a label is free to overflow instead */
+.chart-grid>*{min-width:0}
+.col{grid-row:1;align-self:end;display:flex;flex-direction:column;justify-content:flex-end;
+  cursor:pointer;position:relative;border:0;background:none;padding:0}
 .col i{display:block;width:100%}
 .col:hover i,.col.sel i{filter:saturate(1.4) brightness(1.06)}
 .col.sel{box-shadow:inset 0 0 0 1px var(--ink)}
 .col.bad{opacity:.5}
 .col.bad::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent 0 3px,rgba(22,33,29,.22) 3px 4px)}
 /* the crawl that first reflects a CKAN release, so the drop in the green band
-   reads against the release that caused it */
-.col.rel::before{content:"";position:absolute;left:-3px;top:-14px;bottom:0;border-left:1px dashed var(--mute);opacity:.55}
-.xrel{padding-top:7px;height:20px}
-.xrel span{position:relative}
-.xrel b{position:absolute;top:0;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:3px;
+   reads against the release that caused it. Anchored to the bottom of the plot
+   row so the line is full height whatever the bar's height is. */
+.col.rel::before{content:"";position:absolute;left:calc(var(--colgap)/-2 - 1px);bottom:0;height:var(--plot);
+  border-left:1px dashed var(--mute);opacity:.55}
+.relmark{grid-row:2;position:relative}
+.relmark b{position:absolute;top:0;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:3px;
   font-family:var(--mono);font-size:.6875rem;font-weight:400;color:var(--teal);white-space:nowrap;cursor:help}
-.xrel span.near-end b{left:auto;right:0;transform:none}
-.xaxis{padding-top:8px;padding-bottom:12px}
-.xaxis span{text-align:center;font-family:var(--mono);font-size:.75rem;color:var(--mute);overflow:visible;white-space:nowrap}
+.relmark.near-end b{left:auto;right:0;transform:none}
+.xlabel{grid-row:3;padding-top:8px;text-align:center;font-family:var(--mono);font-size:.75rem;
+  color:var(--mute);white-space:nowrap}
+/* support status. One part-to-whole bar for the latest crawl, drawn as SVG at
+   the measured width, with the values in a legend beside it so nothing
+   depends on hovering. */
+.support-chart{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 14px 14px;outline:none}
+.support-chart:focus-visible{box-shadow:0 0 0 2px var(--teal)}
+.support-host svg{display:block}
+.support-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px 24px;margin-top:14px}
+.support-legend div{display:flex;align-items:baseline;gap:8px;min-width:0}
+.support-legend .key{align-self:center}
+.support-legend b{font-weight:500;color:var(--ink)}
+.support-legend span.v{margin-left:auto;font-family:var(--mono);font-size:.875rem;color:var(--mute);white-space:nowrap}
+.support-note{margin:10px 0 0;font-size:.875rem;color:var(--mute)}
+.support-tip{position:absolute;top:-6px;left:0;transform:translateY(-100%);pointer-events:none;background:var(--panel);
+  border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:.875rem;color:var(--mute);
+  white-space:nowrap;box-shadow:0 4px 14px rgba(16,24,40,.08)}
+.support-tip b{color:var(--ink);font-weight:600}
+
+/* chart legend: a key, not a control. */
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 10px;font-size:1rem;align-items:center}
+.legend b{display:flex;align-items:center;gap:7px;font-weight:400}
+.key{width:11px;height:11px;border-radius:3px;flex:none}
+
 .s-current{background:var(--teal-f)} .s-behind{background:var(--sand-f)}
 .s-eol{background:var(--rust-f)} .s-unknown{background:var(--slate-f)}
 .readout{margin-top:12px;font-size:1rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;min-height:52px}
@@ -114,23 +150,6 @@ section{margin-bottom:56px}
 .readout a{color:var(--teal)}
 .warn{display:inline-block;margin-left:6px;font-size:.875rem;padding:1px 7px;border-radius:4px;background:var(--faint);color:var(--mute)}
 
-/* fleet strip */
-.legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 10px;font-size:1rem;align-items:center}
-.legend b{display:flex;align-items:center;gap:7px;font-weight:400}
-.legend button{all:unset;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:1rem;padding:3px 8px 3px 4px;border-radius:var(--r-sm)}
-.legend button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
-.legend button[aria-pressed="true"]{background:#fff;box-shadow:inset 0 0 0 1px var(--line)}
-.legend button.off{opacity:.38}
-.key{width:11px;height:11px;border-radius:3px;flex:none}
-.legend .n{font-family:var(--mono);color:var(--mute);font-size:.875rem}
-.fleet{display:flex;flex-wrap:wrap;gap:2px;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
-.tile{width:11px;height:16px;border-radius:1px;border:0;padding:0;cursor:pointer;transition:transform .08s}
-.tile:hover,.tile:focus-visible{transform:scaleY(1.45);outline:none;box-shadow:0 0 0 1px var(--ink)}
-.tile.dim{opacity:.14;pointer-events:none}
-
-/* ledger */
-/* ~74px a row: a 1.25rem line, a .875rem detail line and 20px of padding.
-   740px shows ten of the tall ones, more where an event has no detail. */
 .ledger{border-top:1px solid var(--line);max-height:740px;overflow:auto}
 .ev{display:grid;grid-template-columns:96px 22px 1fr;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:1.25rem}
 .ev.sus{background:var(--faint)}
@@ -146,7 +165,7 @@ section{margin-bottom:56px}
 
 /* controls */
 .controls{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;align-items:center}
-input[type=search]{font:inherit;font-size:1rem;padding:7px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel);color:var(--ink);min-width:190px;flex:1}
+input[type=search]{font:inherit;font-size:1rem;padding:7px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel);color:var(--ink);min-width:min(190px,100%);flex:1}
 input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
 /* No overflow:hidden here: it clipped the tooltips on the buttons. Round the
    end buttons instead, which is what the clipping was for. */
@@ -186,6 +205,8 @@ input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
 /* Not .row: that is Bootstrap's grid class. Its `.row > * {width:100%}`
    stacked these, and ours leaked onto the page layout row in return. */
 .kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dotted var(--line)}
+/* the name truncates with an ellipsis, which only works once it may shrink */
+.kv>*{min-width:0}
 .kv:last-child{border-bottom:0}
 .kv b{font-weight:500}
 .kv .v{color:var(--mute)}
@@ -195,9 +216,21 @@ input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
 .vbar .track{display:flex;height:6px;margin-top:5px;border-radius:3px;overflow:hidden;background:var(--faint)}
 .vbar .track i{display:block;height:100%}
 
-/* table */
-table{width:100%;border-collapse:collapse;font-size:1rem}
-thead th{position:sticky;top:0;background:var(--paper);text-align:left;font-weight:700;font-size:.875rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);padding:8px 8px 10px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
+/* table. Every table lives in .tbl-scroll: nine columns of nowrap headers have
+   a min-content width of roughly 900px, and with nothing to contain them the
+   table widened the page itself at narrow widths or high zoom — which pushed
+   the chart off screen and made every right-aligned blurb align to a canvas
+   wider than the viewport. The cap keeps the sticky header working by giving
+   it a scrollport of its own, the same way .ledger does. */
+.tbl-scroll{overflow:auto;max-height:78vh;overscroll-behavior-x:contain}
+table{width:100%;min-width:0;border-collapse:collapse;font-size:1rem}
+/* a long plugin or host name breaks rather than setting the column's width */
+td,th{overflow-wrap:anywhere}
+/* An opaque background and a stacking order are what make the sticky header
+   actually cover the rows: --paper is transparent, so rows scrolled under the
+   header and read straight through it. border-collapse drops the border on a
+   sticky cell, hence the inset shadow standing in for the rule. */
+thead th{position:sticky;top:0;z-index:2;background:var(--panel);text-align:left;font-weight:700;font-size:.875rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);padding:8px 8px 10px;box-shadow:inset 0 -1px 0 var(--line);cursor:pointer;white-space:nowrap}
 thead th:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
 thead th.num{text-align:right}
 th .caret{opacity:.35}
@@ -205,9 +238,17 @@ th[aria-sort] .caret{opacity:1;color:var(--ink)}
 tbody td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 tbody tr:hover{background:var(--panel)}
 td.num{text-align:right;font-family:var(--mono)}
+/* Every column but the first holds a value, and those read better centred
+   under their heading; the first column is the name and stays left-aligned.
+   Selectors carry the column class's specificity so they win over .num, and
+   the block-level children inside a cell need centring of their own because
+   text-align does not move a block. */
+thead th:not(:first-child),tbody td:not(:first-child){text-align:center}
+tbody td:not(:first-child) .spark,tbody td:not(:first-child) .spark-att{margin-inline:auto}
+tbody td:not(:first-child) .uptime{justify-content:center}
 td.nm a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
 td.nm a:hover{border-color:var(--teal);color:var(--teal)}
-td.nm .ex{display:block;font-size:.875rem;color:var(--mute);margin-top:2px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46ch}
+td.nm .ex{display:block;font-size:.875rem;color:var(--mute);margin-top:2px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:min(46ch,100%)}
 .uptime{display:flex;gap:1px}
 .uptime i{display:block;width:3px;height:13px;background:var(--teal);border-radius:1px}
 .uptime i.down{background:rgba(217,83,79,.28)}
@@ -234,13 +275,25 @@ footer a,footer a:visited{color:var(--mute);text-decoration:underline;text-decor
 footer a:hover,footer a:focus{color:var(--ink);text-decoration-color:currentColor}
 footer a code{color:inherit}
 
+/* The sidebar takes its share from 992px up, so the content column is narrow
+   well before the viewport is: the two-column body goes first, then the stat
+   band, then the wide table columns. Zoom scales the CSS pixel, so each of
+   these steps answers zooming in as well as a smaller screen. */
+@media (max-width:1200px){
+  .cols{grid-template-columns:1fr;gap:26px}
+}
 @media (max-width:900px){
   .stats{grid-template-columns:repeat(2,1fr)}
-  .cols{grid-template-columns:1fr;gap:26px}
   .wrap{padding:0 16px 60px}
-  td.nm .ex{max-width:28ch}
+  td.nm .ex{max-width:min(28ch,100%)}
   .hide-s{display:none}
-  .xaxis span{font-size:0}
+}
+@media (max-width:640px){
+  .stats{grid-template-columns:1fr}
+  .shead h2{font-size:1.75rem}
+  /* a cap plus page scrolling is two scrollbars on a short screen */
+  .tbl-scroll{max-height:none}
+  .ev{grid-template-columns:auto 22px 1fr;gap:8px;font-size:1rem}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
@@ -276,7 +329,7 @@ footer a code{color:inherit}
 
 /* Sidebar. Scoped outside .ckan-insights because the secondary column is
    rendered by page.html, not inside the dashboard wrapper. */
-.insights-tabs{margin:0 0 36px}
+.insights-tabs{margin:0 0 36px;flex-wrap:wrap}
 .insights-tabs .nav-link{
   font-family:"Satoshi",system-ui,sans-serif;font-size:1.25rem;font-weight:500;
   color:#667085;border:0;border-bottom:2px solid transparent;padding:10px 16px;
@@ -358,33 +411,21 @@ footer a code{color:inherit}
 <section id="weekly" data-tab="overview">
   <div class="shead">
     <h2>Week by week</h2>
-    <p>One column per archived crawl, split by support status as it stood that week — a portal counts as current if it ran the newest patch CKAN had shipped by then. Hatched columns are crawls that reached almost nothing — a crawler failure, not a fleet collapse. Click a column to read its numbers, and scroll sideways for the earlier crawls. A dashed marker is the first crawl after CKAN shipped a release. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-timeline.html" target="_blank" rel="noopener" title="The fleet, week by week — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p>One column per archived crawl, split by support status as it stood that week: a portal counts as current if it ran the newest patch CKAN had shipped by then. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-timeline.html" target="_blank" rel="noopener" title="The fleet, week by week. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="legend" id="chartLegend"></div>
   <div class="chart-wrap">
     <div class="chart-scroll" id="chartScroll">
-      <div class="chart" id="chart"></div>
-      <div class="xrel" id="xrel"></div>
-      <div class="xaxis" id="xaxis"></div>
+      <div class="chart-grid" id="chartGrid"></div>
     </div>
   </div>
   <div class="readout" id="weekReadout"></div>
 </section>
 
-<section id="fleet" data-tab="overview">
-  <div class="shead">
-    <h2>The fleet</h2>
-    <p>One tile per instance in the latest crawl, grouped newest version first. Click a status to filter the table at the bottom. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="How much of the fleet runs supported software? — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
-  </div>
-  <div class="legend" id="legend"></div>
-  <div class="fleet" id="fleetStrip"></div>
-  <div class="readout" id="readout"><span class="ph">Hover or tap a tile for instance details.</span></div>
-</section>
-
 <section id="changes" data-tab="trends">
   <div class="shead">
     <h2>Version and plugin changes</h2>
-    <p>Every version bump and every plugin install or removal detected between consecutive crawls. Shaded rows come from crawls where a large share of the fleet changed at once — a re-baselined crawler or a long gap between crawls — and should not be read as real upgrades.</p>
+    <p>Version upgrades and plugin changes between crawls. Shaded rows are likely crawler artifacts, not real changes.</p>
   </div>
   <div class="controls">
     <div class="seg" role="group" aria-label="Event type">
@@ -406,50 +447,54 @@ footer a code{color:inherit}
     <p>Movement in stars, forks and contributors across the archived crawls, with the star line for the last 26 weeks. Sorted by combined movement, forks weighted above stars because forking means someone used the code. Plugins that ship inside CKAN are excluded throughout.</p>
   </div>
   <div class="tblhead"><span class="count" id="attCount"></span></div>
-  <table>
-    <thead><tr>
-      <th data-esort="p">Extension <span class="caret">↕</span></th>
-      <th data-esort="i" class="num">Portals<span class="tip" tabindex="0" role="note" aria-label="What Portals measures" data-tip="Distinct catalogued portals observed running this extension. An observation, not a total.">i</span> <span class="caret">↕</span></th>
-      <th data-esort="pct" class="num hide-s">Share <span class="caret">↕</span></th>
-      <th data-esort="s" class="num">Stars<span class="tip" tabindex="0" role="note" aria-label="About the stars column" data-tip="Stars now, with the change across the archived crawls beside it. Sorts by the total; the table loads sorted by movement.">i</span> <span class="caret">↕</span></th>
-      <th data-esort="f" class="num">Forks <span class="caret">↕</span></th>
-      <th data-esort="c" class="num hide-s">People <span class="caret">↕</span></th>
-      <th data-esort="up">Upkeep<span class="tip" tabindex="0" role="note" aria-label="What Upkeep measures" data-tip="How recently the repository was pushed to. Quiet is not broken: ckanext-envvars runs on 126 portals and has been untouched for two years because it is finished.">i</span> <span class="caret">↕</span></th>
-      <th data-esort="push" class="num hide-s">Last push <span class="caret">↕</span></th>
-      <th data-esort="br" class="num hide-s">Branches<span class="tip" tabindex="0" role="note" aria-label="What Branches measures" data-tip="Branches on the repository, and how many carry a commit from the last year.">i</span> <span class="caret">↕</span></th>
-    </tr></thead>
-    <tbody id="attBody"></tbody>
-  </table>
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr>
+        <th data-esort="p">Extension <span class="caret">↕</span></th>
+        <th data-esort="i" class="num">Portals<span class="tip" tabindex="0" role="note" aria-label="What Portals measures" data-tip="Distinct catalogued portals observed running this extension. An observation, not a total.">i</span> <span class="caret">↕</span></th>
+        <th data-esort="pct" class="num hide-s">Share <span class="caret">↕</span></th>
+        <th data-esort="s" class="num">Stars<span class="tip" tabindex="0" role="note" aria-label="About the stars column" data-tip="Stars now, with the change across the archived crawls beside it. Sorts by the total; the table loads sorted by movement.">i</span> <span class="caret">↕</span></th>
+        <th data-esort="f" class="num">Forks <span class="caret">↕</span></th>
+        <th data-esort="c" class="num hide-s">People <span class="caret">↕</span></th>
+        <th data-esort="up">Upkeep<span class="tip" tabindex="0" role="note" aria-label="What Upkeep measures" data-tip="How recently the repository was pushed to. Quiet is not broken: ckanext-envvars runs on 126 portals and has been untouched for two years because it is finished.">i</span> <span class="caret">↕</span></th>
+        <th data-esort="push" class="num hide-s">Last push <span class="caret">↕</span></th>
+        <th data-esort="br" class="num hide-s">Branches<span class="tip" tabindex="0" role="note" aria-label="What Branches measures" data-tip="Branches on the repository, and how many carry a commit from the last year.">i</span> <span class="caret">↕</span></th>
+      </tr></thead>
+      <tbody id="attBody"></tbody>
+    </table>
+  </div>
   <div class="more"><button id="attMoreBtn"></button></div>
 </section>
 
 <section id="ext-downstream" data-tab="trends">
   <div class="shead">
     <h2>Livelier downstream</h2>
-    <p>Extensions whose forks are being pushed while upstream is not. This is where maintenance quietly relocates &mdash; a portal operator patches a fork and never upstreams it. A fork being pushed more recently does not prove it is ahead in commits.</p>
+    <p>Extensions whose forks are being pushed while upstream is not. This is where maintenance quietly relocates: a portal operator patches a fork and never upstreams it. A fork being pushed more recently does not prove it is ahead in commits.</p>
   </div>
   <div class="tblhead">
     <input type="search" id="dsSearch" placeholder="search upstream or fork…" aria-label="Search downstream forks">
     <span class="count" id="dsCount"></span>
   </div>
-  <table>
-    <thead><tr>
-      <th data-dsort="p">Upstream <span class="caret">↕</span></th>
-      <th data-dsort="i" class="num">Portals <span class="caret">↕</span></th>
-      <th data-dsort="push" class="num">Upstream last push <span class="caret">↕</span></th>
-      <th data-dsort="ahead" class="num">Forks ahead<span class="tip" tabindex="0" role="note" aria-label="What Forks ahead measures" data-tip="Forks pushed at least a fortnight more recently than upstream, out of the five most recently pushed.">i</span> <span class="caret">↕</span></th>
-      <th data-dsort="f" class="num hide-s">Forks <span class="caret">↕</span></th>
-      <th data-dsort="s" class="num hide-s">Stars <span class="caret">↕</span></th>
-    </tr></thead>
-    <tbody id="dsBody"></tbody>
-  </table>
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr>
+        <th data-dsort="p">Upstream <span class="caret">↕</span></th>
+        <th data-dsort="i" class="num">Portals <span class="caret">↕</span></th>
+        <th data-dsort="push" class="num">Upstream last push <span class="caret">↕</span></th>
+        <th data-dsort="ahead" class="num">Forks ahead<span class="tip" tabindex="0" role="note" aria-label="What Forks ahead measures" data-tip="Forks pushed at least a fortnight more recently than upstream, out of the five most recently pushed.">i</span> <span class="caret">↕</span></th>
+        <th data-dsort="f" class="num hide-s">Forks <span class="caret">↕</span></th>
+        <th data-dsort="s" class="num hide-s">Stars <span class="caret">↕</span></th>
+      </tr></thead>
+      <tbody id="dsBody"></tbody>
+    </table>
+  </div>
   <div class="empty" id="dsEmpty" hidden>Nothing matches that filter.</div>
   <div class="more"><button id="dsMoreBtn"></button></div>
 </section>
 <section id="adoption" data-tab="trends">
   <div class="shead">
     <h2>Extension adoption (entry points)</h2>
-    <p id="extHint">Counts are from the latest crawl. Trend and delta come from the stable cohort — the instances that answered in every crawl of the trailing window — so movement is a real install, not a missed crawl. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-extension-adoption.html" target="_blank" rel="noopener" title="Which plugins the ecosystem runs — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p><span id="extHint">Counts are from the latest crawl. Trend and delta come from the stable cohort, the instances that answered in every crawl of the trailing window, so movement is a real install, not a missed crawl.</span> <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-extension-adoption.html" target="_blank" rel="noopener" title="Which plugins the ecosystem runs. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="cols">
     <div>
@@ -485,10 +530,23 @@ footer a code{color:inherit}
 </section>
 
 
+<section id="support" data-tab="overview">
+  <div class="shead">
+    <h2>Support status</h2>
+    <p>Where the portals that reported a version stand in the latest crawl, by the support status of the CKAN release they run. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="Support status. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+  </div>
+  <div class="support-chart" id="supportChart" tabindex="0" role="group">
+    <div class="support-host" id="supportHost"></div>
+    <div class="support-tip" id="supportTip" aria-live="polite" hidden></div>
+    <div class="support-legend" id="supportLegend"></div>
+    <p class="support-note" id="supportNote"></p>
+  </div>
+</section>
+
 <section id="versions" data-tab="overview">
   <div class="shead">
     <h2>Version spread</h2>
-    <p>Only the newest patch of 2.10 and 2.11 is officially supported. Everything else is on its own. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-version-spread.html" target="_blank" rel="noopener" title="Which CKAN versions are in the wild? — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p><span id="verHint">Latest supported releases.</span> <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-version-spread.html" target="_blank" rel="noopener" title="Which CKAN versions are in the wild? Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="cols">
     <div><div class="card"><h3>By release branch</h3><p class="hint">Split by patch status within each branch.</p><div id="branchRows"></div></div></div>
@@ -498,40 +556,40 @@ footer a code{color:inherit}
   </div>
 </section>
 
-<section id="instances" data-tab="instances">
-  <div class="shead">
-    <h2>CKAN instances</h2>
-    <p>Every instance the archive has seen, at its most recent crawl, with its crawl response strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name, host, version, or plugin.</p>
-  </div>
-  <div class="tblhead">
-    <input type="search" id="tblSearch" placeholder="search instances…" aria-label="Search instances">
-    <span class="count" id="tblCount"></span>
-  </div>
-  <table>
-    <thead><tr>
-      <th data-sort="n">Instance <span class="caret">↕</span></th>
-      <th data-sort="v">Version <span class="caret">↕</span></th>
-      <th data-sort="up" class="hide-s">Answered<span class="tip" tabindex="0" role="note" aria-label="What Answered measures" data-tip="Crawls this portal responded to, out of those that ran. A site can be up and still not answer the API.">i</span> <span class="caret">↕</span></th>
-      <th data-sort="d" class="num">Datasets <span class="caret">↕</span></th>
-      <th data-sort="growth" class="num hide-s">Cohort Δ<span class="tip" tabindex="0" role="note" aria-label="What Cohort delta measures" data-tip="Change in reported dataset count between this portal's first and most recent answered crawl.">i</span> <span class="caret">↕</span></th>
-      <th data-sort="x" class="num">Exts <span class="caret">↕</span></th>
-    </tr></thead>
-    <tbody id="tbody"></tbody>
-  </table>
-  <div class="empty" id="tblEmpty" hidden>Nothing matches that filter.</div>
-  <div class="more"><button id="tblMoreBtn"></button></div>
-</section>
-
-<section id="reliability" data-tab="instances">
+<section id="reliability" data-tab="overview">
   <div class="shead">
     <h2>Sites crawl reliability</h2>
-    <p>How often each portal actually answered, counted only over the crawls that worked. Flaky endpoints are a crawler problem as much as a portal problem. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-crawl-reliability.html" target="_blank" rel="noopener" title="How reliably portals answer — standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p><a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-crawl-reliability.html" target="_blank" rel="noopener" title="How reliably portals answer. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="cols">
     <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
     <div><div class="card"><h3>Flakiest endpoints</h3><p class="hint">Answered some crawls, not others. Worth a retry policy.</p><div class="rows" id="flakyRows"></div></div></div>
   </div>
 </section>
+<section id="instances" data-tab="instances">
+  <div class="shead">
+    <h2>CKAN instances</h2>
+  </div>
+  <div class="tblhead">
+    <input type="search" id="tblSearch" placeholder="search by name or host…" aria-label="Search instances by name or host">
+    <span class="count" id="tblCount"></span>
+  </div>
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr>
+        <th data-sort="n">Instance <span class="caret">↕</span></th>
+        <th data-sort="up" class="hide-s">Answered<span class="tip" tabindex="0" role="note" aria-label="What Answered measures" data-tip="Crawls this portal responded to, out of those that ran. A site can be up and still not answer the API.">i</span> <span class="caret">↕</span></th>
+        <th data-sort="d" class="num">Datasets <span class="caret">↕</span></th>
+        <th data-sort="growth" class="num hide-s">Cohort Δ<span class="tip" tabindex="0" role="note" aria-label="What Cohort delta measures" data-tip="Change in reported dataset count between this portal's first and most recent answered crawl.">i</span> <span class="caret">↕</span></th>
+        <th data-sort="x" class="num">Exts<span class="tip" tabindex="0" role="note" aria-label="What Exts counts" data-tip="How many plugins this portal reported, not which ones.">i</span> <span class="caret">↕</span></th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="empty" id="tblEmpty" hidden>Nothing matches that filter.</div>
+  <div class="more"><button id="tblMoreBtn"></button></div>
+</section>
+
 <section id="ext-all" data-tab="instances">
   <div class="shead">
     <h2>Extensions</h2>
@@ -541,21 +599,23 @@ footer a code{color:inherit}
     <input type="search" id="extAllSearch" placeholder="search extensions…" aria-label="Search extensions">
     <span class="count" id="extAllCount"></span>
   </div>
-  <table>
-    <thead><tr>
-      <th data-xsort="p">Extension <span class="caret">↕</span></th>
-      <th data-xsort="i" class="num">Portals <span class="caret">↕</span></th>
-      <th data-xsort="pct" class="num hide-s">Share <span class="caret">↕</span></th>
-      <th data-xsort="s" class="num">Stars <span class="caret">↕</span></th>
-      <th data-xsort="f" class="num">Forks <span class="caret">↕</span></th>
-      <th data-xsort="c" class="num hide-s">People <span class="caret">↕</span></th>
-      <th data-xsort="up">Upkeep <span class="caret">↕</span></th>
-      <th data-xsort="push" class="num hide-s">Last push <span class="caret">↕</span></th>
-      <th data-xsort="br" class="num hide-s">Branches <span class="caret">↕</span></th>
-      <th data-xsort="ahead" class="num hide-s">Forks ahead <span class="caret">↕</span></th>
-    </tr></thead>
-    <tbody id="extAllBody"></tbody>
-  </table>
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr>
+        <th data-xsort="p">Extension <span class="caret">↕</span></th>
+        <th data-xsort="i" class="num">Portals <span class="caret">↕</span></th>
+        <th data-xsort="pct" class="num hide-s">Share <span class="caret">↕</span></th>
+        <th data-xsort="s" class="num">Stars <span class="caret">↕</span></th>
+        <th data-xsort="f" class="num">Forks <span class="caret">↕</span></th>
+        <th data-xsort="c" class="num hide-s">People <span class="caret">↕</span></th>
+        <th data-xsort="up">Upkeep <span class="caret">↕</span></th>
+        <th data-xsort="push" class="num hide-s">Last push <span class="caret">↕</span></th>
+        <th data-xsort="br" class="num hide-s">Branches <span class="caret">↕</span></th>
+        <th data-xsort="ahead" class="num hide-s">Forks ahead <span class="caret">↕</span></th>
+      </tr></thead>
+      <tbody id="extAllBody"></tbody>
+    </table>
+  </div>
   <div class="empty" id="extAllEmpty" hidden>Nothing matches that filter.</div>
   <div class="more"><button id="extAllMoreBtn"></button></div>
 </section>
@@ -629,7 +689,7 @@ footer a code{color:inherit}
     <div class="module module-narrow module-shallow insights-side">
       <h2 class="module-heading">{{ _("Something isn't working?") }}</h2>
       <div class="insights-note">
-        <p>{{ _('A portal listed with the wrong version, one that is missing, or a number that does not look right — tell us and we will look into it.') }}</p>
+        <p>{{ _('A portal listed with the wrong version, one that is missing, or a number that does not look right: tell us and we will look into it.') }}</p>
         <p><a class="insights-report" href="{{ h.url_for('pose_contact.form') }}">
           <i class="fa fa-envelope"></i>{{ _('Report an issue') }}</a></p>
       </div>
@@ -659,11 +719,15 @@ const byId = id => document.getElementById(id) || _sink;
   } catch (err) {
     return fail('Network error fetching the weekly crawl payload.');
   }
-const NAMES = D.ext_names, W = D.weeks, NW = W.length, VW = D.vweeks, NVW = VW.length;
+const W = D.weeks, NW = W.length, VW = D.vweeks, NVW = VW.length;
 const fmt = n => n.toLocaleString('en-US');
 const pct = (a,b) => b ? Math.round(100*a/b) : 0;
 const short = w => w.slice(5).replace('-','/');
 const ORDER = ['current','behind','eol','unknown'];
+// Every support share on the page divides by the portals that reported a
+// version. D.reachable also counts portals that returned a plugin list with no
+// version, which put the headline a point away from the chart beside it.
+const reporting = t => (t.current||0) + (t.behind||0) + (t.eol||0);
 const STATUS = {
   current:{label:'On latest patch', desc:'newest patch that existed at that crawl'},
   behind:{label:'Behind on patches', desc:'supported branch, older patch than shipped by then'},
@@ -671,7 +735,6 @@ const STATUS = {
   unknown:{label:'No response', desc:'no version reported'}
 };
 let selectedExt = null;
-let active = new Set(ORDER);
 
 /* ---------- header ---------- */
 const latest = D.timeline[NW-1];
@@ -684,7 +747,7 @@ const recentUpgraders = new Set(
             .map(u => u.n)).size;
 byId('range').textContent = `CKAN ecosystem crawl · ${W[0]} → ${W[NW-1]}`;
 byId('hed').innerHTML =
-  `${fmt(D.latest_total)} portals, <em>${pct(D.statuses.eol||0, D.reachable)}%</em> of them past end of life.`;
+  `${fmt(D.latest_total)} portals; <em>${pct(latest.eol||0, reporting(latest))}%</em> of those reporting a version are past end of life.`;
 byId('m-weeks').textContent =
   `${NW} crawls · ${NVW} with version data · ${fmt(D.total)} instances seen`;
 byId('side-generated').textContent = D.generated || '\u2014';
@@ -695,53 +758,62 @@ byId('side-portals').textContent = fmt(D.latest_total);
 byId('stats').innerHTML = [
   [fmt(D.latest_total),
    `portals in the latest crawl, ${fmt(D.reachable)} of them answering`],
-  [pct(D.statuses.current||0, D.reachable) + '%',
-   'of responding portals run the newest patch of a supported branch'],
+  [pct(latest.current||0, reporting(latest)) + '%',
+   'of portals reporting a version run the newest patch of a supported branch'],
   [fmt(recentUpgraders),
    `portals upgraded CKAN in the last ${UPGRADE_WEEKS} crawls`]
 ].map(([b,s]) => `<div class="stat"><b>${b}</b><small>${s}</small></div>`).join('');
 
 /* ---------- weekly chart ---------- */
-const chart = byId('chart');
+const grid = byId('chartGrid');
+grid.style.setProperty('--n', NW);
+
 /* Releases that landed inside the charted span, pinned to the first crawl that
    could see them. Grouped by date: CKAN ships a patch for every supported
    branch on the same day. */
-const RELS = (D.releases || []).reduce((acc,r) => ((acc[r.d] = acc[r.d] || []).push(r.v), acc), {});
-const relAt = {};
-for (const [day, vs] of Object.entries(RELS)) {
-  const i = W.findIndex(w => w >= day);
-  if (i < 0) continue;
-  const sorted = vs.slice().sort((a,b) => verNum(b) - verNum(a));
-  (relAt[i] = relAt[i] || {days:[], vs:[]}).days.push(day);
-  relAt[i].vs.push(...sorted);
-}
 function verNum(v){
   const p = (v.match(/\d+/g) || []).slice(0,3).map(Number);
   while (p.length < 3) p.push(0);
   return p[0]*1e6 + p[1]*1e3 + p[2];
 }
+const RELS = (D.releases || []).reduce((acc,r) => ((acc[r.d] = acc[r.d] || []).push(r.v), acc), {});
+const relAt = {};
+for (const [day, vs] of Object.entries(RELS)) {
+  const i = W.findIndex(w => w >= day);
+  if (i < 0) continue;
+  const at = relAt[i] = relAt[i] || {days:[], vs:[]};
+  at.days.push(day);
+  at.vs.push(...vs);
+}
+for (const at of Object.values(relAt)) at.vs.sort((a,b) => verNum(b) - verNum(a));
 
+/* One grid, three bands: the bars, then the release markers, then the date
+   labels. Each band emits exactly NW cells, so column i of every band lands in
+   the same track. */
 const maxRows = Math.max(...D.timeline.map(t => t.rows));
-chart.innerHTML = D.timeline.map((t,i) => {
+const bars = D.timeline.map((t,i) => {
   const h = 100*t.rows/maxRows;
   const seg = ORDER.map(s => t[s] ? `<i class="s-${s}" style="height:${100*t[s]/t.rows}%"></i>` : '').join('');
   return `<button class="col ${t.q==='ok'?'':'bad'}${relAt[i]?' rel':''}" data-i="${i}" aria-label="${W[i]}" style="height:${h}%">${seg}</button>`;
 }).join('');
-byId('xrel').innerHTML = W.map((w,i) => {
+
+const marks = W.map((w,i) => {
   const r = relAt[i];
-  if (!r) return '<span></span>';
-  const vs = r.vs.slice().sort((a,b) => verNum(b) - verNum(a));
-  const label = vs.length > 1 ? `${vs[0]} +${vs.length-1}` : vs[0];
-  const title = `CKAN ${vs.join(', ')} released ${r.days.join(', ')}`;
+  if (!r) return '<span class="relmark"></span>';
+  const label = r.vs.length > 1 ? `${r.vs[0]} +${r.vs.length-1}` : r.vs[0];
+  const title = `CKAN ${r.vs.join(', ')} released ${r.days.join(', ')}`;
   // a centred label would be clipped by the wrapper at the end of the track
-  const cls = i > NW - 5 ? ' class="near-end"' : '';
-  return `<span${cls}><b title="${title}">&#9650;${label}</b></span>`;
+  const cls = i > NW - 5 ? ' near-end' : '';
+  return `<span class="relmark${cls}"><b title="${title}">&#9650;${label}</b></span>`;
 }).join('');
 
 /* Labelled every fourth crawl counting back from the newest, so the latest
    crawl always carries a date and never collides with the one before it. */
-byId('xaxis').innerHTML =
-  W.map((w,i) => `<span>${(NW-1-i)%4===0 ? short(w) : ''}</span>`).join('');
+const labels = W.map((w,i) =>
+  `<span class="xlabel">${(NW-1-i)%4===0 ? short(w) : ''}</span>`).join('');
+
+grid.innerHTML = bars + marks + labels;
+const chart = grid;
 byId('chartLegend').innerHTML = ORDER.map(s =>
   `<b><span class="key s-${s}"></span>${STATUS[s].label}</b>`).join('');
 const weekReadout = byId('weekReadout');
@@ -768,53 +840,92 @@ showWeek(NW-1);
 // the track is wider than the panel and the newest crawl is the interesting end
 byId('chartScroll').scrollLeft = byId('chartScroll').scrollWidth;
 
-/* ---------- fleet strip ---------- */
-function verKey(i){
-  if(!i.v) return [-1,-1,-1];
-  const p = i.v.split('.').map(x => parseInt(x,10)||0);
-  return [p[0]||0, p[1]||0, p[2]||0];
-}
-const LATEST_SET = D.instances.filter(i => i.seen > 0 || i.v || i.e.length);
-const fleetOrder = LATEST_SET.slice().sort((a,b) => {
-  const A = verKey(a), B = verKey(b);
-  for(let k=0;k<3;k++) if(A[k]!==B[k]) return B[k]-A[k];
-  return b.d-a.d;
-});
-const strip = byId('fleetStrip');
-strip.innerHTML = fleetOrder.map((i,ix) =>
-  `<button class="tile s-${i.s}" data-ix="${ix}" title="${i.n}" aria-label="${i.n}, ${i.v||'no version'}"></button>`
-).join('');
-const readout = byId('readout');
-function showInstance(i){
-  readout.innerHTML = `<b class="mono">${i.n}</b> &nbsp;<span class="pill p-${i.s}">${i.v||'no version'}</span><br>
-    <a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.h||i.u}</a>
-    &nbsp;·&nbsp; ${fmt(i.d)} datasets &nbsp;·&nbsp; ${fmt(i.o)} orgs &nbsp;·&nbsp; ${i.e.length} extensions
-    &nbsp;·&nbsp; answered ${i.seen}/${i.of} crawls`;
-}
-['mouseover','focusin','click'].forEach(ev => strip.addEventListener(ev, e => {
-  const t = e.target.closest('.tile'); if(t) showInstance(fleetOrder[+t.dataset.ix]);
-}));
+/* ---------- support status ---------- */
+/* One bar, the latest crawl, split by support status: an overall picture of
+   where the fleet stands, not a trend. The denominator is the portals that
+   reported a version, the same one the headline stats use, and the portals
+   that did not report are stated beside it rather than drawn as a segment. */
+(function renderSupport(){
+  const box = byId('supportChart'), host = byId('supportHost'), tip = byId('supportTip');
+  const STATES = ['current','behind','eol'];
+  const FILL = {current:'rgba(58,131,58,.8)', behind:'rgba(253,126,20,.8)', eol:'rgba(217,83,79,.8)'};
+  const total = reporting(latest);
+  const parts = STATES.map(s => ({s, n: latest[s]||0, share: total ? 100*(latest[s]||0)/total : 0}))
+                      .filter(p => p.n > 0);
+  if(!total){
+    byId('supportNote').textContent = 'No portal reported a version in the latest crawl.';
+    return;
+  }
+  byId('supportLegend').innerHTML = parts.map(p =>
+    `<div><span class="key s-${p.s}"></span><b>${STATUS[p.s].label}</b>`
+    + `<span class="v">${fmt(p.n)} · ${pct(p.n, total)}%</span></div>`).join('');
+  byId('supportNote').textContent =
+    `${fmt(total)} of ${fmt(latest.rows)} portals reported a version in the crawl of ${latest.w}; `
+    + `${fmt((latest.unknown||0))} did not and are not counted here.`;
+  box.setAttribute('aria-label', `Support status in the crawl of ${latest.w}: `
+    + parts.map(p => `${STATUS[p.s].label} ${fmt(p.n)}, ${pct(p.n, total)}%`).join('; ') + '.');
 
-/* ---------- status filter ---------- */
-const legend = byId('legend');
-legend.innerHTML = ORDER.map(s =>
-  `<button data-s="${s}" aria-pressed="true"><span class="key s-${s}"></span>${STATUS[s].label}
-   <span class="n">${fmt(D.statuses[s]||0)}</span></button>`).join('');
-legend.addEventListener('click', e => {
-  const b = e.target.closest('button'); if(!b) return;
-  const s = b.dataset.s;
-  if(active.has(s) && active.size===ORDER.length) active = new Set([s]);
-  else if(active.has(s)){ active.delete(s); if(!active.size) active = new Set(ORDER); }
-  else active.add(s);
-  legend.querySelectorAll('button').forEach(x => {
-    const on = active.has(x.dataset.s);
-    x.setAttribute('aria-pressed', on); x.classList.toggle('off', !on);
+  const H = 28, GAP = 2;
+  let width = 0, hover = null, spans = [];
+  function layoutParts(){
+    // widths share what is left after the 2px surface gaps between segments
+    const usable = Math.max(0, width - GAP*(parts.length - 1));
+    let x = 0;
+    spans = parts.map((p,k) => {
+      const w = k === parts.length - 1 ? width - x : Math.max(2, usable * p.n / total);
+      const span = {x, w, p};
+      x += w + GAP;
+      return span;
+    });
+  }
+  function svg(){
+    const f = n => n.toFixed(1);
+    let out = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${H}" viewBox="0 0 ${width} ${H}" aria-hidden="true">`
+            + `<defs><clipPath id="supportClip"><rect x="0" y="0" width="${width}" height="${H}" rx="4" ry="4"/></clipPath></defs>`
+            + `<g clip-path="url(#supportClip)">`;
+    spans.forEach((sp,k) => {
+      const dim = hover != null && hover !== k ? ' fill-opacity=".45"' : '';
+      out += `<rect x="${f(sp.x)}" y="0" width="${f(sp.w)}" height="${H}" fill="${FILL[sp.p.s]}"${dim}/>`;
+    });
+    return out + '</g></svg>';
+  }
+  const draw = () => { layoutParts(); host.innerHTML = svg(); };
+  function show(k){
+    hover = k; draw();
+    const sp = spans[k];
+    tip.replaceChildren();
+    const v = document.createElement('b'); v.textContent = `${fmt(sp.p.n)} portals`;
+    tip.append(v, document.createTextNode(` · ${STATUS[sp.p.s].label} · ${pct(sp.p.n, total)}%`));
+    tip.hidden = false;
+    const w = tip.offsetWidth || 200, pad = 14;
+    const centre = pad + sp.x + sp.w/2;
+    tip.style.left = `${Math.max(0, Math.min(centre - w/2, box.clientWidth - w))}px`;
+  }
+  function hide(){ hover = null; tip.hidden = true; draw(); }
+  box.addEventListener('pointermove', e => {
+    const x = e.clientX - host.getBoundingClientRect().left;
+    const k = spans.findIndex(sp => x >= sp.x - GAP && x <= sp.x + sp.w + GAP);
+    if(k >= 0) show(k);
   });
-  const all = active.size===ORDER.length;
-  strip.querySelectorAll('.tile').forEach(t =>
-    t.classList.toggle('dim', !all && !active.has(fleetOrder[+t.dataset.ix].s)));
-  renderTable();
-});
+  box.addEventListener('pointerleave', () => { if(document.activeElement !== box) hide(); });
+  box.addEventListener('focus', () => show(hover ?? 0));
+  box.addEventListener('blur', hide);
+  box.addEventListener('keydown', e => {
+    const k = hover ?? 0;
+    const next = {ArrowLeft:k-1, ArrowRight:k+1, Home:0, End:spans.length-1}[e.key];
+    if(next == null) return;
+    e.preventDefault();
+    show(Math.max(0, Math.min(spans.length - 1, next)));
+  });
+  const resize = () => {
+    const w = Math.round(host.clientWidth);
+    if(w && w !== width){ width = w; hover == null ? draw() : show(hover); }
+  };
+  width = Math.round(host.clientWidth) || 720;
+  draw();
+  if(typeof ResizeObserver === 'function') new ResizeObserver(resize).observe(host);
+  else window.addEventListener('resize', resize);
+})();
 
 /* ---------- ledger ---------- */
 let evKind = 'all', evQuery = '';
@@ -907,7 +1018,7 @@ function renderExts(){
 ranks.addEventListener('click', e => {
   const b = e.target.closest('.rank'); if(!b) return;
   selectedExt = selectedExt === b.dataset.e ? null : b.dataset.e;
-  renderExts(); renderPairs(); renderTable();
+  renderExts(); renderPairs();
 });
 moreBtn.addEventListener('click', () => {
   const n = extList().length; extLimit = extLimit >= n ? 25 : n; renderExts();
@@ -950,12 +1061,10 @@ byId('famRows').innerHTML = D.families.map(([f,n]) =>
   `<div class="kv"><b>${f.replace('ckanext-','')}</b><span class="v">${fmt(n)} · ${pct(n,D.with_ext)}%</span></div>`).join('');
 
 /* ---------- version spread ---------- */
-const byBranch = {};
-LATEST_SET.forEach(i => {
-  if(!i.b) return;
-  (byBranch[i.b] ||= {current:0, behind:0, eol:0, unknown:0, total:0});
-  byBranch[i.b][i.s]++; byBranch[i.b].total++;
-});
+/* Published per branch by the pipeline. The page used to walk the instance
+   list to build this, which meant every portal had to carry its own branch
+   and status. */
+const byBranch = D.branch_status || {};
 const branchMax = Math.max(1, ...Object.values(byBranch).map(b => b.total));
 byId('branchRows').innerHTML = Object.entries(byBranch)
   .sort((a,b) => b[1].total-a[1].total).map(([b,v]) => `
@@ -965,6 +1074,18 @@ byId('branchRows').innerHTML = Object.entries(byBranch)
       ${ORDER.map(s => v[s] ? `<i class="s-${s}" style="width:${100*v[s]/v.total}%"></i>` : '').join('')}
     </div>
   </div>`).join('');
+/* CKAN patches every supported branch on the same day, so the branches in its
+   most recent release are the supported ones, and their versions from that day
+   are the latest patches. Read from the release table rather than written into
+   the page, which is how the old "2.10 and 2.11" went stale. */
+(function(){
+  const rel = D.releases || [];
+  if(!rel.length) return;
+  const newest = rel.reduce((d, r) => r.d > d ? r.d : d, '');
+  const vs = rel.filter(r => r.d === newest).map(r => r.v).sort((a,b) => verNum(b) - verNum(a));
+  const list = vs.length > 1 ? `${vs.slice(0,-1).join(', ')} and ${vs[vs.length-1]}` : vs[0];
+  byId('verHint').textContent = `Latest supported releases: CKAN ${list}.`;
+})();
 byId('verRows').innerHTML = D.versions.slice(0,14).map(([v,n]) =>
   `<div class="kv"><b>${v}</b><span class="v">${fmt(n)}</span></div>`).join('');
 
@@ -986,33 +1107,30 @@ byId('flakyRows').innerHTML = D.instances
 /* ---------- table ---------- */
 const tbody = byId('tbody'), tblCount = byId('tblCount');
 let sortKey = 'd', sortDir = -1, tblQuery = '', tblLimit = 25, tblRows = 0;
-const SV = {n:i=>i.n, v:i=>verKey(i).reduce((a,x)=>a*1000+x+1,0), up:i=>i.of?i.seen/i.of:-1,
-            d:i=>i.d, growth:i=>i.growth, x:i=>i.e.length};
+const SV = {n:i=>i.n, up:i=>i.of?i.seen/i.of:-1, d:i=>i.d, growth:i=>i.growth, x:i=>i.x||0};
 function renderTable(){
-  let rows = D.instances.filter(i => active.has(i.s));
-  if(selectedExt){ const id = NAMES.indexOf(selectedExt); rows = rows.filter(i => i.e.includes(id)); }
+  /* No status or extension filter, and no version or plugin search: a portal
+     directory is the catalogue's own business, but pairing a name with the
+     software it runs and letting the reader filter by "end of life" is not. */
+  let rows = D.instances;
   if(tblQuery) rows = rows.filter(i =>
-    i.n.includes(tblQuery) || (i.h||'').includes(tblQuery) || (i.v||'').includes(tblQuery) ||
-    i.e.some(id => NAMES[id].includes(tblQuery)));
+    i.n.includes(tblQuery) || (i.h||'').includes(tblQuery));
   const get = SV[sortKey];
   rows.sort((a,b) => { const A = get(a), B = get(b);
     return typeof A === 'string' ? sortDir*A.localeCompare(B) : sortDir*(A-B); });
   tbody.innerHTML = rows.slice(0, tblLimit).map(i => `
     <tr>
-      <td class="nm"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a>${i.gone?' <span class="pill p-unknown">dropped</span>':''}
-        ${i.e.length?`<span class="ex">${i.e.slice(0,5).map(id=>NAMES[id]).join(' · ')}${i.e.length>5?' …':''}</span>`:''}</td>
-      <td><span class="pill p-${i.s}">${i.v||'—'}</span></td>
+      <td class="nm"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a>${i.gone?' <span class="pill p-unknown">dropped</span>':''}</td>
       <td class="hide-s"><span class="uptime" title="${i.seen}/${i.of} crawls">${i.up.map(u=>`<i class="${u?'':'down'}"></i>`).join('')}</span></td>
       <td class="num">${fmt(i.d)}</td>
       <td class="num hide-s"><span class="delta ${i.growth>0?'up':i.growth<0?'dn':'flat'}">${i.growth?(i.growth>0?'+':'')+fmt(i.growth):'·'}</span></td>
-      <td class="num">${i.e.length||'—'}</td>
+      <td class="num">${i.x||'—'}</td>
     </tr>`).join('');
   byId('tblEmpty').hidden = rows.length > 0;
   tblRows = rows.length;
   const shown = Math.min(rows.length, tblLimit);
   tblCount.textContent = `${fmt(rows.length)} instance${rows.length===1?'':'s'}`
-    + (rows.length > shown ? ` · showing first ${fmt(shown)}` : '')
-    + (selectedExt ? ` · running ${selectedExt}` : '');
+    + (rows.length > shown ? ` · showing first ${fmt(shown)}` : '');
   const more = byId('tblMoreBtn');
   more.parentElement.hidden = rows.length <= 25;
   more.textContent = tblLimit >= rows.length ? 'show fewer' : `show all ${fmt(rows.length)} →`;

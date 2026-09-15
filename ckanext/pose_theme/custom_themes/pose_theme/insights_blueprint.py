@@ -31,8 +31,9 @@ insights = Blueprint('insights', __name__)
 NAV = [
     ('overview', '/insights', 'Overview', [
         ('weekly', 'Week by week', 'chart-column'),
-        ('fleet', 'The fleet', 'server'),
+        ('support', 'Support status', 'bars-progress'),
         ('versions', 'Version spread', 'code-branch'),
+        ('reliability', 'Sites crawl reliability', 'heart-pulse'),
     ]),
     ('trends', '/insights/trends', 'Trends', [
         ('changes', 'Version and plugin changes', 'clock-rotate-left'),
@@ -42,7 +43,6 @@ NAV = [
     ]),
     ('instances', '/insights/instances', 'Instances', [
         ('instances', 'CKAN instances', 'table'),
-        ('reliability', 'Sites crawl reliability', 'heart-pulse'),
         ('ext-all', 'Extensions', 'list-ul'),
     ]),
     ('discussion', '/insights/discussion', 'Discussion', []),
@@ -66,7 +66,7 @@ def _render(tab):
 
 @insights.route('/insights')
 def insights_view():
-    """Render the overview screen: headline stats, weekly crawl, fleet, versions."""
+    """Render the overview screen: headline stats, weekly crawl, support status, versions, crawl reliability."""
     return _render('overview')
 
 
@@ -78,7 +78,7 @@ def insights_trends():
 
 @insights.route('/insights/instances')
 def insights_instances():
-    """Render the instances screen: instance table and crawl reliability."""
+    """Render the instances screen: instance table and extensions."""
     return _render('instances')
 
 
