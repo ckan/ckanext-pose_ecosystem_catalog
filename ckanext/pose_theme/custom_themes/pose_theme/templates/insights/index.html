@@ -121,6 +121,23 @@ section{margin-bottom:56px}
 .relmark.near-end b{left:auto;right:0;transform:none}
 .xlabel{grid-row:3;padding-top:8px;text-align:center;font-family:var(--mono);font-size:.75rem;
   color:var(--mute);white-space:nowrap}
+/* support status. One part-to-whole bar for the latest crawl, drawn as SVG at
+   the measured width, with the values in a legend beside it so nothing
+   depends on hovering. */
+.support-chart{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 14px 14px;outline:none}
+.support-chart:focus-visible{box-shadow:0 0 0 2px var(--teal)}
+.support-host svg{display:block}
+.support-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px 24px;margin-top:14px}
+.support-legend div{display:flex;align-items:baseline;gap:8px;min-width:0}
+.support-legend .key{align-self:center}
+.support-legend b{font-weight:500;color:var(--ink)}
+.support-legend span.v{margin-left:auto;font-family:var(--mono);font-size:.875rem;color:var(--mute);white-space:nowrap}
+.support-note{margin:10px 0 0;font-size:.875rem;color:var(--mute)}
+.support-tip{position:absolute;top:-6px;left:0;transform:translateY(-100%);pointer-events:none;background:var(--panel);
+  border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:.875rem;color:var(--mute);
+  white-space:nowrap;box-shadow:0 4px 14px rgba(16,24,40,.08)}
+.support-tip b{color:var(--ink);font-weight:600}
+
 /* chart legend: a key, not a control. */
 .legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 10px;font-size:1rem;align-items:center}
 .legend b{display:flex;align-items:center;gap:7px;font-weight:400}
@@ -513,6 +530,19 @@ footer a code{color:inherit}
 </section>
 
 
+<section id="support" data-tab="overview">
+  <div class="shead">
+    <h2>Support status</h2>
+    <p>Where the portals that reported a version stand in the latest crawl, by the support status of the CKAN release they run. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="Support status. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+  </div>
+  <div class="support-chart" id="supportChart" tabindex="0" role="group">
+    <div class="support-host" id="supportHost"></div>
+    <div class="support-tip" id="supportTip" aria-live="polite" hidden></div>
+    <div class="support-legend" id="supportLegend"></div>
+    <p class="support-note" id="supportNote"></p>
+  </div>
+</section>
+
 <section id="versions" data-tab="overview">
   <div class="shead">
     <h2>Version spread</h2>
@@ -809,6 +839,93 @@ chart.addEventListener('mouseover', e => { const c = e.target.closest('.col'); i
 showWeek(NW-1);
 // the track is wider than the panel and the newest crawl is the interesting end
 byId('chartScroll').scrollLeft = byId('chartScroll').scrollWidth;
+
+/* ---------- support status ---------- */
+/* One bar, the latest crawl, split by support status: an overall picture of
+   where the fleet stands, not a trend. The denominator is the portals that
+   reported a version, the same one the headline stats use, and the portals
+   that did not report are stated beside it rather than drawn as a segment. */
+(function renderSupport(){
+  const box = byId('supportChart'), host = byId('supportHost'), tip = byId('supportTip');
+  const STATES = ['current','behind','eol'];
+  const FILL = {current:'rgba(58,131,58,.8)', behind:'rgba(253,126,20,.8)', eol:'rgba(217,83,79,.8)'};
+  const total = reporting(latest);
+  const parts = STATES.map(s => ({s, n: latest[s]||0, share: total ? 100*(latest[s]||0)/total : 0}))
+                      .filter(p => p.n > 0);
+  if(!total){
+    byId('supportNote').textContent = 'No portal reported a version in the latest crawl.';
+    return;
+  }
+  byId('supportLegend').innerHTML = parts.map(p =>
+    `<div><span class="key s-${p.s}"></span><b>${STATUS[p.s].label}</b>`
+    + `<span class="v">${fmt(p.n)} · ${pct(p.n, total)}%</span></div>`).join('');
+  byId('supportNote').textContent =
+    `${fmt(total)} of ${fmt(latest.rows)} portals reported a version in the crawl of ${latest.w}; `
+    + `${fmt((latest.unknown||0))} did not and are not counted here.`;
+  box.setAttribute('aria-label', `Support status in the crawl of ${latest.w}: `
+    + parts.map(p => `${STATUS[p.s].label} ${fmt(p.n)}, ${pct(p.n, total)}%`).join('; ') + '.');
+
+  const H = 28, GAP = 2;
+  let width = 0, hover = null, spans = [];
+  function layoutParts(){
+    // widths share what is left after the 2px surface gaps between segments
+    const usable = Math.max(0, width - GAP*(parts.length - 1));
+    let x = 0;
+    spans = parts.map((p,k) => {
+      const w = k === parts.length - 1 ? width - x : Math.max(2, usable * p.n / total);
+      const span = {x, w, p};
+      x += w + GAP;
+      return span;
+    });
+  }
+  function svg(){
+    const f = n => n.toFixed(1);
+    let out = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${H}" viewBox="0 0 ${width} ${H}" aria-hidden="true">`
+            + `<defs><clipPath id="supportClip"><rect x="0" y="0" width="${width}" height="${H}" rx="4" ry="4"/></clipPath></defs>`
+            + `<g clip-path="url(#supportClip)">`;
+    spans.forEach((sp,k) => {
+      const dim = hover != null && hover !== k ? ' fill-opacity=".45"' : '';
+      out += `<rect x="${f(sp.x)}" y="0" width="${f(sp.w)}" height="${H}" fill="${FILL[sp.p.s]}"${dim}/>`;
+    });
+    return out + '</g></svg>';
+  }
+  const draw = () => { layoutParts(); host.innerHTML = svg(); };
+  function show(k){
+    hover = k; draw();
+    const sp = spans[k];
+    tip.replaceChildren();
+    const v = document.createElement('b'); v.textContent = `${fmt(sp.p.n)} portals`;
+    tip.append(v, document.createTextNode(` · ${STATUS[sp.p.s].label} · ${pct(sp.p.n, total)}%`));
+    tip.hidden = false;
+    const w = tip.offsetWidth || 200, pad = 14;
+    const centre = pad + sp.x + sp.w/2;
+    tip.style.left = `${Math.max(0, Math.min(centre - w/2, box.clientWidth - w))}px`;
+  }
+  function hide(){ hover = null; tip.hidden = true; draw(); }
+  box.addEventListener('pointermove', e => {
+    const x = e.clientX - host.getBoundingClientRect().left;
+    const k = spans.findIndex(sp => x >= sp.x - GAP && x <= sp.x + sp.w + GAP);
+    if(k >= 0) show(k);
+  });
+  box.addEventListener('pointerleave', () => { if(document.activeElement !== box) hide(); });
+  box.addEventListener('focus', () => show(hover ?? 0));
+  box.addEventListener('blur', hide);
+  box.addEventListener('keydown', e => {
+    const k = hover ?? 0;
+    const next = {ArrowLeft:k-1, ArrowRight:k+1, Home:0, End:spans.length-1}[e.key];
+    if(next == null) return;
+    e.preventDefault();
+    show(Math.max(0, Math.min(spans.length - 1, next)));
+  });
+  const resize = () => {
+    const w = Math.round(host.clientWidth);
+    if(w && w !== width){ width = w; hover == null ? draw() : show(hover); }
+  };
+  width = Math.round(host.clientWidth) || 720;
+  draw();
+  if(typeof ResizeObserver === 'function') new ResizeObserver(resize).observe(host);
+  else window.addEventListener('resize', resize);
+})();
 
 /* ---------- ledger ---------- */
 let evKind = 'all', evQuery = '';
