@@ -118,25 +118,22 @@ section{margin-bottom:56px}
 .relmark.near-end b{left:auto;right:0;transform:none}
 .xlabel{grid-row:3;padding-top:8px;text-align:center;font-family:var(--mono);font-size:.75rem;
   color:var(--mute);white-space:nowrap}
-/* past end of life. One line and its figures; the chart is drawn as SVG at the
-   measured width so text stays at its real size instead of scaling with a
-   viewBox. */
-.share-figs{display:flex;flex-wrap:wrap;gap:14px 36px;margin:4px 0 16px}
-.share-fig b{display:block;font-size:2rem;font-weight:500;line-height:1.1;color:var(--ink)}
-.share-fig b.good{color:var(--teal)}
-.share-fig b.bad{color:var(--rust)}
-.share-fig small{display:block;margin-top:4px;font-size:.875rem;color:var(--mute);max-width:32ch;line-height:1.4}
-.share-chart{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 6px 4px;outline:none}
-.share-chart:focus-visible{box-shadow:0 0 0 2px var(--teal)}
-.share-host svg{display:block}
-.share-tip{position:absolute;top:12px;left:0;pointer-events:none;background:var(--panel);border:1px solid var(--line);
-  border-radius:6px;padding:8px 10px;font-size:.875rem;color:var(--mute);line-height:1.45;
-  box-shadow:0 4px 14px rgba(16,24,40,.08);max-width:min(260px,calc(100% - 12px))}
-.share-tip b{font-size:1rem;font-weight:600;color:var(--ink)}
-.share-table{margin-top:12px}
-.share-table summary{cursor:pointer;font-size:.875rem;color:var(--mute);width:max-content}
-.share-table summary:hover,.share-table summary:focus-visible{color:var(--ink)}
-.share-table th{cursor:default}
+/* support status. One part-to-whole bar for the latest crawl, drawn as SVG at
+   the measured width, with the values in a legend beside it so nothing
+   depends on hovering. */
+.support-chart{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 14px 14px;outline:none}
+.support-chart:focus-visible{box-shadow:0 0 0 2px var(--teal)}
+.support-host svg{display:block}
+.support-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px 24px;margin-top:14px}
+.support-legend div{display:flex;align-items:baseline;gap:8px;min-width:0}
+.support-legend .key{align-self:center}
+.support-legend b{font-weight:500;color:var(--ink)}
+.support-legend span.v{margin-left:auto;font-family:var(--mono);font-size:.875rem;color:var(--mute);white-space:nowrap}
+.support-note{margin:10px 0 0;font-size:.875rem;color:var(--mute)}
+.support-tip{position:absolute;top:-6px;left:0;transform:translateY(-100%);pointer-events:none;background:var(--panel);
+  border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:.875rem;color:var(--mute);
+  white-space:nowrap;box-shadow:0 4px 14px rgba(16,24,40,.08)}
+.support-tip b{color:var(--ink);font-weight:600}
 
 /* chart legend: a key, not a control. */
 .legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 10px;font-size:1rem;align-items:center}
@@ -530,25 +527,17 @@ footer a code{color:inherit}
 </section>
 
 
-<section id="eol-share" data-tab="overview">
+<section id="support" data-tab="overview">
   <div class="shead">
-    <h2>Past end of life</h2>
-    <p>Share of the portals that reported a version whose CKAN branch no longer receives patches, one point per week from its last usable crawl. Portals that did not answer are left out of the count, so a crawl that reached fewer of them does not read as movement. The catalogue also gained portals over the period, so some of the change is new listings rather than upgrades. The break in the line is a stretch of failed crawls. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="Past end of life. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <h2>Support status</h2>
+    <p>Where the portals that reported a version stand in the latest crawl, by the support status of the CKAN release they run. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="Support status. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
-  <div class="share-figs" id="shareFigs"></div>
-  <div class="share-chart" id="shareChart" tabindex="0" role="group" aria-describedby="shareFigs">
-    <div class="share-host" id="shareHost"></div>
-    <div class="share-tip" id="shareTip" aria-live="polite" hidden></div>
+  <div class="support-chart" id="supportChart" tabindex="0" role="group">
+    <div class="support-host" id="supportHost"></div>
+    <div class="support-tip" id="supportTip" aria-live="polite" hidden></div>
+    <div class="support-legend" id="supportLegend"></div>
+    <p class="support-note" id="supportNote"></p>
   </div>
-  <details class="share-table">
-    <summary>Show the numbers</summary>
-    <div class="tbl-scroll">
-      <table>
-        <thead><tr><th>Crawl</th><th class="num">Reporting a version</th><th class="num">Past end of life</th><th class="num">Share</th></tr></thead>
-        <tbody id="shareRows"></tbody>
-      </table>
-    </div>
-  </details>
 </section>
 
 <section id="versions" data-tab="overview">
@@ -849,224 +838,86 @@ showWeek(NW-1);
 // the track is wider than the panel and the newest crawl is the interesting end
 byId('chartScroll').scrollLeft = byId('chartScroll').scrollWidth;
 
-/* ---------- past end of life ---------- */
-/* One line: the share of portals reporting a version that run an end-of-life
-   branch, per usable crawl.
-
-   Why a share and not counts: the week-by-week columns move with how many
-   portals answered, and between 33 and 660 were silent in a single crawl, so
-   no trend in the mix can be read off them. Divided by the portals that
-   reported, the mix is comparable crawl to crawl.
-
-   Why one line: among those portals the three statuses sum to 100%, so the
-   supported share is exactly the complement and one series carries the whole
-   split. Three status-coloured lines on one plot also fail colour-blind
-   separation (rust against green is dE 5.5 under protanopia) and rust against
-   orange is under the normal-vision floor. The current/behind split stays in
-   the week-by-week chart, with its release markers. */
-const SHARE_MIN = 50;  // fewer versions than this in one crawl is a crawler failure
-const SHARE_C = {line:'#d9534f', ink:'#101828', mute:'#667085', grid:'#f2f4f7',
-                 rule:'#e4e7ec', gap:'#f7f8fa', rel:'#98a2b3', panel:'#ffffff'};
-const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const usableCrawl = t => t.q === 'ok' && !t.sus && reporting(t) >= SHARE_MIN;
-/* One point per ISO week, from the last usable crawl in it. The crawler
-   sometimes ran several times in a few days (four crawls between 04-16 and
-   04-21), and a line through all of them draws re-crawl jitter that reads as
-   a glitch rather than a trend. A release note on any crawl in the week is
-   carried onto the point that represents it. */
-const DAY = 86400000;
-const sharePts = [];
-D.timeline.forEach((t,i) => {
-  if(!usableCrawl(t)) return;
-  const ms = Date.parse(t.w + 'T00:00:00Z');
-  const wk = ms - ((new Date(ms).getUTCDay() + 6) % 7) * DAY;
-  const n = reporting(t);
-  const point = {i, w:t.w, ms, wk, eol:t.eol||0, n, v:100*(t.eol||0)/n,
-                 rel: relAt[i] ? relAt[i].vs.slice() : []};
-  const prev = sharePts[sharePts.length-1];
-  if(prev && prev.wk === wk){
-    point.i0 = prev.i0;
-    point.rel = prev.rel.concat(point.rel);
-    sharePts[sharePts.length-1] = point;
-  } else {
-    point.i0 = i;
-    sharePts.push(point);
-  }
-});
-// A run of unusable crawls between two usable weeks breaks the line rather
-// than drawing a slope through weeks nobody measured.
-const shareSegs = [], shareGaps = [];
-sharePts.forEach((p,k) => {
-  const prev = sharePts[k-1];
-  if(!prev || D.timeline.slice(prev.i+1, p.i0).some(t => !usableCrawl(t))) {
-    if(prev) shareGaps.push([prev, p]);
-    shareSegs.push([p]);
-  } else shareSegs[shareSegs.length-1].push(p);
-});
-
-function shareGeom(width){
-  const H = 250, T = 30, B = 28, L = 46, R = 62;
-  const pw = Math.max(60, width - L - R), ph = H - T - B;
-  const t0 = sharePts[0].ms, t1 = sharePts[sharePts.length-1].ms;
-  const vals = sharePts.map(p => p.v);
-  // A line need not start at zero, but its range should be honest about how
-  // far the share actually moved: ten points of headroom either side.
-  const lo = Math.max(0, Math.floor(Math.min(...vals)/10)*10 - 10);
-  const hi = Math.min(100, Math.ceil(Math.max(...vals)/10)*10 + 10);
-  return {H, T, B, L, R, pw, ph, lo, hi, t0, t1,
-    X: ms => L + pw*(ms - t0)/((t1 - t0) || 1),
-    Y: v => T + ph*(hi - v)/((hi - lo) || 1)};
-}
-
-function shareSVG(width, hover){
-  const g = shareGeom(width), C = SHARE_C, f = n => n.toFixed(1);
-  let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${g.H}" viewBox="0 0 ${width} ${g.H}" `
-        + `font-family="Satoshi, system-ui, -apple-system, 'Segoe UI', sans-serif" aria-hidden="true">`;
-  // failed-crawl bands first, so everything else draws over them
-  shareGaps.forEach(([a,b]) => {
-    const x0 = g.X(a.ms), x1 = g.X(b.ms);
-    s += `<rect x="${f(x0)}" y="${g.T}" width="${f(x1-x0)}" height="${g.ph}" fill="${C.gap}"/>`;
-    if(x1 - x0 > 90) s += `<text x="${f((x0+x1)/2)}" y="${g.T + g.ph - 10}" text-anchor="middle" font-size="11" fill="${C.mute}">crawls failed</text>`;
-  });
-  // horizontal grid, solid hairlines, baseline one step darker
-  for(let v = g.lo; v <= g.hi; v += 10){
-    const y = f(g.Y(v));
-    s += `<line x1="${g.L}" x2="${g.L + g.pw}" y1="${y}" y2="${y}" stroke="${v === g.lo ? C.rule : C.grid}" stroke-width="1"/>`
-       + `<text x="${g.L - 8}" y="${y}" dy="4" text-anchor="end" font-size="11" fill="${C.mute}">${v}%</text>`;
-  }
-  // month ticks, thinned to fit, with the year wherever it changes
-  let m = new Date(g.t0); m = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 1));
-  const months = [];
-  while(m.getTime() <= g.t1){ months.push(m); m = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 1)); }
-  const perMonth = months.length > 1 ? g.X(months[1].getTime()) - g.X(months[0].getTime()) : g.pw;
-  const step = Math.max(1, Math.ceil(70 / perMonth));
-  let lastYear = null;
-  months.forEach((md,k) => {
-    if(k % step) return;
-    const x = g.X(md.getTime());
-    if(x > g.L + g.pw - 20) return;
-    const yr = md.getUTCFullYear();
-    const label = yr !== lastYear ? `${MON[md.getUTCMonth()]} ${yr}` : MON[md.getUTCMonth()];
-    lastYear = yr;
-    s += `<line x1="${f(x)}" x2="${f(x)}" y1="${g.T + g.ph}" y2="${g.T + g.ph + 4}" stroke="${C.rule}" stroke-width="1"/>`
-       + `<text x="${f(x)}" y="${g.T + g.ph + 18}" text-anchor="middle" font-size="11" fill="${C.mute}">${label}</text>`;
-  });
-  // releases: the same dashed markers as the week-by-week chart. Labels are
-  // measured before they are placed: the full label if it clears the one
-  // before it, the version alone if that fits, otherwise no label and the
-  // tooltip carries it. Never two labels on top of each other.
-  const charW = 6.4;  // average advance of an 11px sans digit or capital
-  let labelEnd = -Infinity;
-  Object.entries(RELS).sort((a,b) => a[0] < b[0] ? -1 : 1).forEach(([day, vs]) => {
-    const ms = Date.parse(day + 'T00:00:00Z');
-    // A release in the first plotted week belongs to it even when it landed
-    // before that week's last crawl, so it pins to the left edge.
-    if(ms < sharePts[0].wk || ms > g.t1) return;
-    const x = Math.max(g.L, g.X(ms));
-    s += `<line x1="${f(x)}" x2="${f(x)}" y1="${g.T}" y2="${g.T + g.ph}" stroke="${C.rel}" stroke-width="1" stroke-dasharray="3 3"/>`;
-    const sorted = vs.slice().sort((a,b) => verNum(b) - verNum(a));
-    const anchor = x < g.L + 36 ? 'start' : x > g.L + g.pw - 36 ? 'end' : 'middle';
-    const candidates = [`CKAN ${sorted[0]}${sorted.length > 1 ? ` +${sorted.length-1}` : ''}`, sorted[0]];
-    for(const text of candidates){
-      const w = text.length * charW;
-      const x0 = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w/2;
-      if(x0 < labelEnd + 10 || x0 < 0 || x0 + w > width) continue;
-      s += `<text x="${f(x)}" y="${g.T - 10}" text-anchor="${anchor}" font-size="11" fill="${C.mute}">${text}</text>`;
-      labelEnd = x0 + w;
-      break;
-    }
-  });
-  // the line, broken at failed crawls
-  shareSegs.forEach(seg => {
-    if(seg.length === 1){
-      s += `<circle cx="${f(g.X(seg[0].ms))}" cy="${f(g.Y(seg[0].v))}" r="2.5" fill="${C.line}"/>`;
-      return;
-    }
-    s += `<path d="${seg.map((p,k) => `${k ? 'L' : 'M'}${f(g.X(p.ms))} ${f(g.Y(p.v))}`).join('')}" fill="none" `
-       + `stroke="${C.line}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
-  });
-  // selective direct labels: where it started and where it is now
-  const first = sharePts[0], last = sharePts[sharePts.length-1];
-  const dot = p => `<circle cx="${f(g.X(p.ms))}" cy="${f(g.Y(p.v))}" r="4" fill="${C.line}" stroke="${C.panel}" stroke-width="2"/>`;
-  s += dot(first) + dot(last)
-     + `<text x="${f(g.X(first.ms) + 2)}" y="${f(g.Y(first.v) - 12)}" font-size="12" font-weight="600" fill="${C.ink}">${first.v.toFixed(1)}%</text>`
-     + `<text x="${f(g.X(last.ms) + 10)}" y="${f(g.Y(last.v) + 4)}" font-size="12" font-weight="600" fill="${C.ink}">${last.v.toFixed(1)}%</text>`;
-  // crosshair on the hovered crawl
-  if(hover != null){
-    const p = sharePts[hover], x = f(g.X(p.ms)), y = f(g.Y(p.v));
-    s += `<line x1="${x}" x2="${x}" y1="${g.T}" y2="${g.T + g.ph}" stroke="${C.ink}" stroke-opacity=".35" stroke-width="1"/>`
-       + `<circle cx="${x}" cy="${y}" r="4.5" fill="${C.line}" stroke="${C.panel}" stroke-width="2"/>`;
-  }
-  return s + '</svg>';
-}
-
-(function renderShare(){
-  const figs = byId('shareFigs'), box = byId('shareChart'), host = byId('shareHost'), tip = byId('shareTip');
-  if(sharePts.length < 2){
-    figs.textContent = 'Not enough usable crawls yet to show a trend.';
-    box.hidden = true;
+/* ---------- support status ---------- */
+/* One bar, the latest crawl, split by support status: an overall picture of
+   where the fleet stands, not a trend. The denominator is the portals that
+   reported a version, the same one the headline stats use, and the portals
+   that did not report are stated beside it rather than drawn as a segment. */
+(function renderSupport(){
+  const box = byId('supportChart'), host = byId('supportHost'), tip = byId('supportTip');
+  const STATES = ['current','behind','eol'];
+  const FILL = {current:'rgba(58,131,58,.8)', behind:'rgba(253,126,20,.8)', eol:'rgba(217,83,79,.8)'};
+  const total = reporting(latest);
+  const parts = STATES.map(s => ({s, n: latest[s]||0, share: total ? 100*(latest[s]||0)/total : 0}))
+                      .filter(p => p.n > 0);
+  if(!total){
+    byId('supportNote').textContent = 'No portal reported a version in the latest crawl.';
     return;
   }
-  const first = sharePts[0], last = sharePts[sharePts.length-1];
-  const low = sharePts.reduce((a,p) => p.v < a.v ? p : a);
-  const delta = last.v - first.v;
-  figs.innerHTML =
-    `<div class="share-fig"><b>${last.v.toFixed(1)}%</b><small>of portals reporting a version run an end-of-life branch, ${last.w}</small></div>`
-  + `<div class="share-fig"><b class="${delta < 0 ? 'good' : delta > 0 ? 'bad' : ''}">${delta < 0 ? '−' : '+'}${Math.abs(delta).toFixed(1)} pts</b>`
-  + `<small>since the first week with version data, ${first.w}, when it was ${first.v.toFixed(1)}%</small></div>`
-  + `<div class="share-fig"><b>${low.v.toFixed(1)}%</b><small>lowest so far, ${low.w}</small></div>`;
-  box.setAttribute('aria-label',
-    `Share of portals reporting a version that run an end-of-life branch, from ${first.v.toFixed(1)}% on ${first.w} `
-    + `to ${last.v.toFixed(1)}% on ${last.w}. Use the arrow keys to step through crawls.`);
+  byId('supportLegend').innerHTML = parts.map(p =>
+    `<div><span class="key s-${p.s}"></span><b>${STATUS[p.s].label}</b>`
+    + `<span class="v">${fmt(p.n)} · ${pct(p.n, total)}%</span></div>`).join('');
+  byId('supportNote').textContent =
+    `${fmt(total)} of ${fmt(latest.rows)} portals reported a version in the crawl of ${latest.w}; `
+    + `${fmt((latest.unknown||0))} did not and are not counted here.`;
+  box.setAttribute('aria-label', `Support status in the crawl of ${latest.w}: `
+    + parts.map(p => `${STATUS[p.s].label} ${fmt(p.n)}, ${pct(p.n, total)}%`).join('; ') + '.');
 
-  byId('shareRows').innerHTML = sharePts.slice().reverse().map(p =>
-    `<tr><td class="mono">${p.w}</td><td class="num">${fmt(p.n)}</td><td class="num">${fmt(p.eol)}</td><td class="num">${p.v.toFixed(1)}%</td></tr>`
-  ).join('');
-
-  let width = 0, hover = null;
-  const draw = () => { host.innerHTML = shareSVG(width, hover); };
-  function showTip(k){
+  const H = 28, GAP = 2;
+  let width = 0, hover = null, spans = [];
+  function layoutParts(){
+    // widths share what is left after the 2px surface gaps between segments
+    const usable = Math.max(0, width - GAP*(parts.length - 1));
+    let x = 0;
+    spans = parts.map((p,k) => {
+      const w = k === parts.length - 1 ? width - x : Math.max(2, usable * p.n / total);
+      const span = {x, w, p};
+      x += w + GAP;
+      return span;
+    });
+  }
+  function svg(){
+    const f = n => n.toFixed(1);
+    let out = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${H}" viewBox="0 0 ${width} ${H}" aria-hidden="true">`
+            + `<defs><clipPath id="supportClip"><rect x="0" y="0" width="${width}" height="${H}" rx="4" ry="4"/></clipPath></defs>`
+            + `<g clip-path="url(#supportClip)">`;
+    spans.forEach((sp,k) => {
+      const dim = hover != null && hover !== k ? ' fill-opacity=".45"' : '';
+      out += `<rect x="${f(sp.x)}" y="0" width="${f(sp.w)}" height="${H}" fill="${FILL[sp.p.s]}"${dim}/>`;
+    });
+    return out + '</g></svg>';
+  }
+  const draw = () => { layoutParts(); host.innerHTML = svg(); };
+  function show(k){
     hover = k; draw();
-    const p = sharePts[k], g = shareGeom(width);
-    // Built with textContent: nothing here is markup, and a tooltip is the
-    // last place a stray angle bracket should be interpreted.
+    const sp = spans[k];
     tip.replaceChildren();
-    const v = document.createElement('b'); v.textContent = `${p.v.toFixed(1)}%`;
-    const a = document.createElement('div'); a.textContent = `${fmt(p.eol)} of ${fmt(p.n)} reporting a version`;
-    const d = document.createElement('div'); d.className = 'mono'; d.textContent = p.w;
-    tip.append(v, document.createTextNode(' past end of life'), a, d);
-    if(p.rel.length){
-      const r = document.createElement('div');
-      r.textContent = `First week after CKAN ${p.rel.sort((a,b) => verNum(b) - verNum(a)).join(', ')}`;
-      tip.append(r);
-    }
+    const v = document.createElement('b'); v.textContent = `${fmt(sp.p.n)} portals`;
+    tip.append(v, document.createTextNode(` · ${STATUS[sp.p.s].label} · ${pct(sp.p.n, total)}%`));
     tip.hidden = false;
-    const x = g.X(p.ms) + 6;  // host sits 6px inside the box
-    const w = tip.offsetWidth || 200;
-    tip.style.left = `${Math.max(6, Math.min(x + 14 + w > box.clientWidth - 6 ? x - 14 - w : x + 14, box.clientWidth - w - 6))}px`;
+    const w = tip.offsetWidth || 200, pad = 14;
+    const centre = pad + sp.x + sp.w/2;
+    tip.style.left = `${Math.max(0, Math.min(centre - w/2, box.clientWidth - w))}px`;
   }
-  function hideTip(){ hover = null; tip.hidden = true; draw(); }
-  function nearest(clientX){
-    const g = shareGeom(width), x = clientX - host.getBoundingClientRect().left;
-    let best = 0, bd = Infinity;
-    sharePts.forEach((p,k) => { const dd = Math.abs(g.X(p.ms) - x); if(dd < bd){ bd = dd; best = k; } });
-    return best;
-  }
-  // The whole plot is the hit target: the pointer only has to be nearest a crawl.
-  box.addEventListener('pointermove', e => showTip(nearest(e.clientX)));
-  box.addEventListener('pointerleave', () => { if(document.activeElement !== box) hideTip(); });
-  box.addEventListener('focus', () => showTip(hover ?? sharePts.length - 1));
-  box.addEventListener('blur', hideTip);
+  function hide(){ hover = null; tip.hidden = true; draw(); }
+  box.addEventListener('pointermove', e => {
+    const x = e.clientX - host.getBoundingClientRect().left;
+    const k = spans.findIndex(sp => x >= sp.x - GAP && x <= sp.x + sp.w + GAP);
+    if(k >= 0) show(k);
+  });
+  box.addEventListener('pointerleave', () => { if(document.activeElement !== box) hide(); });
+  box.addEventListener('focus', () => show(hover ?? 0));
+  box.addEventListener('blur', hide);
   box.addEventListener('keydown', e => {
-    const k = hover ?? sharePts.length - 1;
-    const next = {ArrowLeft:k-1, ArrowRight:k+1, Home:0, End:sharePts.length-1}[e.key];
+    const k = hover ?? 0;
+    const next = {ArrowLeft:k-1, ArrowRight:k+1, Home:0, End:spans.length-1}[e.key];
     if(next == null) return;
     e.preventDefault();
-    showTip(Math.max(0, Math.min(sharePts.length - 1, next)));
+    show(Math.max(0, Math.min(spans.length - 1, next)));
   });
   const resize = () => {
     const w = Math.round(host.clientWidth);
-    if(w && w !== width){ width = w; hover == null ? draw() : showTip(hover); }
+    if(w && w !== width){ width = w; hover == null ? draw() : show(hover); }
   };
   width = Math.round(host.clientWidth) || 720;
   draw();
