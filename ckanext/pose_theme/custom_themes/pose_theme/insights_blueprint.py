@@ -31,7 +31,6 @@ insights = Blueprint('insights', __name__)
 NAV = [
     ('overview', '/insights', 'Overview', [
         ('weekly', 'Week by week', 'chart-column'),
-        ('support', 'Support status', 'bars-progress'),
         ('versions', 'Version spread', 'code-branch'),
         ('reliability', 'Sites crawl reliability', 'heart-pulse'),
     ]),
@@ -66,7 +65,7 @@ def _render(tab):
 
 @insights.route('/insights')
 def insights_view():
-    """Render the overview screen: headline stats, weekly crawl, support status, versions, crawl reliability."""
+    """Render the overview screen: headline stats, weekly crawl, versions, crawl reliability."""
     return _render('overview')
 
 
