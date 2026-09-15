@@ -73,8 +73,11 @@ section{margin-bottom:56px}
 /* Right-aligned only while it sits beside the heading. .shead wraps, and a
    wrapped paragraph that keeps text-align:right ends up ragged-left in the
    middle of the page, which reads as a layout bug. */
-.shead p{margin:0;font-size:1rem;color:var(--mute);flex:1 1 40ch;min-width:0;max-width:66ch;line-height:1.5;text-align:left}
-@media (min-width:1200px){.shead p{text-align:right}}
+/* Always pinned to the right edge. Beside the heading it grows into the free
+   space and right-aligns; when it wraps onto its own line at narrow widths or
+   high zoom, it grows to 66ch and margin-left:auto takes what is left, so it
+   stays against the right edge instead of falling back to the left. */
+.shead p{margin:0 0 0 auto;font-size:1rem;color:var(--mute);flex:1 1 40ch;min-width:0;max-width:66ch;line-height:1.5;text-align:right}
 .cols{display:grid;grid-template-columns:1.35fr 1fr;gap:34px;align-items:start}
 /* grid and flex items default to min-width:auto, so one long string in a card
    pushes the whole column wider than its track */
@@ -391,7 +394,7 @@ footer a code{color:inherit}
 <section id="weekly" data-tab="overview">
   <div class="shead">
     <h2>Week by week</h2>
-    <p>One column per archived crawl, split by support status as it stood that week: a portal counts as current if it ran the newest patch CKAN had shipped by then. Hatched columns are crawls that reached almost nothing, a crawler failure rather than a fleet collapse. Click a column to read its numbers, and scroll sideways for the earlier crawls. A dashed marker is the first crawl after CKAN shipped a release. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-timeline.html" target="_blank" rel="noopener" title="The fleet, week by week. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p>One column per archived crawl, split by support status as it stood that week: a portal counts as current if it ran the newest patch CKAN had shipped by then. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-timeline.html" target="_blank" rel="noopener" title="The fleet, week by week. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="legend" id="chartLegend"></div>
   <div class="chart-wrap">
@@ -474,7 +477,7 @@ footer a code{color:inherit}
 <section id="adoption" data-tab="trends">
   <div class="shead">
     <h2>Extension adoption (entry points)</h2>
-    <p id="extHint">Counts are from the latest crawl. Trend and delta come from the stable cohort, the instances that answered in every crawl of the trailing window, so movement is a real install, not a missed crawl. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-extension-adoption.html" target="_blank" rel="noopener" title="Which plugins the ecosystem runs. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p><span id="extHint">Counts are from the latest crawl. Trend and delta come from the stable cohort, the instances that answered in every crawl of the trailing window, so movement is a real install, not a missed crawl.</span> <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-extension-adoption.html" target="_blank" rel="noopener" title="Which plugins the ecosystem runs. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="cols">
     <div>
@@ -513,7 +516,7 @@ footer a code{color:inherit}
 <section id="versions" data-tab="overview">
   <div class="shead">
     <h2>Version spread</h2>
-    <p>Only the newest patch of 2.10 and 2.11 is officially supported. Everything else is on its own. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-version-spread.html" target="_blank" rel="noopener" title="Which CKAN versions are in the wild? Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p><span id="verHint">Latest supported releases.</span> <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-version-spread.html" target="_blank" rel="noopener" title="Which CKAN versions are in the wild? Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="cols">
     <div><div class="card"><h3>By release branch</h3><p class="hint">Split by patch status within each branch.</p><div id="branchRows"></div></div></div>
@@ -526,7 +529,7 @@ footer a code{color:inherit}
 <section id="reliability" data-tab="overview">
   <div class="shead">
     <h2>Sites crawl reliability</h2>
-    <p>How often each portal actually answered, counted only over the crawls that worked. Flaky endpoints are a crawler problem as much as a portal problem. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-crawl-reliability.html" target="_blank" rel="noopener" title="How reliably portals answer. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+    <p><a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-crawl-reliability.html" target="_blank" rel="noopener" title="How reliably portals answer. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="cols">
     <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
@@ -536,7 +539,6 @@ footer a code{color:inherit}
 <section id="instances" data-tab="instances">
   <div class="shead">
     <h2>CKAN instances</h2>
-    <p>Every instance the archive has seen, at its most recent crawl, with its crawl response strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name or host. Exts is how many plugins a portal reported, not which ones. Which CKAN version and which plugins a given portal runs are not shown here: the version numbers appear under Version spread as fleet-wide counts, and plugin installs under Trends as how many portals run each one.</p>
   </div>
   <div class="tblhead">
     <input type="search" id="tblSearch" placeholder="search by name or host…" aria-label="Search instances by name or host">
@@ -955,6 +957,18 @@ byId('branchRows').innerHTML = Object.entries(byBranch)
       ${ORDER.map(s => v[s] ? `<i class="s-${s}" style="width:${100*v[s]/v.total}%"></i>` : '').join('')}
     </div>
   </div>`).join('');
+/* CKAN patches every supported branch on the same day, so the branches in its
+   most recent release are the supported ones, and their versions from that day
+   are the latest patches. Read from the release table rather than written into
+   the page, which is how the old "2.10 and 2.11" went stale. */
+(function(){
+  const rel = D.releases || [];
+  if(!rel.length) return;
+  const newest = rel.reduce((d, r) => r.d > d ? r.d : d, '');
+  const vs = rel.filter(r => r.d === newest).map(r => r.v).sort((a,b) => verNum(b) - verNum(a));
+  const list = vs.length > 1 ? `${vs.slice(0,-1).join(', ')} and ${vs[vs.length-1]}` : vs[0];
+  byId('verHint').textContent = `Latest supported releases: CKAN ${list}.`;
+})();
 byId('verRows').innerHTML = D.versions.slice(0,14).map(([v,n]) =>
   `<div class="kv"><b>${v}</b><span class="v">${fmt(n)}</span></div>`).join('');
 
