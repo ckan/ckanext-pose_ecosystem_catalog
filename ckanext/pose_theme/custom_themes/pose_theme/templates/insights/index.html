@@ -118,10 +118,16 @@ section{margin-bottom:56px}
 .relmark.near-end b{left:auto;right:0;transform:none}
 .xlabel{grid-row:3;padding-top:8px;text-align:center;font-family:var(--mono);font-size:.75rem;
   color:var(--mute);white-space:nowrap}
+/* fleet band. Proportional cells, not portals: nothing to hover, nothing to
+   identify. */
+.fleet{display:flex;flex-wrap:wrap;gap:2px;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.tile{flex:1 1 9px;min-width:6px;height:16px;border-radius:1px}
+
 /* chart legend. The button variants went with the fleet strip, which was the
    only thing that used the legend as a filter; this is a key, not a control. */
 .legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 10px;font-size:1rem;align-items:center}
 .legend b{display:flex;align-items:center;gap:7px;font-weight:400}
+.legend .n{font-family:var(--mono);color:var(--mute);font-size:.875rem}
 .key{width:11px;height:11px;border-radius:3px;flex:none}
 
 .s-current{background:var(--teal-f)} .s-behind{background:var(--sand-f)}
@@ -511,6 +517,16 @@ footer a code{color:inherit}
 </section>
 
 
+<section id="fleet" data-tab="overview">
+  <div class="shead">
+    <h2>The fleet</h2>
+    <p>The latest crawl by support status, one cell per hundredth of the fleet. Deliberately not a roster: pairing a portal with the version it runs reads as a list of targets, so this says how much and not who. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="How much of the fleet runs supported software? Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="fleet" id="fleetStrip" role="img" aria-labelledby="fleetReadout"></div>
+  <div class="readout" id="fleetReadout"></div>
+</section>
+
 <section id="versions" data-tab="overview">
   <div class="shead">
     <h2>Version spread</h2>
@@ -537,7 +553,7 @@ footer a code{color:inherit}
 <section id="instances" data-tab="instances">
   <div class="shead">
     <h2>CKAN instances</h2>
-    <p>Every instance the archive has seen, at its most recent crawl, with its crawl response strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name or host. Versions and plugin lists are reported in aggregate only, never per portal.</p>
+    <p>Every instance the archive has seen, at its most recent crawl, with its crawl response strip and cohort dataset trend. <span class="pill p-unknown">dropped</span> marks the ones the latest crawl no longer lists. Search matches name or host. Which CKAN version and which plugins a given portal runs are not shown here: the version numbers appear under Version spread as fleet-wide counts, and plugin installs under Trends as how many portals run each one.</p>
   </div>
   <div class="tblhead">
     <input type="search" id="tblSearch" placeholder="search by name or host…" aria-label="Search instances by name or host">
@@ -803,6 +819,37 @@ chart.addEventListener('mouseover', e => { const c = e.target.closest('.col'); i
 showWeek(NW-1);
 // the track is wider than the panel and the newest crawl is the interesting end
 byId('chartScroll').scrollLeft = byId('chartScroll').scrollWidth;
+
+/* ---------- fleet band ---------- */
+/* A shape rather than a roster. This was one tile per instance, each carrying
+   the portal's name and exact version in a title attribute and filterable by
+   status, which is a catalogue of vulnerable portals with the search built in.
+   The payload no longer carries per-portal versions at all, so the band is
+   drawn from the aggregate: 100 cells, each one hundredth of the fleet, in
+   status order. Same headline, no names. */
+const FLEET_CELLS = 100;
+const fleetTotal = ORDER.reduce((n,s) => n + (D.statuses[s]||0), 0);
+const band = [];
+let placed = 0;
+ORDER.forEach((s,ix) => {
+  const share = D.statuses[s]||0;
+  // the last status takes the rounding remainder so the band is always full
+  const cells = ix === ORDER.length-1
+    ? FLEET_CELLS - placed
+    : Math.round(FLEET_CELLS * share / (fleetTotal||1));
+  placed += cells;
+  for(let k=0;k<cells;k++) band.push(s);
+});
+byId('fleetStrip').innerHTML = band.map(s => `<i class="tile s-${s}"></i>`).join('');
+byId('fleetReadout').innerHTML = ORDER.map(s =>
+  `<span class="pill p-${s}">${fmt(D.statuses[s]||0)} ${STATUS[s].label.toLowerCase()}</span>`
+).join(' ') + `<br><span class="ph">${fmt(fleetTotal)} portals in the latest crawl, ${pct(D.statuses.eol||0, fleetTotal)}% of them past end of life. Cells are proportions, not portals.</span>`;
+
+/* Counts only. The legend used to filter the band and the instance table by
+   status, which is the filtering this de-identification exists to remove. */
+byId('legend').innerHTML = ORDER.map(s =>
+  `<b><span class="key s-${s}"></span>${STATUS[s].label}
+   <span class="n">${fmt(D.statuses[s]||0)}</span></b>`).join('');
 
 /* ---------- ledger ---------- */
 let evKind = 'all', evQuery = '';
