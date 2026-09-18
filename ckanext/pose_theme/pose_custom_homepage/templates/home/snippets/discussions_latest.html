@@ -244,7 +244,15 @@
 .discussions-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
+  /* Column gap wide enough that the two lists read as separate panels; the
+     right edge of one list and the left edge of the next sit close together
+     otherwise, since both are full-bleed rows with no border of their own. */
+  gap: 5rem;
+}
+@media (max-width: 1400px) {
+  .discussions-columns {
+    gap: 3.5rem;
+  }
 }
 .discussions-column {
   min-width: 0;
