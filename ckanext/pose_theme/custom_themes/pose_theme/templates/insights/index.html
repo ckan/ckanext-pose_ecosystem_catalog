@@ -1065,9 +1065,18 @@ byId('famRows').innerHTML = D.families.map(([f,n]) =>
    list to build this, which meant every portal had to carry its own branch
    and status. */
 const byBranch = D.branch_status || {};
+/* Newest branch first, so the list reads 2.12, 2.11, 2.10 down to the oldest
+   still in the wild, rather than by how many portals run it.
+
+   Two buckets sit after the released branches instead of leading a descending
+   list: "other", which is the thin branches folded together and not a release
+   at all, and anything 3.x, which no portal can be running from a release yet,
+   so a dev or master build should not head the list as the newest thing. */
+const verRank = k => k === 'other' ? 1 : (parseInt(k, 10) >= 3 ? 2 : 0);
+const byVersionDesc = (a,b) => verRank(a) - verRank(b) || verNum(b) - verNum(a);
 const branchMax = Math.max(1, ...Object.values(byBranch).map(b => b.total));
 byId('branchRows').innerHTML = Object.entries(byBranch)
-  .sort((a,b) => b[1].total-a[1].total).map(([b,v]) => `
+  .sort((a,b) => byVersionDesc(a[0], b[0])).map(([b,v]) => `
   <div class="vbar">
     <div class="lbl"><span>CKAN ${b}</span><span>${fmt(v.total)}</span></div>
     <div class="track" style="width:${Math.max(8,100*v.total/branchMax)}%">
@@ -1086,8 +1095,12 @@ byId('branchRows').innerHTML = Object.entries(byBranch)
   const list = vs.length > 1 ? `${vs.slice(0,-1).join(', ')} and ${vs[vs.length-1]}` : vs[0];
   byId('verHint').textContent = `Latest supported releases: CKAN ${list}.`;
 })();
-byId('verRows').innerHTML = D.versions.slice(0,14).map(([v,n]) =>
-  `<div class="kv"><b>${v}</b><span class="v">${fmt(n)}</span></div>`).join('');
+/* The fourteen biggest buckets, listed newest version first: picked by count
+   so the list still shows what the fleet actually runs, ordered by version so
+   it reads down the releases like the branches above it. */
+byId('verRows').innerHTML = D.versions.slice(0,14)
+  .sort((a,b) => byVersionDesc(a[0], b[0]))
+  .map(([v,n]) => `<div class="kv"><b>${v}</b><span class="v">${fmt(n)}</span></div>`).join('');
 
 /* ---------- reliability ---------- */
 byId('relHint').textContent = `Across the ${NVW} crawls that returned version data.`;
