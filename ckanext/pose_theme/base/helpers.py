@@ -7,6 +7,8 @@ import string
 import threading
 import time
 from datetime import datetime, timezone
+from html import unescape
+from xml.etree import ElementTree
 
 import ckan.model as model
 
@@ -550,6 +552,24 @@ def _set_discourse_fallback_topics(topics):
     _discourse_fallback_cache['expires_at'] = time.time() + _get_discourse_topics_ttl()
 
 
+def _relative_time(date_str):
+    """Short age for a feed timestamp, e.g. 20m ago, 3h ago, 5d ago."""
+    try:
+        dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+        diff = int((datetime.now(timezone.utc) - dt).total_seconds())
+        if diff < 60:
+            return 'just now'
+        if diff < 3600:
+            return '{}m ago'.format(diff // 60)
+        if diff < 86400:
+            return '{}h ago'.format(diff // 3600)
+        if diff < 2592000:
+            return '{}d ago'.format(diff // 86400)
+        return '{}mo ago'.format(diff // 2592000)
+    except Exception:
+        return ''
+
+
 def discourse_latest_topics(num=6):
     """Fetch the latest non-pinned topics from the configured Discourse forum.
 
@@ -573,23 +593,6 @@ def discourse_latest_topics(num=6):
         if cached is not None:
             return cached[:num]
 
-
-    def _relative_time(date_str):
-        try:
-            dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-            _now = datetime.now(timezone.utc)
-            diff = int((_now - dt).total_seconds())
-            if diff < 60:
-                return 'just now'
-            if diff < 3600:
-                return '{}m ago'.format(diff // 60)
-            if diff < 86400:
-                return '{}h ago'.format(diff // 3600)
-            if diff < 2592000:
-                return '{}d ago'.format(diff // 86400)
-            return '{}mo ago'.format(diff // 2592000)
-        except Exception:
-            return ''
 
     with _discourse_cache_lock:
         # Re-check Redis inside the lock — another thread may have just refreshed
@@ -667,6 +670,150 @@ def discourse_latest_topics(num=6):
         except Exception as e:
             logger.debug("[pose_theme] Error fetching Discourse topics: %s", e)
             cached = _get_discourse_fallback_topics(allow_stale=True)
+            if cached is not None:
+                return cached[:num]
+            return []
+
+
+# GitHub Discussions has no REST endpoint and its GraphQL API rejects
+# unauthenticated calls, but every repository publishes discussions.atom, which
+# needs no token and carries title, author, avatar, timestamp and body. Reply
+# counts are the one thing the feed omits.
+_GITHUB_DISCUSSIONS_CACHE_KEY = 'github:latest_discussions'
+_DEFAULT_GITHUB_DISCUSSIONS_TTL = 900  # seconds
+_github_discussions_cache_lock = threading.Lock()
+_github_discussions_fallback_cache = {
+    'discussions': None,
+    'expires_at': 0,
+}
+
+
+def get_github_discussions_repo():
+    return config.get(
+        'ckanext.pose_theme.github_discussions_repo', 'ckan/ckan'
+    ).strip('/')
+
+
+def get_github_discussions_url():
+    return 'https://github.com/{}/discussions'.format(get_github_discussions_repo())
+
+
+def _get_github_discussions_ttl():
+    ttl = toolkit.asint(
+        config.get('ckanext.pose_theme.github_discussions_cache_age',
+                   _DEFAULT_GITHUB_DISCUSSIONS_TTL)
+    )
+    return ttl if ttl and ttl > 0 else _DEFAULT_GITHUB_DISCUSSIONS_TTL
+
+
+def _get_github_discussions_fallback(allow_stale=False):
+    if _github_discussions_fallback_cache['discussions'] is None:
+        return None
+    if allow_stale or _github_discussions_fallback_cache['expires_at'] > time.time():
+        return _github_discussions_fallback_cache['discussions']
+    return None
+
+
+def _set_github_discussions_fallback(discussions):
+    _github_discussions_fallback_cache['discussions'] = discussions
+    _github_discussions_fallback_cache['expires_at'] = (
+        time.time() + _get_github_discussions_ttl()
+    )
+
+
+def _atom_excerpt(html, limit=120):
+    """First line of an Atom entry body as plain text."""
+    text = re.sub(r'<[^>]+>', ' ', html or '')
+    text = unescape(text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text[:limit].strip()
+
+
+def github_latest_discussions(num=5):
+    """Latest discussions from the configured GitHub repository.
+
+    Cached in Redis so every homepage render does not hit github.com, with the
+    same in-process fallback and serve-stale-on-error behaviour as
+    discourse_latest_topics. TTL comes from
+    ckanext.pose_theme.github_discussions_cache_age (default 900s).
+    """
+    from urllib.request import urlopen, Request
+
+    redis = None
+    try:
+        redis = connect_to_redis()
+        cached = redis.get(_GITHUB_DISCUSSIONS_CACHE_KEY)
+        if cached is not None:
+            return json.loads(cached)[:num]
+    except Exception as e:
+        logger.debug("[pose_theme] GitHub discussions cache read failed: %s", e)
+        cached = _get_github_discussions_fallback()
+        if cached is not None:
+            return cached[:num]
+
+    with _github_discussions_cache_lock:
+        # Another thread may have refreshed while this one waited.
+        if redis is not None:
+            try:
+                cached = redis.get(_GITHUB_DISCUSSIONS_CACHE_KEY)
+                if cached is not None:
+                    return json.loads(cached)[:num]
+            except Exception:
+                redis = None
+        if redis is None:
+            cached = _get_github_discussions_fallback()
+            if cached is not None:
+                return cached[:num]
+
+        feed_url = 'https://github.com/{}/discussions.atom'.format(
+            get_github_discussions_repo())
+        atom = 'http://www.w3.org/2005/Atom'
+        media = 'http://search.yahoo.com/mrss/'
+        try:
+            req = Request(
+                feed_url,
+                headers={'Accept': 'application/atom+xml',
+                         'User-Agent': 'CKAN-pose-ecosystem-catalog/1.0'},
+            )
+            with urlopen(req, timeout=5) as response:
+                root = ElementTree.fromstring(response.read())
+
+            discussions = []
+            for entry in root.findall('{%s}entry' % atom):
+                link = entry.find('{%s}link' % atom)
+                author = entry.find('{%s}author' % atom)
+                thumb = entry.find('{%s}thumbnail' % media)
+                username = (author.findtext('{%s}name' % atom, default='')
+                            if author is not None else '')
+                avatar = thumb.get('url', '') if thumb is not None else ''
+                if not avatar and username:
+                    avatar = 'https://github.com/{}.png?size=40'.format(username)
+                discussions.append({
+                    'title': (entry.findtext('{%s}title' % atom, default='') or '').strip(),
+                    'url': link.get('href', '') if link is not None else '',
+                    'relative_time': _relative_time(
+                        entry.findtext('{%s}updated' % atom, default='')
+                        or entry.findtext('{%s}published' % atom, default='')),
+                    'author': username,
+                    'avatar_url': avatar,
+                    'excerpt': _atom_excerpt(
+                        entry.findtext('{%s}content' % atom, default='')),
+                })
+                if len(discussions) >= 20:  # cap fetch; cache the full set
+                    break
+
+            _set_github_discussions_fallback(discussions)
+            if redis is not None:
+                try:
+                    redis.set(_GITHUB_DISCUSSIONS_CACHE_KEY, json.dumps(discussions),
+                              ex=_get_github_discussions_ttl())
+                except Exception as e:
+                    logger.debug(
+                        "[pose_theme] GitHub discussions cache write failed: %s", e)
+            return discussions[:num]
+        except Exception as e:
+            logger.debug("[pose_theme] Error fetching GitHub discussions: %s", e)
+            cached = _get_github_discussions_fallback(allow_stale=True)
             if cached is not None:
                 return cached[:num]
             return []

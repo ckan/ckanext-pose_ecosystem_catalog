@@ -1,0 +1,267 @@
+{#
+  Two discussion feeds side by side: GitHub Discussions on ckan/ckan and the
+  Discourse community forum. Both columns render through the same macros, so
+  the two lists cannot drift apart visually, and each item only shows the
+  fields its source actually has. GitHub's discussions.atom carries no reply
+  count, so that line is simply absent on the left.
+#}
+{% set gh_url = h.pose_theme_get_github_discussions_url() %}
+{% set gh_discussions = h.pose_theme_get_github_discussions(5) %}
+{% set forum_url = h.pose_theme_get_discourse_url() %}
+{% set topics = h.pose_theme_get_discourse_latest(5) %}
+
+{% macro discussion_item(item) %}
+  <li class="discourse-topic-item">
+    <span class="discourse-avatars">
+      {% if item.op_avatar_url %}
+        <img src="{{ item.op_avatar_url }}" alt="{{ item.op_username }}" class="discourse-avatar discourse-avatar-op" title="{{ item.op_username }} (OP)">
+        <img src="{{ item.avatar_url }}" alt="{{ item.last_poster }}" class="discourse-avatar discourse-avatar-reply" title="{{ item.last_poster }} (latest reply)">
+      {% elif item.avatar_url %}
+        <img src="{{ item.avatar_url }}" alt="{{ item.author or item.last_poster }}" class="discourse-avatar discourse-avatar-single" title="{{ item.author or item.last_poster }}">
+      {% else %}
+        <span class="discourse-avatar-fallback"><i class="fa fa-user"></i></span>
+      {% endif %}
+    </span>
+    <div class="discourse-topic-body">
+      <a class="discourse-topic-title" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">
+        {{ item.title }}
+      </a>
+      <div class="discourse-topic-excerpt">
+        {{ item.excerpt if item.excerpt else '' }}
+      </div>
+    </div>
+    <div class="discourse-topic-side">
+      {% if item.get('reply_count') is not none %}
+        <span class="discourse-topic-replies">
+          <i class="fa fa-comment-o"></i>
+          {{ item.reply_count }} {{ 'reply' if item.reply_count == 1 else 'replies' }}
+        </span>
+      {% endif %}
+      {% if item.relative_time %}
+        <span class="discourse-topic-time">
+          <i class="fa fa-clock-o"></i> {{ item.relative_time }}
+        </span>
+      {% endif %}
+    </div>
+  </li>
+{% endmacro %}
+
+{% macro discussion_column(eyebrow, heading, url, items, cta) %}
+  <div class="discussions-column">
+    <div class="discourse-header">
+      <h4 class="heading-explanation above-heading">{{ eyebrow }}</h4>
+      <div class="discourse-title-row">
+        <h2 class="heading">{{ heading }}</h2>
+        <a href="{{ url }}" class="btn btn-default discourse-view-all" target="_blank" rel="noopener noreferrer">
+          {{ cta }} &nbsp;<i class="fa fa-external-link"></i>
+        </a>
+      </div>
+    </div>
+
+    {% if items %}
+      <ul class="discourse-topics-list">
+        {% for item in items %}{{ discussion_item(item) }}{% endfor %}
+      </ul>
+    {% else %}
+      <p class="discourse-empty">
+        No recent discussions found.
+        <a href="{{ url }}" target="_blank" rel="noopener noreferrer">Open it directly.</a>
+      </p>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+<section class="main-browse section global-datasets discourse-latest">
+  <div class="module-content">
+    <div class="container">
+      <div class="discussions-columns">
+        {{ discussion_column('GitHub', 'Developer Discussions', gh_url, gh_discussions, 'View on GitHub') }}
+        {{ discussion_column('Community forum', 'Latest Discussions', forum_url, topics, 'View all discussions') }}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+/* ── Section background & spacing ───────────────────────────── */
+.discourse-latest {
+  background-color: #ffffff;
+}
+.discourse-latest .container {
+  padding-left: 7rem;
+  padding-right: 7rem;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+@media (max-width: 992px) {
+  .discourse-latest .container {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+}
+@media (max-width: 768px) {
+  .discourse-latest .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* ── Header row ─────────────────────────────────────────────── */
+.discourse-header {
+  margin-bottom: 1rem;
+}
+.discourse-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.discourse-latest .heading {
+  margin: 0;
+}
+.discourse-latest .heading {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #000;
+}
+
+/* ── Topic list ─────────────────────────────────────────────── */
+.discourse-topics-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.discourse-topic-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+.discourse-topic-item:last-child {
+  border-bottom: none;
+}
+.discourse-avatars {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  width: 3rem;
+  height: 2rem;
+  position: relative;
+}
+.discourse-avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  position: absolute;
+}
+.discourse-avatar-single {
+  left: 0.5rem;
+}
+.discourse-avatar-op {
+  left: 0;
+  z-index: 1;
+}
+.discourse-avatar-reply {
+  left: 1.1rem;
+  z-index: 2;
+}
+.discourse-avatar-fallback {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background-color: #0089d1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.8rem;
+  position: absolute;
+  left: 0.5rem;
+}
+.discourse-topic-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.discourse-topic-title {
+  display: block;
+  font-weight: 600;
+  font-size: 0.97rem;
+  color: #222;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+.discourse-topic-title:hover {
+  color: #d9534f;
+  text-decoration: none;
+}
+.discourse-topic-excerpt {
+  font-size: 0.8rem;
+  color: #888;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+  margin-top: 0.2rem;
+}
+
+.discourse-topic-side {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: #888;
+  text-align: right;
+  min-width: 90px;
+}
+
+/* ── Empty state ────────────────────────────────────────────── */
+.discourse-empty {
+  color: #777;
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+}
+
+/* ── CTA button ─────────────────────────────────────────────── */
+.discourse-view-all {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Two columns, GitHub first ──────────────────────────────── */
+.discussions-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+}
+.discussions-column {
+  min-width: 0;
+}
+@media (max-width: 992px) {
+  .discussions-columns {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+/* Half the width means the heading and its button no longer share a line
+   comfortably at every zoom level, so the row is allowed to wrap. */
+.discussions-columns .discourse-title-row {
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
+}
+.discussions-columns .heading {
+  font-size: 1.75rem;
+}
+</style>
