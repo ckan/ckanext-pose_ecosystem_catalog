@@ -1,9 +1,10 @@
 {#
-  Two discussion feeds side by side: GitHub Discussions on ckan/ckan and the
-  Discourse community forum. Both columns render through the same macros, so
-  the two lists cannot drift apart visually, and each item only shows the
-  fields its source actually has. GitHub's discussions.atom carries no reply
-  count, so that line is simply absent on the left.
+  Two discussion feeds, stacked: the Discourse community forum first, then
+  GitHub Discussions on ckan/ckan in its own section below it. Both render
+  through the same macros, so the lists cannot drift apart visually, and each
+  item only shows the fields its source actually has. GitHub's
+  discussions.atom carries no reply count, so that line is simply absent in
+  the GitHub section.
 #}
 {% set gh_url = h.pose_theme_get_github_discussions_url() %}
 {% set gh_discussions = h.pose_theme_get_github_discussions(5) %}
@@ -46,41 +47,39 @@
   </li>
 {% endmacro %}
 
-{% macro discussion_column(eyebrow, heading, url, items, cta) %}
-  <div class="discussions-column">
-    <div class="discourse-header">
-      <h4 class="heading-explanation above-heading">{{ eyebrow }}</h4>
-      <div class="discourse-title-row">
-        <h2 class="heading">{{ heading }}</h2>
-        <a href="{{ url }}" class="btn btn-default discourse-view-all" target="_blank" rel="noopener noreferrer">
-          {{ cta }} &nbsp;<i class="fa fa-external-link"></i>
-        </a>
-      </div>
-    </div>
-
-    {% if items %}
-      <ul class="discourse-topics-list">
-        {% for item in items %}{{ discussion_item(item) }}{% endfor %}
-      </ul>
-    {% else %}
-      <p class="discourse-empty">
-        No recent discussions found.
-        <a href="{{ url }}" target="_blank" rel="noopener noreferrer">Open it directly.</a>
-      </p>
-    {% endif %}
-  </div>
-{% endmacro %}
-
-<section class="main-browse section global-datasets discourse-latest">
+{% macro discussion_section(modifier, eyebrow, heading, url, items, cta) %}
+<section class="main-browse section global-datasets discourse-latest {{ modifier }}">
   <div class="module-content">
     <div class="container">
-      <div class="discussions-columns">
-        {{ discussion_column('GitHub', 'Developer Discussions', gh_url, gh_discussions, 'View on GitHub') }}
-        {{ discussion_column('Community forum', 'Latest Discussions', forum_url, topics, 'View all discussions') }}
+
+      <div class="discourse-header">
+        <h4 class="heading-explanation above-heading">{{ eyebrow }}</h4>
+        <div class="discourse-title-row">
+          <h2 class="heading">{{ heading }}</h2>
+          <a href="{{ url }}" class="btn btn-default discourse-view-all" target="_blank" rel="noopener noreferrer">
+            {{ cta }} &nbsp;<i class="fa fa-external-link"></i>
+          </a>
+        </div>
       </div>
+
+      {% if items %}
+        <ul class="discourse-topics-list">
+          {% for item in items %}{{ discussion_item(item) }}{% endfor %}
+        </ul>
+      {% else %}
+        <p class="discourse-empty">
+          No recent discussions found.
+          <a href="{{ url }}" target="_blank" rel="noopener noreferrer">Open it directly.</a>
+        </p>
+      {% endif %}
+
     </div>
   </div>
 </section>
+{% endmacro %}
+
+{{ discussion_section('', 'Community forum', 'Latest Discussions', forum_url, topics, 'View all discussions') }}
+{{ discussion_section('github-discussions', 'GitHub', 'Developer Discussions', gh_url, gh_discussions, 'View on GitHub') }}
 
 <style>
 /* ── Section background & spacing ───────────────────────────── */
@@ -240,36 +239,21 @@
   flex-shrink: 0;
 }
 
-/* ── Two columns, GitHub first ──────────────────────────────── */
-.discussions-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  /* Column gap wide enough that the two lists read as separate panels; the
-     right edge of one list and the left edge of the next sit close together
-     otherwise, since both are full-bleed rows with no border of their own. */
-  gap: 5rem;
+/* ── The GitHub section below the forum one ─────────────────── */
+/* Both sections share .discourse-latest, whose container sets no vertical
+   padding, so this only has to add the space between them. */
+.github-discussions .container {
+  padding-top: 3.5rem;
 }
-@media (max-width: 1400px) {
-  .discussions-columns {
-    gap: 3.5rem;
+@media (max-width: 768px) {
+  .github-discussions .container {
+    padding-top: 2.5rem;
   }
 }
-.discussions-column {
-  min-width: 0;
-}
-@media (max-width: 992px) {
-  .discussions-columns {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-}
-/* Half the width means the heading and its button no longer share a line
-   comfortably at every zoom level, so the row is allowed to wrap. */
-.discussions-columns .discourse-title-row {
+/* The heading and its button share a line at full width, but not at every
+   zoom level, so the row wraps rather than overflowing. */
+.discourse-title-row {
   flex-wrap: wrap;
   row-gap: 0.5rem;
-}
-.discussions-columns .heading {
-  font-size: 1.75rem;
 }
 </style>
