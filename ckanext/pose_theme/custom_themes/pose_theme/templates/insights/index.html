@@ -70,6 +70,13 @@ section{margin-bottom:56px}
 .shead-export:hover,.shead-export:focus{color:#d9534f;text-decoration:none}
 .shead-export i{font-size:.75rem;opacity:.8}
 .shead h2{font-size:2rem;font-weight:500;line-height:1.125}
+/* Each title links to its own section. The title keeps heading colour rather
+   than link colour; the icon appears on hover or keyboard focus, so the row
+   is not decorated with a permanent chain. */
+.shead h2 .shead-link{display:inline-flex;align-items:baseline;gap:.35em;color:inherit;text-decoration:none}
+.shead h2 .shead-link i{font-size:.5em;color:var(--mute);opacity:0;transition:opacity .12s}
+.shead h2 .shead-link:hover i,.shead h2 .shead-link:focus-visible i{opacity:1}
+.shead h2 .shead-link:focus-visible{outline:2px solid var(--teal);outline-offset:3px;border-radius:4px}
 /* Right-aligned only while it sits beside the heading. .shead wraps, and a
    wrapped paragraph that keeps text-align:right ends up ragged-left in the
    middle of the page, which reads as a layout bug. */
@@ -926,6 +933,26 @@ byId('chartScroll').scrollLeft = byId('chartScroll').scrollWidth;
   if(typeof ResizeObserver === 'function') new ResizeObserver(resize).observe(host);
   else window.addEventListener('resize', resize);
 })();
+
+/* ---------- section anchors ---------- */
+/* Every section title doubles as a link to itself, the way the sidebar entries
+   already link in. Built here rather than in the markup so each section keeps
+   one source of truth for its id, and the path is carried along with the hash
+   so a copied link opens the right screen rather than whichever one the reader
+   is on. */
+document.querySelectorAll('.ckan-insights section[id] > .shead > h2').forEach(h => {
+  const id = h.parentElement.parentElement.id;
+  const link = document.createElement('a');
+  link.className = 'shead-link';
+  link.href = `${location.pathname}#${id}`;
+  link.title = 'Link to this section';
+  while(h.firstChild) link.appendChild(h.firstChild);
+  const icon = document.createElement('i');
+  icon.className = 'fa fa-link';
+  icon.setAttribute('aria-hidden', 'true');
+  link.appendChild(icon);
+  h.appendChild(link);
+});
 
 /* ---------- ledger ---------- */
 let evKind = 'all', evQuery = '';
