@@ -1,65 +1,85 @@
+{#
+  Two discussion feeds, stacked: the Discourse community forum first, then
+  GitHub Discussions on ckan/ckan in its own section below it. Both render
+  through the same macros, so the lists cannot drift apart visually, and each
+  item only shows the fields its source actually has. GitHub's
+  discussions.atom carries no reply count, so that line is simply absent in
+  the GitHub section.
+#}
+{% set gh_url = h.pose_theme_get_github_discussions_url() %}
+{% set gh_discussions = h.pose_theme_get_github_discussions(5) %}
 {% set forum_url = h.pose_theme_get_discourse_url() %}
 {% set topics = h.pose_theme_get_discourse_latest(5) %}
-<section class="main-browse section global-datasets discourse-latest">
+
+{% macro discussion_item(item) %}
+  <li class="discourse-topic-item">
+    <span class="discourse-avatars">
+      {% if item.op_avatar_url %}
+        <img src="{{ item.op_avatar_url }}" alt="{{ item.op_username }}" class="discourse-avatar discourse-avatar-op" title="{{ item.op_username }} (OP)">
+        <img src="{{ item.avatar_url }}" alt="{{ item.last_poster }}" class="discourse-avatar discourse-avatar-reply" title="{{ item.last_poster }} (latest reply)">
+      {% elif item.avatar_url %}
+        <img src="{{ item.avatar_url }}" alt="{{ item.author or item.last_poster }}" class="discourse-avatar discourse-avatar-single" title="{{ item.author or item.last_poster }}">
+      {% else %}
+        <span class="discourse-avatar-fallback"><i class="fa fa-user"></i></span>
+      {% endif %}
+    </span>
+    <div class="discourse-topic-body">
+      <a class="discourse-topic-title" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">
+        {{ item.title }}
+      </a>
+      <div class="discourse-topic-excerpt">
+        {{ item.excerpt if item.excerpt else '' }}
+      </div>
+    </div>
+    <div class="discourse-topic-side">
+      {% if item.get('reply_count') is not none %}
+        <span class="discourse-topic-replies">
+          <i class="fa fa-comment-o"></i>
+          {{ item.reply_count }} {{ 'reply' if item.reply_count == 1 else 'replies' }}
+        </span>
+      {% endif %}
+      {% if item.relative_time %}
+        <span class="discourse-topic-time">
+          <i class="fa fa-clock-o"></i> {{ item.relative_time }}
+        </span>
+      {% endif %}
+    </div>
+  </li>
+{% endmacro %}
+
+{% macro discussion_section(modifier, eyebrow, heading, url, items, cta) %}
+<section class="main-browse section global-datasets discourse-latest {{ modifier }}">
   <div class="module-content">
     <div class="container">
 
       <div class="discourse-header">
-        <h4 class="heading-explanation above-heading">Community forum</h4>
+        <h4 class="heading-explanation above-heading">{{ eyebrow }}</h4>
         <div class="discourse-title-row">
-          <h2 class="heading">Latest Discussions</h2>
-          <a href="{{ forum_url }}" class="btn btn-default discourse-view-all" target="_blank" rel="noopener noreferrer">
-            View all discussions &nbsp;<i class="fa fa-external-link"></i>
+          <h2 class="heading">{{ heading }}</h2>
+          <a href="{{ url }}" class="btn btn-default discourse-view-all" target="_blank" rel="noopener noreferrer">
+            {{ cta }} &nbsp;<i class="fa fa-external-link"></i>
           </a>
         </div>
       </div>
 
-      {% if topics %}
+      {% if items %}
         <ul class="discourse-topics-list">
-          {% for topic in topics %}
-            <li class="discourse-topic-item">
-              <span class="discourse-avatars">
-                {% if topic.op_avatar_url %}
-                  <img src="{{ topic.op_avatar_url }}" alt="{{ topic.op_username }}" class="discourse-avatar discourse-avatar-op" title="{{ topic.op_username }} (OP)">
-                  <img src="{{ topic.avatar_url }}" alt="{{ topic.last_poster }}" class="discourse-avatar discourse-avatar-reply" title="{{ topic.last_poster }} (latest reply)">
-                {% elif topic.avatar_url %}
-                  <img src="{{ topic.avatar_url }}" alt="{{ topic.last_poster }}" class="discourse-avatar discourse-avatar-single" title="{{ topic.last_poster }}">
-                {% else %}
-                  <span class="discourse-avatar-fallback"><i class="fa fa-user"></i></span>
-                {% endif %}
-              </span>
-              <div class="discourse-topic-body">
-                <a class="discourse-topic-title" href="{{ topic.url }}" target="_blank" rel="noopener noreferrer">
-                  {{ topic.title }}
-                </a>
-                <div class="discourse-topic-excerpt">
-                  {{ topic.excerpt if topic.excerpt else '' }}
-                </div>
-              </div>
-              <div class="discourse-topic-side">
-                <span class="discourse-topic-replies">
-                  <i class="fa fa-comment-o"></i>
-                  {{ topic.reply_count }} {{ 'reply' if topic.reply_count == 1 else 'replies' }}
-                </span>
-                {% if topic.relative_time %}
-                  <span class="discourse-topic-time">
-                    <i class="fa fa-clock-o"></i> {{ topic.relative_time }}
-                  </span>
-                {% endif %}
-              </div>
-            </li>
-          {% endfor %}
+          {% for item in items %}{{ discussion_item(item) }}{% endfor %}
         </ul>
       {% else %}
         <p class="discourse-empty">
           No recent discussions found.
-          <a href="{{ forum_url }}" target="_blank" rel="noopener noreferrer">Visit the forum directly.</a>
+          <a href="{{ url }}" target="_blank" rel="noopener noreferrer">Open it directly.</a>
         </p>
       {% endif %}
 
     </div>
   </div>
 </section>
+{% endmacro %}
+
+{{ discussion_section('', 'Community forum', 'Latest Discussions', forum_url, topics, 'View all discussions') }}
+{{ discussion_section('github-discussions', 'GitHub', 'Developer Discussions', gh_url, gh_discussions, 'View on GitHub') }}
 
 <style>
 /* ── Section background & spacing ───────────────────────────── */
@@ -217,5 +237,23 @@
 .discourse-view-all {
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+/* ── The GitHub section below the forum one ─────────────────── */
+/* Both sections share .discourse-latest, whose container sets no vertical
+   padding, so this only has to add the space between them. */
+.github-discussions .container {
+  padding-top: 3.5rem;
+}
+@media (max-width: 768px) {
+  .github-discussions .container {
+    padding-top: 2.5rem;
+  }
+}
+/* The heading and its button share a line at full width, but not at every
+   zoom level, so the row wraps rather than overflowing. */
+.discourse-title-row {
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
 }
 </style>

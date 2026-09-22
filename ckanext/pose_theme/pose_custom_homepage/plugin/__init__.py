@@ -60,4 +60,6 @@ class PoseThemeHomepagePlugin(MixinPlugin):
             'is_activity_enabled': helper.is_activity_enabled,
             'pose_theme_get_discourse_latest': helper.discourse_latest_topics,
             'pose_theme_get_discourse_url': helper.get_discourse_category_url,
+            'pose_theme_get_github_discussions': helper.github_latest_discussions,
+            'pose_theme_get_github_discussions_url': helper.get_github_discussions_url,
         }
