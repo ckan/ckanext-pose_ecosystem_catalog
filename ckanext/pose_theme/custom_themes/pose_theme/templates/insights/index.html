@@ -574,7 +574,7 @@ footer a code{color:inherit}
   </div>
   <div class="cols">
     <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
-    <div><div class="card"><h3>100% response rate</h3><p class="hint" id="perfectHint"></p><div class="rows rows-scroll" id="perfectRows"></div></div></div>
+    <div><div class="card"><h3>Healthy API endpoints</h3><p class="hint" id="perfectHint"></p><div class="rows rows-scroll" id="perfectRows"></div></div></div>
   </div>
 </section>
 <section id="instances" data-tab="instances">
@@ -1145,7 +1145,7 @@ byId('relRows').innerHTML = ['always','flaky','never'].map(k => `
 const perfect = D.instances.filter(i => i.of && i.seen === i.of)
                            .sort((a,b) => b.d - a.d);
 byId('perfectHint').textContent = perfect.length
-  ? `${fmt(perfect.length)} portals answered all ${NVW} crawls, largest first. Scroll for the rest.`
+  ? `${fmt(perfect.length)} portals answered the API in all ${NVW} crawls, largest first. Scroll for the rest.`
   : 'No portal has answered every crawl yet.';
 byId('perfectRows').innerHTML = perfect
   .map(i => `<div class="kv"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a></b><span class="v">${fmt(i.d)} datasets</span></div>`)
