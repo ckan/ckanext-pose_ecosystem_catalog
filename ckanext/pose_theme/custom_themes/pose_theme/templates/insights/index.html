@@ -570,7 +570,7 @@ footer a code{color:inherit}
   </div>
   <div class="cols">
     <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
-    <div><div class="card"><h3>Flakiest endpoints</h3><p class="hint">Answered some crawls, not others. Worth a retry policy.</p><div class="rows" id="flakyRows"></div></div></div>
+    <div><div class="card"><h3>Answered every crawl</h3><p class="hint" id="perfectHint"></p><div class="rows" id="perfectRows"></div></div></div>
   </div>
 </section>
 <section id="instances" data-tab="instances">
@@ -1134,10 +1134,17 @@ byId('relRows').innerHTML = ['always','flaky','never'].map(k => `
     <div style="display:flex;justify-content:space-between" class="mono"><span>${RELL[k][0]}</span><span>${fmt(D.reliability[k])} · ${pct(D.reliability[k],D.total)}%</span></div>
     <div style="height:6px;margin-top:5px;background:#f2f4f7;border-radius:3px"><i style="display:block;height:100%;border-radius:2px;background:${RELL[k][1]};width:${100*D.reliability[k]/relMax}%"></i></div>
   </div>`).join('');
-byId('flakyRows').innerHTML = D.instances
-  .filter(i => i.seen > 0 && i.seen < i.of)
-  .sort((a,b) => (a.seen/a.of)-(b.seen/b.of)).slice(0,12)
-  .map(i => `<div class="kv"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a></b><span class="v">${i.seen}/${i.of}</span></div>`)
+/* The portals with a perfect record, rather than the ones that missed most.
+   Every row here is the same seen/of, so the badge carries dataset count
+   instead: it is what separates one perfect record from another, and it gives
+   the cut at twelve a reason. */
+const perfect = D.instances.filter(i => i.of && i.seen === i.of)
+                           .sort((a,b) => b.d - a.d);
+byId('perfectHint').textContent = perfect.length
+  ? `${fmt(perfect.length)} portals answered all ${NVW} crawls. The largest are listed first.`
+  : 'No portal has answered every crawl yet.';
+byId('perfectRows').innerHTML = perfect.slice(0,12)
+  .map(i => `<div class="kv"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a></b><span class="v">${fmt(i.d)} datasets</span></div>`)
   .join('');
 
 /* ---------- table ---------- */
