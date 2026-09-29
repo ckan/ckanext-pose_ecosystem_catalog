@@ -215,6 +215,10 @@ input[type=search]:focus{outline:2px solid var(--teal);outline-offset:-1px}
 /* the name truncates with an ellipsis, which only works once it may shrink */
 .kv>*{min-width:0}
 .kv:last-child{border-bottom:0}
+/* A long list inside a card scrolls rather than running the section long.
+   The padding keeps the scrollbar off the dotted rules, and the border says
+   there is more below than the visible rows. */
+.rows-scroll{max-height:310px;overflow-y:auto;padding-right:8px;overscroll-behavior:contain}
 .kv b{font-weight:500}
 .kv .v{color:var(--mute)}
 .vbar{position:relative;padding:5px 0;border-bottom:1px dotted var(--line)}
@@ -570,7 +574,7 @@ footer a code{color:inherit}
   </div>
   <div class="cols">
     <div><div class="card"><h3>Response consistency</h3><p class="hint" id="relHint"></p><div id="relRows"></div></div></div>
-    <div><div class="card"><h3>Answered every crawl</h3><p class="hint" id="perfectHint"></p><div class="rows" id="perfectRows"></div></div></div>
+    <div><div class="card"><h3>100% response rate</h3><p class="hint" id="perfectHint"></p><div class="rows rows-scroll" id="perfectRows"></div></div></div>
   </div>
 </section>
 <section id="instances" data-tab="instances">
@@ -1136,14 +1140,14 @@ byId('relRows').innerHTML = ['always','flaky','never'].map(k => `
   </div>`).join('');
 /* The portals with a perfect record, rather than the ones that missed most.
    Every row here is the same seen/of, so the badge carries dataset count
-   instead: it is what separates one perfect record from another, and it gives
-   the cut at twelve a reason. */
+   instead: it is what separates one perfect record from another. The whole
+   list is rendered and the card scrolls, so no portal is cut for space. */
 const perfect = D.instances.filter(i => i.of && i.seen === i.of)
                            .sort((a,b) => b.d - a.d);
 byId('perfectHint').textContent = perfect.length
-  ? `${fmt(perfect.length)} portals answered all ${NVW} crawls. The largest are listed first.`
+  ? `${fmt(perfect.length)} portals answered all ${NVW} crawls, largest first. Scroll for the rest.`
   : 'No portal has answered every crawl yet.';
-byId('perfectRows').innerHTML = perfect.slice(0,12)
+byId('perfectRows').innerHTML = perfect
   .map(i => `<div class="kv"><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a></b><span class="v">${fmt(i.d)} datasets</span></div>`)
   .join('');
 
