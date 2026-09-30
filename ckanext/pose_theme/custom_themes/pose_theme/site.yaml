@@ -278,6 +278,11 @@ dataset_fields:
   form_snippet: null
   help_text: "Total number of groups in this CKAN instance"
 
+- field_name: last_activity_date
+  label: Last Activity Date
+  preset: date
+  help_text: "Date of the most recent activity on this CKAN instance"
+
 - field_name: is_featured
   label: Featured
   preset: select
