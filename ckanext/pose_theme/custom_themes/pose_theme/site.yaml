@@ -119,7 +119,9 @@ dataset_fields:
       value: "staging"
     - label: "Development"
       value: "development"
-  help_text: "The current status of your CKAN site."
+    - label: "Inactive / Dormant"
+      value: "dormant"
+  help_text: "The current status of your CKAN site. Set to Inactive / Dormant automatically when no public dataset has changed in over 180 days."
 
 # Technical Details
 - field_name: git_repo
