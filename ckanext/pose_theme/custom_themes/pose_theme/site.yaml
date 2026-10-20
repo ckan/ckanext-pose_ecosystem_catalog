@@ -113,15 +113,17 @@ dataset_fields:
   preset: select
   validators: ignore_missing
   choices:
-    - label: "Production"
-      value: "production"
+    - label: "Active"
+      value: "active"
     - label: "Staging"
       value: "staging"
     - label: "Development"
       value: "development"
     - label: "Inactive / Dormant"
       value: "dormant"
-  help_text: "The current status of your CKAN site. Set to Inactive / Dormant automatically when no public dataset has changed in over 180 days."
+    - label: "API Unreachable"
+      value: "unreachable"
+  help_text: "The current status of your CKAN site. Set automatically by the weekly crawl: Active when a public dataset changed in the last 180 days, Inactive / Dormant when none has, API Unreachable when the CKAN API did not respond (the site itself may still be up). Staging and Development are set by hand and never changed by the crawl."
 
 # Technical Details
 - field_name: git_repo
