@@ -274,6 +274,13 @@ td.nm .ex-fork{display:block;font-size:.875rem;color:var(--mute);margin-top:2px;
 .p-still{background:#f2f4f7;color:#667085}
 .p-archived{background:#ececf0;color:#3f3f52}
 .p-unknown{background:var(--faint);color:var(--mute)}
+/* Site status, the catalog's own field. Prefixed apart from the upkeep pills,
+   which already use .p-active for something else. */
+.st-active{background:#e6f4ea;color:#1e6b2a}
+.st-dormant{background:#fff3e4;color:#9a4d06}
+.st-unreachable{background:rgba(217,83,79,.12);color:var(--rust)}
+.st-staging,.st-development{background:#f2f4f7;color:#667085}
+.scope{margin:0 0 14px}
 .tblhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0 8px}
 .count{font-family:var(--mono);font-size:.875rem;color:var(--mute)}
 .empty{padding:26px;text-align:center;color:var(--mute);font-size:1rem}
@@ -546,6 +553,12 @@ footer a code{color:inherit}
     <h2>Support status</h2>
     <p>Where the portals that reported a version stand in the latest crawl, by the support status of the CKAN release they run. <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-support-status.html" target="_blank" rel="noopener" title="Support status. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
+  <div class="controls scope" hidden>
+    <div class="seg" role="group" aria-label="Which portals">
+      <button data-scope="all" aria-pressed="true">All portals</button>
+      <button data-scope="active" aria-pressed="false">Active only<span class="tip" tabindex="0" role="note" aria-label="What Active only means" data-tip="Portals the catalog marks active: the API answered the latest crawl and a public dataset changed in the last 180 days. Dormant, unreachable, staging and development sites are left out.">i</span></button>
+    </div>
+  </div>
   <div class="support-chart" id="supportChart" tabindex="0" role="group">
     <div class="support-host" id="supportHost"></div>
     <div class="support-tip" id="supportTip" aria-live="polite" hidden></div>
@@ -559,10 +572,16 @@ footer a code{color:inherit}
     <h2>Version spread</h2>
     <p><span id="verHint">Latest supported releases.</span> <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-version-spread.html" target="_blank" rel="noopener" title="Which CKAN versions are in the wild? Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
+  <div class="controls scope" hidden>
+    <div class="seg" role="group" aria-label="Which portals">
+      <button data-scope="all" aria-pressed="true">All portals</button>
+      <button data-scope="active" aria-pressed="false">Active only<span class="tip" tabindex="0" role="note" aria-label="What Active only means" data-tip="Portals the catalog marks active: the API answered the latest crawl and a public dataset changed in the last 180 days. Dormant, unreachable, staging and development sites are left out.">i</span></button>
+    </div>
+  </div>
   <div class="cols">
     <div><div class="card"><h3>By release branch</h3><p class="hint">Split by patch status within each branch.</p><div id="branchRows"></div></div></div>
     <div>
-      <div class="card"><h3>Most common versions</h3><p class="hint">The 14 most frequently reported version strings.</p><div class="rows" id="verRows"></div></div>
+      <div class="card"><h3>Most common versions</h3><p class="hint" id="verRowsHint">The 14 most frequently reported version strings.</p><div class="rows" id="verRows"></div></div>
     </div>
   </div>
 </section>
@@ -589,6 +608,7 @@ footer a code{color:inherit}
     <table>
       <thead><tr>
         <th data-sort="n">Instance <span class="caret">↕</span></th>
+        <th data-sort="st" id="stHead" hidden>Status<span class="tip" tabindex="0" role="note" aria-label="What Status means" data-tip="The site's status in the catalog, set by the weekly crawl: Active when the API answered and a public dataset changed in the last 180 days, Dormant when none has, API unreachable when the API did not answer (the site itself may still be up). Staging and Development are set by hand.">i</span> <span class="caret">↕</span></th>
         <th data-sort="up" class="hide-s">Answered<span class="tip" tabindex="0" role="note" aria-label="What Answered measures" data-tip="Crawls this portal responded to, out of those that ran. A site can be up and still not answer the API.">i</span> <span class="caret">↕</span></th>
         <th data-sort="d" class="num">Datasets <span class="caret">↕</span></th>
         <th data-sort="growth" class="num hide-s">Cohort Δ<span class="tip" tabindex="0" role="note" aria-label="What Cohort delta measures" data-tip="Change in reported dataset count between this portal's first and most recent answered crawl.">i</span> <span class="caret">↕</span></th>
@@ -851,6 +871,24 @@ showWeek(NW-1);
 // the track is wider than the panel and the newest crawl is the interesting end
 byId('chartScroll').scrollLeft = byId('chartScroll').scrollWidth;
 
+/* ---------- scope ---------- */
+/* The support chart and the version spread can be narrowed to the portals the
+   catalog marks active. The pipeline publishes that slice as D.active; an
+   older payload has none, and the toggles stay hidden. */
+const ACTIVE = D.active || null;
+let scope = 'all';
+const scoped = () => scope === 'active' && ACTIVE ? ACTIVE : null;
+const scopeHooks = [];
+if(ACTIVE){
+  document.querySelectorAll('.controls.scope').forEach(c => c.hidden = false);
+  document.querySelectorAll('[data-scope]').forEach(b => b.addEventListener('click', () => {
+    scope = b.dataset.scope;
+    document.querySelectorAll('[data-scope]').forEach(x =>
+      x.setAttribute('aria-pressed', x.dataset.scope === scope));
+    scopeHooks.forEach(fn => fn());
+  }));
+}
+
 /* ---------- support status ---------- */
 /* One bar, the latest crawl, split by support status: an overall picture of
    where the fleet stands, not a trend. The denominator is the portals that
@@ -860,21 +898,30 @@ byId('chartScroll').scrollLeft = byId('chartScroll').scrollWidth;
   const box = byId('supportChart'), host = byId('supportHost'), tip = byId('supportTip');
   const STATES = ['current','behind','eol'];
   const FILL = {current:'rgba(58,131,58,.8)', behind:'rgba(253,126,20,.8)', eol:'rgba(217,83,79,.8)'};
-  const total = reporting(latest);
-  const parts = STATES.map(s => ({s, n: latest[s]||0, share: total ? 100*(latest[s]||0)/total : 0}))
-                      .filter(p => p.n > 0);
-  if(!total){
-    byId('supportNote').textContent = 'No portal reported a version in the latest crawl.';
-    return;
+  let total = 0, parts = [];
+  function setData(){
+    const a = scoped();
+    const src = a ? a.statuses : latest, rows = a ? a.rows : latest.rows;
+    const who = a ? 'active portals' : 'portals';
+    total = reporting(src);
+    parts = STATES.map(s => ({s, n: src[s]||0, share: total ? 100*(src[s]||0)/total : 0}))
+                  .filter(p => p.n > 0);
+    if(!total){
+      byId('supportLegend').innerHTML = '';
+      byId('supportNote').textContent = `No ${who.replace('portals','portal')} reported a version in the latest crawl.`;
+      box.removeAttribute('aria-label');
+      return;
+    }
+    byId('supportLegend').innerHTML = parts.map(p =>
+      `<div><span class="key s-${p.s}"></span><b>${STATUS[p.s].label}</b>`
+      + `<span class="v">${fmt(p.n)} · ${pct(p.n, total)}%</span></div>`).join('');
+    byId('supportNote').textContent =
+      `${fmt(total)} of ${fmt(rows)} ${who} reported a version in the crawl of ${latest.w}; `
+      + `${fmt((src.unknown||0))} did not and are not counted here.`;
+    box.setAttribute('aria-label', `Support status${a ? ' of active portals' : ''} in the crawl of ${latest.w}: `
+      + parts.map(p => `${STATUS[p.s].label} ${fmt(p.n)}, ${pct(p.n, total)}%`).join('; ') + '.');
   }
-  byId('supportLegend').innerHTML = parts.map(p =>
-    `<div><span class="key s-${p.s}"></span><b>${STATUS[p.s].label}</b>`
-    + `<span class="v">${fmt(p.n)} · ${pct(p.n, total)}%</span></div>`).join('');
-  byId('supportNote').textContent =
-    `${fmt(total)} of ${fmt(latest.rows)} portals reported a version in the crawl of ${latest.w}; `
-    + `${fmt((latest.unknown||0))} did not and are not counted here.`;
-  box.setAttribute('aria-label', `Support status in the crawl of ${latest.w}: `
-    + parts.map(p => `${STATUS[p.s].label} ${fmt(p.n)}, ${pct(p.n, total)}%`).join('; ') + '.');
+  setData();
 
   const H = 28, GAP = 2;
   let width = 0, hover = null, spans = [];
@@ -900,9 +947,11 @@ byId('chartScroll').scrollLeft = byId('chartScroll').scrollWidth;
     });
     return out + '</g></svg>';
   }
-  const draw = () => { layoutParts(); host.innerHTML = svg(); };
+  const draw = () => { layoutParts(); host.innerHTML = total ? svg() : ''; };
   function show(k){
-    hover = k; draw();
+    if(!parts.length) return;
+    // a scope switch can leave fewer segments than the one last hovered
+    k = hover = Math.min(k, parts.length - 1); draw();
     const sp = spans[k];
     tip.replaceChildren();
     const v = document.createElement('b'); v.textContent = `${fmt(sp.p.n)} portals`;
@@ -936,6 +985,7 @@ byId('chartScroll').scrollLeft = byId('chartScroll').scrollWidth;
   draw();
   if(typeof ResizeObserver === 'function') new ResizeObserver(resize).observe(host);
   else window.addEventListener('resize', resize);
+  scopeHooks.push(() => { setData(); hide(); });
 })();
 
 /* ---------- section anchors ---------- */
@@ -1095,7 +1145,6 @@ byId('famRows').innerHTML = D.families.map(([f,n]) =>
 /* Published per branch by the pipeline. The page used to walk the instance
    list to build this, which meant every portal had to carry its own branch
    and status. */
-const byBranch = D.branch_status || {};
 /* Newest branch first, so the list reads 2.12, 2.11, 2.10 down to the oldest
    still in the wild, rather than by how many portals run it.
 
@@ -1105,15 +1154,26 @@ const byBranch = D.branch_status || {};
    so a dev or master build should not head the list as the newest thing. */
 const verRank = k => k === 'other' ? 1 : (parseInt(k, 10) >= 3 ? 2 : 0);
 const byVersionDesc = (a,b) => verRank(a) - verRank(b) || verNum(b) - verNum(a);
-const branchMax = Math.max(1, ...Object.values(byBranch).map(b => b.total));
-byId('branchRows').innerHTML = Object.entries(byBranch)
-  .sort((a,b) => byVersionDesc(a[0], b[0])).map(([b,v]) => `
-  <div class="vbar">
-    <div class="lbl"><span>CKAN ${b}</span><span>${fmt(v.total)}</span></div>
-    <div class="track" style="width:${Math.max(8,100*v.total/branchMax)}%">
-      ${ORDER.map(s => v[s] ? `<i class="s-${s}" style="width:${100*v[s]/v.total}%"></i>` : '').join('')}
-    </div>
-  </div>`).join('');
+function renderVersions(){
+  const a = scoped();
+  const byBranch = (a ? a.branch_status : D.branch_status) || {};
+  const branchMax = Math.max(1, ...Object.values(byBranch).map(b => b.total));
+  byId('branchRows').innerHTML = Object.entries(byBranch)
+    .sort((a,b) => byVersionDesc(a[0], b[0])).map(([b,v]) => `
+    <div class="vbar">
+      <div class="lbl"><span>CKAN ${b}</span><span>${fmt(v.total)}</span></div>
+      <div class="track" style="width:${Math.max(8,100*v.total/branchMax)}%">
+        ${ORDER.map(s => v[s] ? `<i class="s-${s}" style="width:${100*v[s]/v.total}%"></i>` : '').join('')}
+      </div>
+    </div>`).join('') || '<div class="empty">No active portal reported a version.</div>';
+  byId('verRows').innerHTML = (a ? a.versions : D.versions).slice(0,14).map(([v,n]) =>
+    `<div class="kv"><b>${v}</b><span class="v">${fmt(n)}</span></div>`).join('');
+  byId('verRowsHint').textContent = a
+    ? 'The 14 most frequently reported version strings among active portals.'
+    : 'The 14 most frequently reported version strings.';
+}
+renderVersions();
+scopeHooks.push(renderVersions);
 /* CKAN patches every supported branch on the same day, so the branches in its
    most recent release are the supported ones, and their versions from that day
    are the latest patches. Read from the release table rather than written into
@@ -1126,8 +1186,6 @@ byId('branchRows').innerHTML = Object.entries(byBranch)
   const list = vs.length > 1 ? `${vs.slice(0,-1).join(', ')} and ${vs[vs.length-1]}` : vs[0];
   byId('verHint').textContent = `Latest supported releases: CKAN ${list}.`;
 })();
-byId('verRows').innerHTML = D.versions.slice(0,14).map(([v,n]) =>
-  `<div class="kv"><b>${v}</b><span class="v">${fmt(n)}</span></div>`).join('');
 
 /* ---------- reliability ---------- */
 byId('relHint').textContent = `Across the ${NVW} crawls that returned version data.`;
@@ -1154,7 +1212,16 @@ byId('perfectRows').innerHTML = perfect
 /* ---------- table ---------- */
 const tbody = byId('tbody'), tblCount = byId('tblCount');
 let sortKey = 'd', sortDir = -1, tblQuery = '', tblLimit = 25, tblRows = 0;
-const SV = {n:i=>i.n, up:i=>i.of?i.seen/i.of:-1, d:i=>i.d, growth:i=>i.growth, x:i=>i.x||0};
+// Site status is the catalog's field, published per portal by the pipeline
+// once it exports it. An older payload has no 'st' and the column stays hidden.
+const HAS_ST = D.instances.some(i => 'st' in i);
+const ST = {active:'Active', dormant:'Dormant', unreachable:'API unreachable',
+            staging:'Staging', development:'Development'};
+const ST_RANK = Object.keys(ST);
+const stRank = i => { const k = ST_RANK.indexOf(i.st); return k < 0 ? ST_RANK.length : k; };
+const stCell = i => ST[i.st] ? `<span class="pill st-${i.st}">${ST[i.st]}</span>` : '—';
+byId('stHead').hidden = !HAS_ST;
+const SV = {n:i=>i.n, st:stRank, up:i=>i.of?i.seen/i.of:-1, d:i=>i.d, growth:i=>i.growth, x:i=>i.x||0};
 function renderTable(){
   /* No status or extension filter, and no version or plugin search: a portal
      directory is the catalogue's own business, but pairing a name with the
@@ -1168,6 +1235,7 @@ function renderTable(){
   tbody.innerHTML = rows.slice(0, tblLimit).map(i => `
     <tr>
       <td class="nm"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a>${i.gone?' <span class="pill p-unknown">dropped</span>':''}</td>
+      ${HAS_ST ? `<td>${stCell(i)}</td>` : ''}
       <td class="hide-s"><span class="uptime" title="${i.seen}/${i.of} crawls">${i.up.map(u=>`<i class="${u?'':'down'}"></i>`).join('')}</span></td>
       <td class="num">${fmt(i.d)}</td>
       <td class="num hide-s"><span class="delta ${i.growth>0?'up':i.growth<0?'dn':'flat'}">${i.growth?(i.growth>0?'+':'')+fmt(i.growth):'·'}</span></td>
@@ -1196,7 +1264,7 @@ SORT_HEADS.forEach(th => {
   th.tabIndex = 0;
   const go = () => {
     const k = th.dataset.sort;
-    if(sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = (k === 'n') ? 1 : -1; }
+    if(sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = (k === 'n' || k === 'st') ? 1 : -1; }
     SORT_HEADS.forEach(x => {
       x.removeAttribute('aria-sort');
       const c = x.querySelector('.caret'); if(c) c.textContent = '↕'; });
