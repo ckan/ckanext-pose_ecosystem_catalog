@@ -77,6 +77,8 @@ section{margin-bottom:56px}
 .shead h2 .shead-link i{font-size:.5em;color:var(--mute);opacity:0;transition:opacity .12s}
 .shead h2 .shead-link:hover i,.shead h2 .shead-link:focus-visible i{opacity:1}
 .shead h2 .shead-link:focus-visible{outline:2px solid var(--teal);outline-offset:3px;border-radius:4px}
+.shead h2 .shead-link.copied i{opacity:1;color:var(--teal)}
+.sr-only-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* Right-aligned only while it sits beside the heading. .shead wraps, and a
    wrapped paragraph that keeps text-align:right ends up ragged-left in the
    middle of the page, which reads as a layout bug. */
@@ -993,7 +995,16 @@ if(ACTIVE){
    already link in. Built here rather than in the markup so each section keeps
    one source of truth for its id, and the path is carried along with the hash
    so a copied link opens the right screen rather than whichever one the reader
-   is on. */
+   is on.
+
+   A click also copies the full URL, so sharing a chart is one click rather
+   than click, then copy from the address bar. The jump to the section still
+   happens; the clipboard is a bonus where the browser allows it (it needs a
+   secure context, which localhost and the live site both are). */
+const copiedNote = document.createElement('span');
+copiedNote.className = 'sr-only-live';
+copiedNote.setAttribute('aria-live', 'polite');
+document.body.appendChild(copiedNote);
 document.querySelectorAll('.ckan-insights section[id] > .shead > h2').forEach(h => {
   const id = h.parentElement.parentElement.id;
   const link = document.createElement('a');
@@ -1006,6 +1017,23 @@ document.querySelectorAll('.ckan-insights section[id] > .shead > h2').forEach(h 
   icon.setAttribute('aria-hidden', 'true');
   link.appendChild(icon);
   h.appendChild(link);
+  let reset;
+  link.addEventListener('click', () => {
+    if(!navigator.clipboard) return;
+    navigator.clipboard.writeText(link.href).then(() => {
+      clearTimeout(reset);
+      link.classList.add('copied');
+      icon.className = 'fa fa-check';
+      link.title = 'Link copied';
+      copiedNote.textContent = 'Link to this section copied';
+      reset = setTimeout(() => {
+        link.classList.remove('copied');
+        icon.className = 'fa fa-link';
+        link.title = 'Link to this section';
+        copiedNote.textContent = '';
+      }, 1500);
+    }, () => {});
+  });
 });
 
 /* ---------- ledger ---------- */
