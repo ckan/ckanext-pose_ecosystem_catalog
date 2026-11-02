@@ -1,0 +1,17 @@
+{% import 'macros/form.html' as form %}
+
+{%- set checked = h.asbool(data.get(field.field_name)) -%}
+
+{%- call form.input_block(
+    label=h.scheming_language_text(field.label),
+    classes=field.classes if 'classes' in field else ['control-medium'],
+    error=errors[field.field_name],
+    is_required=h.scheming_field_required(field)) -%}
+  <div class="form-check form-switch">
+    <input class="form-check-input" type="checkbox" role="switch"
+           id="field-{{ field.field_name }}" name="{{ field.field_name }}"
+           value="true" {{ 'checked' if checked }}>
+    <label class="form-check-label" for="field-{{ field.field_name }}">{{ _('Yes') }}</label>
+  </div>
+  {%- snippet 'scheming/form_snippets/help_text.html', field=field -%}
+{%- endcall -%}
