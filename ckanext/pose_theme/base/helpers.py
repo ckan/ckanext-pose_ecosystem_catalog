@@ -94,8 +94,44 @@ def organization(num=12):
     return groups[:num]
 
 
+_IMAGE_EXTENSIONS = (u'png', u'jpg', u'jpeg', u'gif', u'webp', u'svg')
+
+
+def _is_screenshot(res):
+    return toolkit.asbool(res.get('is_screenshot'))
+
+
+def _is_image(res):
+    fmt = (res.get('format') or u'').lower().lstrip(u'.')
+    if fmt in _IMAGE_EXTENSIONS:
+        return True
+    if (res.get('mimetype') or u'').startswith(u'image/'):
+        return True
+    path = (res.get('url') or u'').split(u'?', 1)[0].split(u'#', 1)[0]
+    return path.rpartition(u'.')[2].lower() in _IMAGE_EXTENSIONS
+
+
+def _pick_screenshot(resources):
+    """Return the resource to show as the package's image, or None.
+
+    A resource ticked "Use as screenshot" wins. Without one, the first image
+    resource is used, so packages created before the toggle keep their image.
+    Schemas whose resources are all screenshots (showcase) have no format
+    field; there the first resource is still used.
+    """
+    for res in resources:
+        if _is_screenshot(res):
+            return res
+    for res in resources:
+        if _is_image(res):
+            return res
+    if not any(res.get('format') for res in resources):
+        return resources[0]
+    return None
+
+
 def get_thumbnail_url(pkg):
-    """Return a thumbnail URL for a package's first resource.
+    """Return a thumbnail URL for a package's screenshot resource.
 
     For uploaded files, returns a static-looking /assets/thumbnails/<id> URL
     instead of the /dataset/<id>/resource/<id>/download/<file> path. Cloudflare
@@ -106,7 +142,9 @@ def get_thumbnail_url(pkg):
     resources = (pkg.get('resources') if isinstance(pkg, dict) else None) or []
     if not resources:
         return None
-    res = resources[0]
+    res = _pick_screenshot(resources)
+    if res is None:
+        return None
     if res.get('url_type') == 'upload':
         return toolkit.url_for('pose_thumbnails.thumbnail', resource_id=res['id'])
     return res.get('url')

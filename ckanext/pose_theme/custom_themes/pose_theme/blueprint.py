@@ -19,9 +19,9 @@ datastore_dictionary.add_url_rule(u'/datastore/dictionary_download/<resource_id>
 
 
 _OPTIONAL_RESOURCE_TYPES = {
-    u'tool_resource': u'tool',
-    u'site_resource': u'site',
-    u'extension_resource': u'extension',
+    u'tool_resource.new': u'tool',
+    u'site_resource.new': u'site',
+    u'extension_resource.new': u'extension',
 }
 
 
@@ -31,10 +31,12 @@ def allow_finish_without_resources():
     Resources are optional for tool/site/extension types.
     Intercept the resource-creation POST and activate the dataset directly
     when no resource data is provided.
+
+    Only the ``<type>_resource.new`` endpoint is matched. The other resource
+    endpoints (delete, edit, new_view, edit_view, ...) post forms that carry
+    no ``url`` either, and intercepting them silently swallowed the request.
     """
-    pkg_type = _OPTIONAL_RESOURCE_TYPES.get(
-        request.endpoint.rsplit(u'.', 1)[0] if request.endpoint else u''
-    )
+    pkg_type = _OPTIONAL_RESOURCE_TYPES.get(request.endpoint or u'')
     if not pkg_type or request.method != u'POST':
         return
     save_action = request.form.get(u'save')
