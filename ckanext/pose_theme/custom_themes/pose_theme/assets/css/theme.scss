@@ -220,7 +220,7 @@ form.form-inline.form-select.lang-select {
     width: 395px;
   }
 
-  .control-medium input,
+  .control-medium input:not([type="checkbox"]):not([type="radio"]),
   .control-medium select,
   .control-medium textarea {
     width: 380px;
