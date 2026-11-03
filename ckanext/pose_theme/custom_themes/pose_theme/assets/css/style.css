@@ -520,7 +520,7 @@ section.featured-charts-wrap h2 a {
   font-weight: 500;
   box-shadow: none;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  background: #ffffff;
+  background-color: #ffffff;
 }
 .form-control:focus, .form-control:focus-visible, input.form-control:focus, input.form-control:focus-visible, .control-large input:focus, .control-large input:focus-visible, .select2-container-multi .select2-choices:focus, .select2-container-multi .select2-choices:focus-visible, .select2-container .select2-choices:focus, .select2-container .select2-choices:focus-visible, .editor textarea:focus, .editor textarea:focus-visible {
   box-shadow: none;
