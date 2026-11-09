@@ -519,7 +519,7 @@ footer a code{color:inherit}
   <div class="cols">
     <div>
       <div class="controls">
-        <input type="search" id="extSearch" placeholder="filter extensions…" aria-label="Filter extensions">
+        <input type="search" id="extSearch" placeholder="search by plugin name…" aria-label="Search by plugin name">
         <div class="seg" role="group" aria-label="Sort">
           <button data-sort="count" aria-pressed="true">By install base</button>
           <button data-sort="delta" aria-pressed="false">By movement</button>
@@ -536,9 +536,10 @@ footer a code{color:inherit}
     <div>
       <div class="card">
         <h3 id="pairTitle">Ships alongside</h3>
-        <p class="hint" id="pairHint">Pick an extension to see its co-installs and its cohort line.</p>
+        <p class="hint" id="pairHint">Pick an extension to see its co-installs, cohort line and the portals using it.</p>
         <div id="pairChart"></div>
         <div class="rows" id="pairRows"></div>
+        <div id="pairPortals"></div>
       </div>
       <div class="card">
         <h3>Upstream packages</h3>
@@ -1047,6 +1048,8 @@ const EVENTS = [
 // should reach the live listings. CKAN redirects /dataset/<name> to the
 // type-specific route, so this works for site, tool and extension alike.
 const CATALOG = 'https://ecosystem.ckan.org';
+/* Plugin names come from crawled portals, so they are untrusted in HTML. */
+const esc = s => String(s).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
 const catalogUrl = n => `${CATALOG}/dataset/${encodeURIComponent(n)}`;
 function renderLedger(){
   const rows = EVENTS.filter(e => {
@@ -1068,8 +1071,8 @@ function renderLedger(){
         <span class="body">${link}${e.u.major?' <span class="pill p-current">minor release</span>':''}
         <span class="det">${e.u.from}<span class="arrow">→</span>${e.u.to}</span></span></div>`;
     }
-    const add = e.x.add.map(p => `<ins>+${p}</ins>`).join(' ');
-    const rem = e.x.rem.map(p => `<del>−${p}</del>`).join(' ');
+    const add = e.x.add.map(p => `<ins>+${esc(p)}</ins>`).join(' ');
+    const rem = e.x.rem.map(p => `<del>−${esc(p)}</del>`).join(' ');
     return `<div class="ev x${sus}"><time>${e.w}</time><span class="glyph">◇</span>
       <span class="body">${link}<span class="det">${[add,rem].filter(Boolean).join(' ')}</span></span></div>`;
   }).join('') || '<div class="empty">No events match that.</div>';
@@ -1096,6 +1099,9 @@ function spark(series, w=68, h=18){
 }
 
 /* ---------- extension ranks ---------- */
+/* Packages and entry points spell one name differently (datapusher-plus,
+   datapusher_plus, ckanext-datapusher-plus), so searches compare without them. */
+const normName = s => (s || '').toLowerCase().replace(/^ckanext[-_. ]*/, '').replace(/[-_.\s]/g, '');
 let extKind = 'all', extQuery = '', extSort = 'count', extLimit = 25;
 const ranks = byId('ranks'), moreBtn = byId('moreBtn');
 byId('extHint').textContent =
@@ -1104,7 +1110,7 @@ byId('extHint').textContent =
 function extList(){
   let l = D.exts.filter(e =>
     (extKind === 'all' || (extKind === 'core') === !!e.core) &&
-    (!extQuery || e.name.includes(extQuery) || (e.family||'').includes(extQuery)));
+    (!extQuery || normName(e.name).includes(extQuery) || normName(e.family).includes(extQuery)));
   if(extSort === 'delta') l = l.filter(e => e.delta).sort((a,b) => Math.abs(b.delta)-Math.abs(a.delta));
   return l;
 }
@@ -1113,9 +1119,9 @@ function renderExts(){
   const max = D.exts.length ? D.exts[0].count : 1;
   ranks.innerHTML = top.map((e,ix) => {
     const d = e.delta, cls = d>0?'up':d<0?'dn':'flat';
-    return `<button class="rank ${e.core?'':'third'}" data-e="${e.name}" aria-pressed="${selectedExt===e.name}">
+    return `<button class="rank ${e.core?'':'third'}" data-e="${esc(e.name)}" aria-pressed="${selectedExt===e.name}">
       <span class="i">${ix+1}</span>
-      <span class="nm"><span>${e.name}</span><span class="tag ${e.core?'core':'third'}">${e.core?'core':'ext'}</span></span>
+      <span class="nm"><span>${esc(e.name)}</span><span class="tag ${e.core?'core':'third'}">${e.core?'core':'ext'}</span></span>
       <span>${spark(e.cohort)}</span>
       <span class="ct">${fmt(e.count)} <em>${e.pct}%</em><br><span class="delta ${cls}">${d>0?'+':''}${d||'·'}</span></span>
       <span class="bar"><i style="width:${Math.max(1.5,100*e.count/max)}%"></i></span>
@@ -1133,7 +1139,7 @@ moreBtn.addEventListener('click', () => {
   const n = extList().length; extLimit = extLimit >= n ? 25 : n; renderExts();
 });
 byId('extSearch').addEventListener('input', e => {
-  extQuery = e.target.value.trim().toLowerCase(); extLimit = 25; renderExts();
+  extQuery = normName(e.target.value); extLimit = 25; renderExts();
 });
 document.querySelectorAll('[data-kind]').forEach(b => b.addEventListener('click', () => {
   extKind = b.dataset.kind; extLimit = 25;
@@ -1147,24 +1153,29 @@ document.querySelectorAll('.seg [data-sort]').forEach(b => b.addEventListener('c
 }));
 function renderPairs(){
   const T = byId('pairTitle'), H = byId('pairHint'),
-        C = byId('pairChart'), R = byId('pairRows');
+        C = byId('pairChart'), R = byId('pairRows'), P = byId('pairPortals');
   if(!selectedExt){
     T.textContent = 'Ships alongside';
-    H.textContent = 'Pick an extension to see its co-installs and its cohort line.';
-    C.innerHTML = ''; R.innerHTML = ''; return;
+    H.textContent = 'Pick an extension to see its co-installs, cohort line and the portals using it.';
+    C.innerHTML = ''; R.innerHTML = ''; P.innerHTML = ''; return;
   }
   const self = D.exts.find(e => e.name === selectedExt);
   const near = D.pairs.filter(p => p.a === selectedExt || p.b === selectedExt)
     .map(p => ({name: p.a === selectedExt ? p.b : p.a, n: p.n}))
     .sort((a,b) => b.n-a.n).slice(0,10);
   const c = self.cohort;
-  T.innerHTML = `<span class="mono">${selectedExt}</span>`;
+  T.innerHTML = `<span class="mono">${esc(selectedExt)}</span>`;
   H.textContent = `${fmt(self.count)} instances load it${self.family?` · from ${self.family}`:''}`
     + (c && c.length ? ` · cohort went ${c[0]} → ${c[c.length-1]}` : '');
   C.innerHTML = spark(c, 300, 54);
   R.innerHTML = near.length ? near.map(p =>
-    `<div class="kv"><b>${p.name}</b><span class="v">${pct(p.n,self.count)}%</span></div>`).join('')
+    `<div class="kv"><b>${esc(p.name)}</b><span class="v">${pct(p.n,self.count)}%</span></div>`).join('')
     : '<div class="kv"><span class="v">No common pairing.</span></div>';
+  /* Optional until the rollup has published exts[].by. */
+  const portals = (self.by || []).map(ix => D.instances[ix]);
+  P.innerHTML = portals.length ? `<h3 style="margin-top:14px">Portals using it (${fmt(portals.length)})</h3>
+    <div class="rows rows-scroll">${portals.map(i =>
+      `<div class="kv"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${i.n}</a></div>`).join('')}</div>` : '';
 }
 byId('famRows').innerHTML = D.families.map(([f,n]) =>
   `<div class="kv"><b>${f.replace('ckanext-','')}</b><span class="v">${fmt(n)} · ${pct(n,D.with_ext)}%</span></div>`).join('');
@@ -1441,7 +1452,7 @@ byId('tblMoreBtn').addEventListener('click', () => {
   function renderAll(){
     let list = rows;
     if(xQuery) list = list.filter(r =>
-      r.p.toLowerCase().includes(xQuery) || (r.r||'').toLowerCase().includes(xQuery));
+      normName(r.p).includes(xQuery) || normName(r.r).includes(xQuery));
     xMatched = list.length;
     byId('extAllCount').textContent = `${fmt(list.length)} extensions`
       + (meta.observed ? ` · ${fmt(meta.observed)} observed running` : '');
@@ -1463,7 +1474,7 @@ byId('tblMoreBtn').addEventListener('click', () => {
   }
   sortable('xsort', 'ext-all', xState, renderAll);
   byId('extAllSearch').addEventListener('input', e => {
-    xQuery = e.target.value.trim().toLowerCase(); xLimit = 25; renderAll(); });
+    xQuery = normName(e.target.value); xLimit = 25; renderAll(); });
   byId('extAllMoreBtn').addEventListener('click', () => {
     xLimit = xLimit >= xMatched ? 25 : xMatched; renderAll(); });
   renderAll();
