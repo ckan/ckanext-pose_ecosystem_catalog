@@ -1048,6 +1048,8 @@ const EVENTS = [
 // should reach the live listings. CKAN redirects /dataset/<name> to the
 // type-specific route, so this works for site, tool and extension alike.
 const CATALOG = 'https://ecosystem.ckan.org';
+/* Plugin names come from crawled portals, so they are untrusted in HTML. */
+const esc = s => String(s).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
 const catalogUrl = n => `${CATALOG}/dataset/${encodeURIComponent(n)}`;
 function renderLedger(){
   const rows = EVENTS.filter(e => {
@@ -1069,8 +1071,8 @@ function renderLedger(){
         <span class="body">${link}${e.u.major?' <span class="pill p-current">minor release</span>':''}
         <span class="det">${e.u.from}<span class="arrow">→</span>${e.u.to}</span></span></div>`;
     }
-    const add = e.x.add.map(p => `<ins>+${p}</ins>`).join(' ');
-    const rem = e.x.rem.map(p => `<del>−${p}</del>`).join(' ');
+    const add = e.x.add.map(p => `<ins>+${esc(p)}</ins>`).join(' ');
+    const rem = e.x.rem.map(p => `<del>−${esc(p)}</del>`).join(' ');
     return `<div class="ev x${sus}"><time>${e.w}</time><span class="glyph">◇</span>
       <span class="body">${link}<span class="det">${[add,rem].filter(Boolean).join(' ')}</span></span></div>`;
   }).join('') || '<div class="empty">No events match that.</div>';
@@ -1099,8 +1101,6 @@ function spark(series, w=68, h=18){
 /* ---------- extension ranks ---------- */
 /* Packages and entry points spell one name differently (datapusher-plus,
    datapusher_plus, ckanext-datapusher-plus), so searches compare without them. */
-/* Plugin names come from crawled portals, so they are untrusted in HTML. */
-const esc = s => String(s).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
 const normName = s => (s || '').toLowerCase().replace(/^ckanext[-_. ]*/, '').replace(/[-_.\s]/g, '');
 let extKind = 'all', extQuery = '', extSort = 'count', extLimit = 25;
 const ranks = byId('ranks'), moreBtn = byId('moreBtn');
