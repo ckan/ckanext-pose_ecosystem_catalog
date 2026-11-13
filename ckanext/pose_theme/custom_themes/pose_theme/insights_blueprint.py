@@ -39,7 +39,7 @@ NAV = [
         ('changes', 'Version and plugin changes', 'clock-rotate-left'),
         ('ext-attention', 'Gaining attention', 'arrow-trend-up'),
         ('ext-downstream', 'Livelier downstream', 'code-pull-request'),
-        ('adoption', 'Extension adoption (entry points)', 'puzzle-piece'),
+        ('adoption', 'Extension adoption', 'puzzle-piece'),
     ]),
     ('instances', '/insights/instances', 'Instances', [
         ('instances', 'CKAN instances', 'table'),
