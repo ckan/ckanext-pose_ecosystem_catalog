@@ -513,18 +513,22 @@ footer a code{color:inherit}
 </section>
 <section id="adoption" data-tab="trends">
   <div class="shead">
-    <h2>Extension adoption (entry points)</h2>
+    <h2>Extension adoption</h2>
     <p><span id="extHint">Counts are from the latest crawl. Trend and delta come from the stable cohort, the instances that answered in every crawl of the trailing window, so movement is a real install, not a missed crawl.</span> <a class="shead-export" href="https://dathere.github.io/pose-ckanext-metadata/charts/chart-extension-adoption.html" target="_blank" rel="noopener" title="Which plugins the ecosystem runs. Standalone chart with image export">Embed this chart<i class="fa fa-external-link"></i></a></p>
   </div>
   <div class="cols">
     <div>
       <div class="controls">
+        <div class="seg" id="modeSeg" role="group" aria-label="Group by">
+          <button data-mode="entry" aria-pressed="true" title="One row per plugin entry point, as portals report them">Entry points</button>
+          <button data-mode="pkg" aria-pressed="false" title="One row per catalogued extension, counting each portal once however many of its entry points it runs">Extensions</button>
+        </div>
         <input type="search" id="extSearch" placeholder="search by plugin name…" aria-label="Search by plugin name">
-        <div class="seg" role="group" aria-label="Sort">
+        <div class="seg" id="sortSeg" role="group" aria-label="Sort">
           <button data-sort="count" aria-pressed="true">By install base</button>
           <button data-sort="delta" aria-pressed="false">By movement</button>
         </div>
-        <div class="seg" role="group" aria-label="Type">
+        <div class="seg" id="kindSeg" role="group" aria-label="Type">
           <button data-kind="all" aria-pressed="true">All</button>
           <button data-kind="third" aria-pressed="false">Third-party</button>
           <button data-kind="core" aria-pressed="false">Core</button>
@@ -1103,11 +1107,37 @@ function spark(series, w=68, h=18){
    datapusher_plus, ckanext-datapusher-plus), so searches compare without them. */
 const normName = s => (s || '').toLowerCase().replace(/^ckanext[-_. ]*/, '').replace(/[-_.\s]/g, '');
 let extKind = 'all', extQuery = '', extSort = 'count', extLimit = 25;
+/* "Entry points" is what portals report (dcat, dcat_json_interface...). "Extensions"
+   is the catalogued package those belong to (ckanext-dcat). One extension provides
+   several entry points, so its count is distinct portals, never the sum of its
+   entry points' counts. The crawl does the matching and publishes the result as
+   ext_rows[].i, with the entry points seen (plugins) and the portals running
+   them (by, indexes into instances) beside it. Payloads from before the crawl
+   published those fall back to exts[].family, then to the entry point whose name
+   matches the package's (datapusher-plus and datapusher_plus), and say so: a
+   package can also provide entry points under other names, which that fallback
+   cannot see. Drop the fallback once every payload carries plugins and by. */
+let extMode = 'entry', selectedPkg = null;
+const PKGS = (D.ext_rows || []).filter(r => r.i);
+const FAMILY = {};
+const BYNAME = {}, ENTRY = {};
+D.exts.forEach(e => {
+  ENTRY[e.name] = e;
+  if(e.family) (FAMILY[e.family] = FAMILY[e.family] || []).push(e);
+  (BYNAME[normName(e.name)] = BYNAME[normName(e.name)] || []).push(e);
+});
 const ranks = byId('ranks'), moreBtn = byId('moreBtn');
-byId('extHint').textContent =
-  `Counts are from the latest crawl (${fmt(D.with_ext)} portals reported a plugin list). Trend and delta come from the `
-  + `${fmt(D.cohort_n)} instances that answered in every crawl from ${D.cohort_weeks[0]} on, so movement is a real install, not a missed crawl.`;
+function renderExtHint(){
+  byId('extHint').textContent = extMode === 'pkg'
+    ? `${fmt(PKGS.length)} catalogued extensions that ${fmt(D.with_ext)} reporting portals run at least one plugin of. `
+      + `A portal counts once per extension, however many of its entry points it loads. Movement is not shown: the stable cohort is counted per entry point.`
+    : `Counts are from the latest crawl (${fmt(D.with_ext)} portals reported a plugin list). Trend and delta come from the `
+      + `${fmt(D.cohort_n)} instances that answered in every crawl from ${D.cohort_weeks[0]} on, so movement is a real install, not a missed crawl.`;
+}
+renderExtHint();
 function extList(){
+  if(extMode === 'pkg') return PKGS.filter(r =>
+    !extQuery || normName(r.p).includes(extQuery) || normName(r.r).includes(extQuery));
   let l = D.exts.filter(e =>
     (extKind === 'all' || (extKind === 'core') === !!e.core) &&
     (!extQuery || normName(e.name).includes(extQuery) || normName(e.family).includes(extQuery)));
@@ -1116,6 +1146,19 @@ function extList(){
 }
 function renderExts(){
   const list = extList(), top = list.slice(0, extLimit);
+  if(extMode === 'pkg'){
+    const pmax = PKGS.length ? PKGS[0].i : 1;
+    ranks.innerHTML = top.map((r,ix) => `<button class="rank third" data-e="${esc(r.p)}" aria-pressed="${selectedPkg===r.p}">
+      <span class="i">${ix+1}</span>
+      <span class="nm"><span>${esc(r.p)}</span><span class="tag third">ext</span></span>
+      <span></span>
+      <span class="ct">${fmt(r.i)} <em>${r.pct}%</em></span>
+      <span class="bar"><i style="width:${Math.max(1.5,100*r.i/pmax)}%"></i></span>
+    </button>`).join('') || '<div class="empty">Nothing matches that.</div>';
+    moreBtn.parentElement.hidden = list.length <= 25;
+    moreBtn.textContent = extLimit >= list.length ? 'show fewer' : `show all ${fmt(list.length)} →`;
+    return;
+  }
   const max = D.exts.length ? D.exts[0].count : 1;
   ranks.innerHTML = top.map((e,ix) => {
     const d = e.delta, cls = d>0?'up':d<0?'dn':'flat';
@@ -1132,7 +1175,8 @@ function renderExts(){
 }
 ranks.addEventListener('click', e => {
   const b = e.target.closest('.rank'); if(!b) return;
-  selectedExt = selectedExt === b.dataset.e ? null : b.dataset.e;
+  if(extMode === 'pkg') selectedPkg = selectedPkg === b.dataset.e ? null : b.dataset.e;
+  else selectedExt = selectedExt === b.dataset.e ? null : b.dataset.e;
   renderExts(); renderPairs();
 });
 moreBtn.addEventListener('click', () => {
@@ -1151,7 +1195,55 @@ document.querySelectorAll('.seg [data-sort]').forEach(b => b.addEventListener('c
   b.closest('.seg').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x===b));
   renderExts();
 }));
+/* Without ext_rows there is nothing to group by, so the toggle goes. */
+byId('modeSeg').hidden = !PKGS.length;
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
+  extMode = b.dataset.mode; extLimit = 25;
+  document.querySelectorAll('[data-mode]').forEach(x => x.setAttribute('aria-pressed', x===b));
+  const pkg = extMode === 'pkg';
+  /* Sort-by-movement and core/third-party need per-entry-point fields. */
+  byId('sortSeg').hidden = pkg; byId('kindSeg').hidden = pkg;
+  byId('extSearch').placeholder = pkg ? 'search by extension or repo…' : 'search by plugin name…';
+  byId('extSearch').setAttribute('aria-label', byId('extSearch').placeholder);
+  renderExtHint(); renderExts(); renderPairs();
+}));
+function renderPkgDetail(){
+  const T = byId('pairTitle'), H = byId('pairHint'),
+        C = byId('pairChart'), R = byId('pairRows'), P = byId('pairPortals');
+  C.innerHTML = '';
+  if(!selectedPkg){
+    T.textContent = 'Entry points';
+    H.textContent = 'Pick an extension to see the entry points it provides and the portals using it.';
+    R.innerHTML = ''; P.innerHTML = ''; return;
+  }
+  const row = PKGS.find(r => r.p === selectedPkg);
+  /* Published by the crawl: the entry points seen and the portals running them. */
+  const published = Array.isArray(row.plugins) && Array.isArray(row.by);
+  const viaName = !published && !FAMILY[selectedPkg] && (BYNAME[normName(selectedPkg)] || []).length > 0;
+  const eps = published ? row.plugins.map(n => ENTRY[n]).filter(Boolean)
+                        : FAMILY[selectedPkg] || BYNAME[normName(selectedPkg)] || [];
+  T.innerHTML = `<span class="mono">${esc(selectedPkg)}</span>`;
+  H.textContent = `${fmt(row.i)} portals run it` + (row.r ? ` · ${row.r}` : '')
+    + (viaName ? ' · entry points matched by name' : '');
+  R.innerHTML = eps.length
+    ? [...eps].sort((a,b) => b.count-a.count).slice(0,12).map(e =>
+        `<div class="kv"><b>${esc(e.name)}</b><span class="v">${fmt(e.count)}</span></div>`).join('')
+      + (eps.length > 12 ? `<div class="kv"><span class="v">and ${fmt(eps.length-12)} more entry points</span></div>` : '')
+    : '<div class="kv"><span class="v">No entry point in the published data is linked to this extension or shares its name.</span></div>';
+  const seen = new Set();
+  if(published) row.by.forEach(ix => seen.add(ix));
+  else eps.forEach(e => (e.by || []).forEach(ix => seen.add(ix)));
+  const portals = [...seen].map(ix => D.instances[ix]).filter(Boolean);
+  /* The crawl's package count and these lists come from separate matching passes,
+     so they can differ by a few portals; say so rather than show two numbers. */
+  const off = !published && portals.length && portals.length !== row.i
+    ? `<p class="hint">The crawl counts ${fmt(row.i)} portals for this extension; its listed entry points name ${fmt(portals.length)}.</p>` : '';
+  P.innerHTML = portals.length ? `<h3 style="margin-top:14px">Portals using it (${fmt(portals.length)})</h3>${off}
+    <div class="rows rows-scroll">${portals.map(i =>
+      `<div class="kv"><a href="${catalogUrl(i.n)}" target="_blank" rel="noopener">${esc(i.n)}</a></div>`).join('')}</div>` : '';
+}
 function renderPairs(){
+  if(extMode === 'pkg') return renderPkgDetail();
   const T = byId('pairTitle'), H = byId('pairHint'),
         C = byId('pairChart'), R = byId('pairRows'), P = byId('pairPortals');
   if(!selectedExt){
