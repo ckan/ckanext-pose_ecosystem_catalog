@@ -36,6 +36,7 @@ class PoseThemePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IClick)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IConfigurable)
+    plugins.implements(plugins.IMiddleware, inherit=True)
 
     # IFacets
     def dataset_facets(self, facets_dict, package_type):
@@ -95,6 +96,12 @@ class PoseThemePlugin(plugins.SingletonPlugin):
         blueprints.extend(contact.get_blueprints())
         blueprints.extend(insights.get_blueprints())
         return blueprints
+
+    # IMiddleware
+    def make_middleware(self, app, config):
+        # Runs after the typed package blueprints are registered.
+        view.route_typed_downloads_to_filestore(app)
+        return app
 
     # IConfigurable
     def configure(self, config):
