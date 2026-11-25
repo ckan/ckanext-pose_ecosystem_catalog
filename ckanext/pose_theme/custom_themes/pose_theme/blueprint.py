@@ -161,6 +161,46 @@ def thumbnail(resource_id):
     )
 
 
+S3_DOWNLOAD_ENDPOINT = u's3_resource.resource_download'
+
+
+def route_typed_downloads_to_filestore(app):
+    """Serve uploads of every typed package (site, extension, tool, ...)
+    through ckanext-s3filestore's download view.
+
+    s3filestore only registers its download route under /dataset/<id>/resource,
+    so /site/<id>/resource/<rid>/download/<file> (and the other scheming types)
+    fall through to CKAN's core view, which reads the file from local disk.
+    With files in S3 that path doesn't exist and the request 500s, which also
+    breaks DataPusher+ fetching the file. Overriding the endpoints keeps the
+    URLs as they are; adding a new route wouldn't work, because the typed
+    blueprints' literal /site/... rules win over a pattern rule.
+
+    Does nothing when s3filestore isn't loaded, so disk storage keeps CKAN's
+    own view. Returns the overridden endpoint names.
+    """
+    view_functions = getattr(app, u'view_functions', None)
+    if not view_functions:
+        # Another IMiddleware plugin ran first and wrapped the Flask app.
+        log.warning(u'[pose_theme] Not a Flask app (%r); typed resource '
+                    u'downloads keep CKAN\'s own view', app)
+        return []
+    s3_download = view_functions.get(S3_DOWNLOAD_ENDPOINT)
+    if s3_download is None:
+        return []
+    # Core names the dataset resource blueprint 'resource' and the others
+    # '<type>_resource'; /dataset already reaches s3filestore.
+    endpoints = sorted(
+        e for e in view_functions
+        if e.endswith(u'_resource.download') and e != S3_DOWNLOAD_ENDPOINT)
+    for endpoint in endpoints:
+        view_functions[endpoint] = s3_download
+    if endpoints:
+        log.info(u'[pose_theme] Routed %s to %s', u', '.join(endpoints),
+                 S3_DOWNLOAD_ENDPOINT)
+    return endpoints
+
+
 def get_blueprints():
     return [datastore_dictionary, discourse_post_compat, thumbnails]
  
